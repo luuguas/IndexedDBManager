@@ -1,17 +1,17 @@
 'use strict';
 
 /**
- * @typedef {object} storesInfoType storesInfoの各要素の型
+ * @typedef {object} storesInfoType オブジェクトストアの情報をまとめたオブジェクト
  * @property {string} storeName ストア名
  * @property {string} keyPath データを区別するためのキー名
  */
 
 /**
+ * IndexedDBの処理をまとめたクラス
  * @constructor
- * @classdesc IndexedDBの処理をまとめたクラス
  * @param {string} databaseName データベース名
  * @param {storesInfoType[]} storesInfo オブジェクトストアの情報
- * @param {number} version データベースのバージョン(引数を省略した場合は1)
+ * @param {number} [version=1] データベースのバージョン
  */
 let IndexedDBManager = function (databaseName, storesInfo, version = 1) {
     this.database = null;
@@ -21,8 +21,17 @@ let IndexedDBManager = function (databaseName, storesInfo, version = 1) {
     this.version = version;
 };
 IndexedDBManager.prototype = {
-    openDatabase: function () {
+    /**
+     * データベースを開く非同期関数
+     * @param {boolean} [requestDespiteError=true] 以前のリクエストでデータベースの読み込みエラーが発生していた場合にリクエストを送るかどうか
+     * @return {Promise<null>}
+     */
+    openDatabase(requestDespiteError = true) {
         return new Promise((resolve, reject) => {
+            if(!requestDespiteError && this.loadingError) {
+                reject('Database is not loaded due to error.');
+                return;
+            }
             if (this.database !== null) {
                 resolve(null);
                 return;
@@ -51,30 +60,81 @@ IndexedDBManager.prototype = {
             };
         });
     },
-    getValue: function (storeName, key) {
+    /**
+     * データベースからデータを入手する非同期関数
+     * @param {string} storeName ストア名
+     * @param {string} key 入手するデータのキー名
+     * @return {Promise<?object>} オブジェクト型のデータを返す(該当するデータがなければundefinedを返す)
+     */
+    getData(storeName, key) {
         return new Promise(async (resolve, reject) => {
-            if(this.loadingError){
-                reject('Failed to get database.');
-                return;
+            try {
+                await this.openDatabase(false);
             }
-            if(this.database === null){
-                try {
-                    await this.openDatabase();
-                }
-                catch (err) {
-                    reject(err);
-                    return;
-                }
+            catch (err) {
+                reject(err);
+                return;
             }
             
             let trans = this.database.transaction(storeName, 'readonly');
-            let store = trans.objectStore(storeName);
-            let getRequest = store.get(key);
+            let getRequest = trans.objectStore(storeName).get(key);
             getRequest.onerror = (event) => {
-                reject('Failed to get value.');
+                reject('Failed to get data.');
             };
             getRequest.onsuccess = (event) => {
                 resolve(event.target.result);
+            };
+        });
+    },
+    /**
+     * データベースにデータを追加する(既に同じキーのデータがあれば上書きする)非同期関数
+     * @param {string} storeName ストア名
+     * @param {object} data 追加するデータ(keyPathで指定したキーのプロパティを持つ)
+     * @return {Promise<null>}
+     */
+    setData(storeName, data) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.openDatabase(false);
+            }
+            catch (err) {
+                reject(err);
+                return;
+            }
+            
+            let trans = this.database.transaction(storeName, 'readwrite');
+            let getRequest = trans.objectStore(storeName).put(data);
+            getRequest.onerror = (event) => {
+                reject('Failed to set data.');
+            };
+            getRequest.onsuccess = (event) => {
+                resolve(null);
+            };
+        });
+    },
+    /**
+     * データベースからデータを削除する非同期関数
+     * @param {string} storeName ストア名
+     * @param {string} key 削除するデータのキー名
+     * @return {Promise<null>}
+     */
+    deleteData(storeName, key) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.openDatabase(false);
+            }
+            catch (err) {
+                reject(err);
+                return;
+            }
+            
+            let trans = this.database.transaction(storeName, 'readwrite');
+            let getRequest = trans.objectStore(storeName).delete(key);
+            getRequest.onerror = (event) => {
+                reject('Failed to delete data.');
+            };
+            getRequest.onsuccess = (event) => {
+                resolve(null);
             };
         });
     },
@@ -84,13 +144,22 @@ IndexedDBManager.prototype = {
 
 let myDatabase = new IndexedDBManager('myDatabase', [{storeName: 'myStore', keyPath: 'key'}]);
 let asyncTasks = async () => {
+    let d = new Date();
+    let key = d.getSeconds() % 10;
+    let value = d.toLocaleString();
     try {
         await myDatabase.openDatabase();
-        let res = await myDatabase.getValue('myStore', 'key1');
-        console.log('Succeeded: ' + res);
+        let oldData = await myDatabase.getData('myStore', key);
+        await myDatabase.setData('myStore', {key, value});
+        let data = await myDatabase.getData('myStore', key);
+        console.log(`Succeeded: data = {key: ${data.key}, value: "${data.value}}"`);
+        if(oldData) {
+            console.log(`Info: oldData = {key: ${oldData.key}, value: "${oldData.value}}"`);
+        }
+        await myDatabase.deleteData('myStore', (key + 1) % 10);
     }
     catch (err) {
-        console.warn('Failed: ' + err);
+        console.warn(`Failed: ${err}`);
     }
 };
 
