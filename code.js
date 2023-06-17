@@ -1,61 +1,70 @@
 'use strict';
 
 /**
- * @typedef {object} storesInfoType オブジェクトストアの情報をまとめたオブジェクト
- * @property {string} storeName ストア名
- * @property {string} keyPath データを区別するためのキー名
- */
-
-/**
  * IndexedDBの処理をまとめたクラス
  * @constructor
  * @param {string} databaseName データベース名
- * @param {storesInfoType[]} storesInfo オブジェクトストアの情報
- * @param {number} [version=1] データベースのバージョン
  */
-let IndexedDBManager = function (databaseName, storesInfo, version = 1) {
+let IndexedDBManager = function (databaseName) {
     this.database = null;
-    this.loadingError = false;
     this.databaseName = databaseName;
-    this.storesInfo = storesInfo;
-    this.version = version;
 };
 IndexedDBManager.prototype = {
     /**
+     * @typedef {object} storeInfosType オブジェクトストアの情報をまとめたオブジェクト
+     * @property {string} storeName ストア名
+     * @property {string} keyPath データを区別するためのキー名
+     */
+    /**
      * データベースを開く非同期関数
-     * @param {boolean} [requestDespiteError=true] 以前のリクエストでデータベースの読み込みエラーが発生していた場合にリクエストを送るかどうか
+     * データベースが新規作成もしくはバージョンが更新された場合のみ、追加でストアの作成・削除をおこなう
+     * データベースに存在せずstoreInfosに含まれるストアを作成し、データベースに存在してstoreInfosに含まれないストアを削除する
+     * @param {storeInfosType[]} storeInfos オブジェクトストアの情報
+     * @param {version} データベースのバージョン
      * @return {Promise<null>}
      */
-    openDatabase(requestDespiteError = true) {
+    openDatabase(storeInfos, version) {
         return new Promise((resolve, reject) => {
-            if(!requestDespiteError && this.loadingError) {
-                reject('Database is not loaded due to error.');
-                return;
-            }
             if (this.database !== null) {
                 resolve(null);
                 return;
             }
             if (typeof window.indexedDB === 'undefined') {
-                this.loadingError = true;
                 reject('IndexedDB is not supported.');
                 return;
             }
 
-            let openRequest = indexedDB.open(this.databaseName, this.version);
+            let openRequest = indexedDB.open(this.databaseName, version);
             openRequest.onupgradeneeded = (event) => {
-                for (let obj of this.storesInfo) {
-                    event.target.result.createObjectStore(obj.storeName, {keyPath: obj.keyPath});
+                let database = event.target.result;
+                let m = new Map();
+                for(let name of database.objectStoreNames) {
+                    m.set(name, {status: 1, keyPath: null});
                 }
-                console.info('Database was created.');
+                for(let info of storeInfos) {
+                    if(m.get(info.storeName)) {
+                        m.set(info.storeName, {status: 2, keyPath: info.keyPath});
+                    }
+                    else {
+                        m.set(info.storeName, {status: 0, keyPath: info.keyPath});
+                    }
+                }
+                for(let [name, info] of m) {
+                    if(info.status === 0) {
+                        database.createObjectStore(name, {keyPath: info.keyPath});
+                    }
+                    else if(info.status === 1) {
+                        database.deleteObjectStore(name);
+                    }
+                }
+                console.info('Database was created or upgraded.');
             };
             openRequest.onerror = (event) => {
-                this.loadingError = true;
+                this.database = null;
                 reject(`Failed to get database. (${event.target.error})`);
             };
             openRequest.onsuccess = (event) => {
                 this.database = event.target.result;
-                this.loadingError = false;
                 resolve(null);
             };
         });
@@ -63,16 +72,13 @@ IndexedDBManager.prototype = {
     /**
      * ストアからデータを入手する非同期関数
      * @param {string} storeName ストア名
-     * @param {string} key 入手するデータのキー名
-     * @return {Promise<?object>} データを返す(該当するデータがなければnullを返す)
+     * @param {string} key 入手するデータのキー
+     * @return {Promise<?object>} オブジェクト型のデータを返す 該当するデータがなければnullを返す
      */
     getData(storeName, key) {
         return new Promise(async (resolve, reject) => {
-            try {
-                await this.openDatabase(false);
-            }
-            catch (err) {
-                reject(err);
+            if(this.database === null) {
+                reject('Database is not loaded.');
                 return;
             }
             
@@ -99,11 +105,8 @@ IndexedDBManager.prototype = {
      */
     getAllMatchedData(storeName, filter) {
         return new Promise(async (resolve, reject) => {
-            try {
-                await this.openDatabase(false);
-            }
-            catch (err) {
-                reject(err);
+            if(this.database === null) {
+                reject('Database is not loaded.');
                 return;
             }
             
@@ -128,18 +131,15 @@ IndexedDBManager.prototype = {
         });
     },
     /**
-     * ストアにデータを追加する非同期関数 既に同じキーを持つデータがあればそれを上書きする
+     * ストアにデータを追加する非同期関数 既に同じキーを持つデータがあれば上書きする
      * @param {string} storeName ストア名
-     * @param {object} data 追加するデータ(keyPathで指定したキーのプロパティを持つ)
+     * @param {object} data 追加するデータ keyPathで指定したキーのプロパティを持つ
      * @return {Promise<null>}
      */
     setData(storeName, data) {
         return new Promise(async (resolve, reject) => {
-            try {
-                await this.openDatabase(false);
-            }
-            catch (err) {
-                reject(err);
+            if(this.database === null) {
+                reject('Database is not loaded.');
                 return;
             }
             
@@ -156,16 +156,13 @@ IndexedDBManager.prototype = {
     /**
      * ストアからデータを削除する非同期関数
      * @param {string} storeName ストア名
-     * @param {string} key 削除するデータのキー名
+     * @param {string} key 削除するデータのキー
      * @return {Promise<null>}
      */
     deleteData(storeName, key) {
         return new Promise(async (resolve, reject) => {
-            try {
-                await this.openDatabase(false);
-            }
-            catch (err) {
-                reject(err);
+            if(this.database === null) {
+                reject('Database is not loaded.');
                 return;
             }
             
@@ -179,30 +176,44 @@ IndexedDBManager.prototype = {
             };
         });
     },
+    /**
+     * ストアから全てのデータを削除する非同期関数
+     * @param {string} storeName ストア名
+     * @return {Promise<null>}
+     */
+    deleteAllData(storeName) {
+        return new Promise(async (resolve, reject) => {
+            if(this.database === null) {
+                reject('Database is not loaded.');
+                return;
+            }
+            
+            let trans = this.database.transaction(storeName, 'readwrite');
+            let getRequest = trans.objectStore(storeName).clear();
+            getRequest.onerror = (event) => {
+                reject(`Failed to delete all data. (${event.target.error})`);
+            };
+            getRequest.onsuccess = (event) => {
+                resolve(null);
+            };
+        });
+    },
 };
 
-///////////////
-
-let myDatabase = new IndexedDBManager('myDatabase', [{storeName: 'myStore', keyPath: 'key'}]);
-let asyncTasks = async () => {
-    let value = new Date();
-    let key = value.getSeconds() % 10;
-    try {
-        await myDatabase.openDatabase();
-        let oldData = await myDatabase.getData('myStore', key);
-        await myDatabase.setData('myStore', {key, value});
-        let data = await myDatabase.getData('myStore', key);
-        console.log(`Succeeded: data = {key: ${data.key}, value: ${data.value.toLocaleString()}}`);
-        if(oldData) {
-            console.log(`Info: oldData = {key: ${oldData.key}, value: ${oldData.value.toLocaleString()}}`);
-        }
-
-        let matchedData = await myDatabase.getAllMatchedData('myStore', (data) => {return (data.value.getMinutes() % 10) >= 5;});
-        console.log(matchedData);
-    }
-    catch (err) {
-        console.warn(`Failed: ${err}`);
-    }
-};
-
-asyncTasks();
+/**
+ * データベースを削除する非同期関数
+ * @param {string} データベース名
+ * @return {Promise<null>}
+ */
+function deleteDatabase(databaseName) {
+    return new Promise((resolve, reject) => {
+        let deleteRequest = indexedDB.deleteDatabase(databaseName);
+        deleteRequest.onerror = (event) => {
+            reject(`Failed to delete database. (${event.target.error})`);
+        };
+        deleteRequest.onsuccess = (event) => {
+            console.info('Database was deleted.');
+            resolve(null);
+        };
+    });
+}
