@@ -37,19 +37,19 @@ IDBManager.prototype = {
                 let database = event.target.result;
                 let m = new Map();
                 for (let name of database.objectStoreNames) {
-                    m.set(name, {status: 1, keyPath: null});
+                    m.set(name, { status: 1, keyPath: null });
                 }
                 for (let info of storeInfos) {
                     if (m.get(info.storeName)) {
-                        m.set(info.storeName, {status: 2, keyPath: info.keyPath});
+                        m.set(info.storeName, { status: 2, keyPath: info.keyPath });
                     }
                     else {
-                        m.set(info.storeName, {status: 0, keyPath: info.keyPath});
+                        m.set(info.storeName, { status: 0, keyPath: info.keyPath });
                     }
                 }
                 for (let [name, info] of m) {
                     if (info.status === 0) {
-                        database.createObjectStore(name, {keyPath: info.keyPath});
+                        database.createObjectStore(name, { keyPath: info.keyPath });
                     }
                     else if (info.status === 1) {
                         database.deleteObjectStore(name);
