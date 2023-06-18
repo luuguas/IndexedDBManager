@@ -1,15 +1,13 @@
-'use strict';
-
 /**
  * IndexedDBの処理をまとめたクラス
  * @constructor
  * @param {string} databaseName データベース名
  */
-let IndexedDBManager = function (databaseName) {
+let IDBManager = function (databaseName) {
     this.database = null;
     this.databaseName = databaseName;
 };
-IndexedDBManager.prototype = {
+IDBManager.prototype = {
     /**
      * @typedef {object} storeInfosType オブジェクトストアの情報をまとめたオブジェクト
      * @property {string} storeName ストア名
@@ -38,22 +36,22 @@ IndexedDBManager.prototype = {
             openRequest.onupgradeneeded = (event) => {
                 let database = event.target.result;
                 let m = new Map();
-                for(let name of database.objectStoreNames) {
+                for (let name of database.objectStoreNames) {
                     m.set(name, {status: 1, keyPath: null});
                 }
-                for(let info of storeInfos) {
-                    if(m.get(info.storeName)) {
+                for (let info of storeInfos) {
+                    if (m.get(info.storeName)) {
                         m.set(info.storeName, {status: 2, keyPath: info.keyPath});
                     }
                     else {
                         m.set(info.storeName, {status: 0, keyPath: info.keyPath});
                     }
                 }
-                for(let [name, info] of m) {
-                    if(info.status === 0) {
+                for (let [name, info] of m) {
+                    if (info.status === 0) {
                         database.createObjectStore(name, {keyPath: info.keyPath});
                     }
-                    else if(info.status === 1) {
+                    else if (info.status === 1) {
                         database.deleteObjectStore(name);
                     }
                 }
@@ -84,7 +82,7 @@ IndexedDBManager.prototype = {
      */
     getData(storeName, key) {
         return new Promise((resolve, reject) => {
-            if(!this.isOpened()) {
+            if (!this.isOpened()) {
                 reject('Database is not loaded.');
                 return;
             }
@@ -95,7 +93,7 @@ IndexedDBManager.prototype = {
                 reject(`Failed to get data. (${event.target.error})`);
             };
             getRequest.onsuccess = (event) => {
-                if(event.target.result) {
+                if (event.target.result) {
                     resolve(event.target.result);
                 }
                 else {
@@ -112,7 +110,7 @@ IndexedDBManager.prototype = {
      */
     getAllMatchedData(storeName, filter) {
         return new Promise((resolve, reject) => {
-            if(!this.isOpened()) {
+            if (!this.isOpened()) {
                 reject('Database is not loaded.');
                 return;
             }
@@ -125,8 +123,8 @@ IndexedDBManager.prototype = {
             };
             cursorRequest.onsuccess = (event) => {
                 let cursor = event.target.result;
-                if(cursor) {
-                    if(filter(cursor.value)) {
+                if (cursor) {
+                    if (filter(cursor.value)) {
                         res.push(cursor.value);
                     }
                     cursor.continue();
@@ -144,7 +142,7 @@ IndexedDBManager.prototype = {
      */
     countData(storeName) {
         return new Promise((resolve, reject) => {
-            if(!this.isOpened()) {
+            if (!this.isOpened()) {
                 reject('Database is not loaded.');
                 return;
             }
@@ -167,7 +165,7 @@ IndexedDBManager.prototype = {
      */
     setData(storeName, data) {
         return new Promise((resolve, reject) => {
-            if(!this.isOpened()) {
+            if (!this.isOpened()) {
                 reject('Database is not loaded.');
                 return;
             }
@@ -190,7 +188,7 @@ IndexedDBManager.prototype = {
      */
     deleteData(storeName, key) {
         return new Promise((resolve, reject) => {
-            if(!this.isOpened()) {
+            if (!this.isOpened()) {
                 reject('Database is not loaded.');
                 return;
             }
@@ -212,7 +210,7 @@ IndexedDBManager.prototype = {
      */
     deleteAllData(storeName) {
         return new Promise((resolve, reject) => {
-            if(!this.isOpened()) {
+            if (!this.isOpened()) {
                 reject('Database is not loaded.');
                 return;
             }
