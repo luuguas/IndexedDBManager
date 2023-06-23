@@ -4,7 +4,7 @@ IDBManager.prototype = {
         return new Promise((resolve, reject) => {
             if (this.database !== null) { resolve(null); return; }
             if (typeof window.indexedDB === 'undefined') { reject('IndexedDB is not supported.'); return; }
-            let openRequest = indexedDB.open(this.databaseName, version);
+            let openRequest = window.indexedDB.open(this.databaseName, version);
             openRequest.onupgradeneeded = (event) => {
                 let database = event.target.result;
                 let m = new Map();
@@ -93,7 +93,7 @@ IDBManager.prototype = {
 
 function deleteDatabase(databaseName) {
     return new Promise((resolve, reject) => {
-        let deleteRequest = indexedDB.deleteDatabase(databaseName);
+        let deleteRequest = window.indexedDB.deleteDatabase(databaseName);
         deleteRequest.onerror = (event) => { reject(`Failed to delete database. (${event.target.error})`); };
         deleteRequest.onsuccess = (event) => { console.info('Database was deleted.'); resolve(null); };
     });
