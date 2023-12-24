@@ -11,11 +11,31 @@
 
 class IDBManager {
     #db;
+    #outputWarning;
+        
     #storeUpdateType = Object.freeze({ 'remain': 0, 'new': 1, 'delete': 2, 'recreate': 3 });
     #storeOptions = Object.freeze([ 'keyPath', 'autoIncrement' ]);
     #indexOptions = Object.freeze([ 'unique', 'multiEntry', 'locale' ]);
     
-    constructor() { this.#db = null; }
+    #addDatabaseEventHandler() {
+        this.#db.onclose = (e) => {
+            if (this.#outputWarning) console.warn(`\'${this.databaseName}\' database was unexpectedly closed.`);
+            this.#db = null;
+        };
+        this.#db.onversionchange = (e) => {
+            if (this.#outputWarning) console.warn(`\'${this.databaseName}\' database was closed due to a request to change its structure.`);
+            this.closeDatabase();
+        };
+    }
+    
+    constructor(outputWarning = false) {
+        this.#db = null;
+        this.#outputWarning = outputWarning;
+    }
+    
+    get outputWarning() { return this.#outputWarning; }
+    set outputWarning(bool) { if (typeof bool === 'boolean') this.#outputWarning = bool; }
+    get databaseName() { return this.#db ? this.#db.name : null; }
     
     //*は省略可
     //objectStoreInfos = [ storeInfo1, storeInfo2, ... ]
@@ -24,13 +44,15 @@ class IDBManager {
     //indexInfo = { name, keyPath, *unique, *multiEntry }
     openDatabase(databaseName, version, objectStoreInfos) {
         return new Promise((resolve, reject) => {
-            const openRequest = window.indexedDB.open(databaseName, version);
             let upgraded = false;
+            const openRequest = window.indexedDB.open(databaseName, version);
             
-            openRequest.onblocked = (e) => { reject(e.target.error); };
+            openRequest.onblocked = (e) => { if (this.#outputWarning) console.warn(`The request to open \'${databaseName}\' database is paused until all connections to the database are closed.`); };
             openRequest.onerror = (e) => { reject(e.target.error); };
             openRequest.onsuccess = (e) => {
-                this.db = e.target.result;
+                if (this.#db) this.closeDatabase();
+                this.#db = e.target.result;
+                this.#addDatabaseEventHandler();
                 resolve(upgraded);
             };
             
@@ -83,25 +105,88 @@ class IDBManager {
             };
         });
     }
+    
+    closeDatabase() {
+        return new Promise((resolve, reject) => {
+            if (this.#db) {
+                this.#db.close();
+                this.#db = null;
+            }
+            resolve(null);
+        });
+    }
+    
+    static deleteDatabase(databaseName, outputWarning = false) {
+        return new Promise((resolve, reject) => {
+            const deleteRequest = window.indexedDB.deleteDatabase(databaseName);
+            deleteRequest.onblocked = (e) => { if (outputWarning) console.warn(`The request to delete \'${databaseName}\' database is paused until all connections to the database are closed.`); };
+            deleteRequest.onerror = (e) => { reject(e.target.error); };
+            deleteRequest.onsuccess = (e) => { resolve(null); };
+        });
+    }
 }
 
-(function() {
-    const idb = new IDBManager();
-    const objectStoreInfos = [
-        { name: 'ObjectStore1' },
-        { name: 'ObjectStore2', keyPath: 'key' },
-        { name: 'ObjectStore3', autoIncrement: true },
-        { name: 'ObjectStore4', keyPath: 'hoge', autoIncrement: true },
-        { name: 'ObjectStore5', recreate: true, keyPath: 'name', indexInfos: [ { name: 'by_age', keyPath: 'age' }, { name: 'by_email', keyPath: 'email', unique: true } ] },
-    ];
-    
-    idb.openDatabase('MyDatabase', 1, objectStoreInfos)
-        .then((response) => {
-            console.log('success');
-            console.log(response);
-        })
-        .catch((error) => {
-            console.log('error');
-            console.error(error);
+(async function() {
+    try {
+        const databaseName = 'MyDatabase';
+        const objectStoreInfos = [
+            { name: 'ObjectStore1' },
+            { name: 'ObjectStore2', keyPath: 'key' },
+            { name: 'ObjectStore3', autoIncrement: true },
+            { name: 'ObjectStore4', keyPath: 'hoge', autoIncrement: true },
+            { name: 'ObjectStore5', recreate: true, keyPath: 'name', indexInfos: [ { name: 'by_age', keyPath: 'age' }, { name: 'by_email', keyPath: 'email', unique: true } ] },
+        ];
+        
+        const idb = new IDBManager(true);
+        
+        const openButton = document.createElement('button');
+        openButton.textContent = 'Open';
+        openButton.addEventListener('click', (e) => {
+            idb.openDatabase(databaseName, 1, objectStoreInfos)
+                .then((response) => {
+                    console.log('open success');
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log('open error');
+                    console.error(error);
+                });
         });
+        
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.addEventListener('click', (e) => {
+            idb.closeDatabase()
+                .then((response) => {
+                    console.log('close success');
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log('close error');
+                    console.error(error);
+                });
+        });
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', (e) => {
+            IDBManager.deleteDatabase(databaseName, true)
+                .then((response) => {
+                    console.log('delete success');
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log('delete error');
+                    console.error(error);
+                });
+        });
+        
+        document.getElementsByTagName('body')[0].appendChild(openButton);
+        document.getElementsByTagName('body')[0].appendChild(closeButton);
+        document.getElementsByTagName('body')[0].appendChild(deleteButton);
+        
+    } catch (error) {
+        console.log('error');
+        console.error(error);
+    }
 })();
