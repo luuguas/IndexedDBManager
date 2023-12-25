@@ -13,9 +13,9 @@ class IDBManager {
     #db;
     #outputWarning;
         
-    #storeUpdateType = Object.freeze({ 'remain': 0, 'new': 1, 'delete': 2, 'recreate': 3 });
+    #storeUpdateType = Object.freeze({ 'remain': 0, 'new': 1, 'delete': 2, 'reset': 3 });
     #storeOptions = Object.freeze([ 'keyPath', 'autoIncrement' ]);
-    #indexOptions = Object.freeze([ 'unique', 'multiEntry', 'locale' ]);
+    #indexOptions = Object.freeze([ 'unique', 'multiEntry' ]);
     
     #addDatabaseEventHandler() {
         this.#db.onclose = (e) => {
@@ -32,14 +32,16 @@ class IDBManager {
         this.#db = null;
         this.#outputWarning = outputWarning;
     }
-    
+
+    get databaseName() { return this.#db ? this.#db.name : null; }
+    get databaseVersion() { return this.#db ? this.#db.version : null; }    
     get outputWarning() { return this.#outputWarning; }
     set outputWarning(bool) { if (typeof bool === 'boolean') this.#outputWarning = bool; }
-    get databaseName() { return this.#db ? this.#db.name : null; }
+
     
     //*は省略可
     //objectStoreInfos = [ storeInfo1, storeInfo2, ... ]
-    //storeInfo = { name, *keyPath, *autoIncrement, *indexInfos }
+    //storeInfo = { name, *keyPath, *autoIncrement, *indexInfos, *reset }
     //indexInfos = [ indexInfo1, indexInfo2, ... ]
     //indexInfo = { name, keyPath, *unique, *multiEntry }
     openDatabase(databaseName, version, objectStoreInfos) {
@@ -71,8 +73,8 @@ class IDBManager {
                     }
                     
                     if (m.has(storeInfo.name)) {
-                        if (storeInfo.recreate) {
-                            m.set(storeInfo.name, { type: this.#storeUpdateType['recreate'], options, indexInfos: storeInfo.indexInfos });
+                        if (storeInfo.reset) {
+                            m.set(storeInfo.name, { type: this.#storeUpdateType['reset'], options, indexInfos: storeInfo.indexInfos });
                         } else {
                             m.set(storeInfo.name, { type: this.#storeUpdateType['remain'], options: null, indexInfos: null });
                         }
@@ -86,7 +88,7 @@ class IDBManager {
                         case this.#storeUpdateType['delete']:
                             db.deleteObjectStore(name);
                             break;
-                        case this.#storeUpdateType['recreate']:
+                        case this.#storeUpdateType['reset']:
                             db.deleteObjectStore(name);
                         case this.#storeUpdateType['new']:
                             const store = db.createObjectStore(name, obj.options);
@@ -134,7 +136,7 @@ class IDBManager {
             { name: 'ObjectStore2', keyPath: 'key' },
             { name: 'ObjectStore3', autoIncrement: true },
             { name: 'ObjectStore4', keyPath: 'hoge', autoIncrement: true },
-            { name: 'ObjectStore5', recreate: true, keyPath: 'name', indexInfos: [ { name: 'by_age', keyPath: 'age' }, { name: 'by_email', keyPath: 'email', unique: true } ] },
+            { name: 'ObjectStore5', reset: true, keyPath: 'name', indexInfos: [ { name: 'by_age', keyPath: 'age' }, { name: 'by_email', keyPath: 'email', unique: true } ] },
         ];
         
         const idb = new IDBManager(true);
