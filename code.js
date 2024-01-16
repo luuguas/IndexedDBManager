@@ -11,8 +11,9 @@
 
 class IDBManager {
     #db;
+    #txs;
     #outputWarning;
-        
+    
     #storeUpdateType = Object.freeze({ 'remain': 0, 'new': 1, 'delete': 2, 'reset': 3 });
     #storeOptions = Object.freeze([ 'keyPath', 'autoIncrement' ]);
     #indexOptions = Object.freeze([ 'unique', 'multiEntry' ]);
@@ -27,9 +28,22 @@ class IDBManager {
             this.closeDatabase();
         };
     }
+    #createTransaction(storeName) {
+        if (this.#txs.has(storeName)) return;
+        
+        const tx = this.#db.transaction(storeName, 'readwrite');
+        tx.onabort = (e) => {
+            if (this.#outputWarning) console.warn(`The transaction of \'${storeName}\' object store was aborted.`);
+            this.#txs.delete(storeName);
+        };
+        tx.oncomplete = (e) => { this.#txs.delete(storeName); };
+        
+        this.#txs.set(storeName, tx);
+    }
     
     constructor(outputWarning = false) {
         this.#db = null;
+        this.#txs = new Map();
         this.#outputWarning = outputWarning;
     }
 
@@ -37,7 +51,6 @@ class IDBManager {
     get databaseVersion() { return this.#db ? this.#db.version : null; }    
     get outputWarning() { return this.#outputWarning; }
     set outputWarning(bool) { if (typeof bool === 'boolean') this.#outputWarning = bool; }
-
     
     //*は省略可
     //objectStoreInfos = [ storeInfo1, storeInfo2, ... ]
@@ -126,6 +139,18 @@ class IDBManager {
             deleteRequest.onsuccess = (e) => { resolve(null); };
         });
     }
+    
+    setItem(storeName, value, key) {
+        return new Promise((resolve, reject) => {
+            storeName = (storeName).toString();
+            this.#createTransaction(storeName);
+            const store = this.#txs.get(storeName).objectStore(storeName);
+            
+            const putRequest = store.put(value, key);
+            putRequest.onerror = (e) => { reject(e.target.error); };
+            putRequest.onsuccess = (e) => { resolve(e.target.result); };
+        });
+    }
 }
 
 (async function() {
@@ -155,37 +180,27 @@ class IDBManager {
                 });
         });
         
-        const closeButton = document.createElement('button');
-        closeButton.textContent = 'Close';
-        closeButton.addEventListener('click', (e) => {
-            idb.closeDatabase()
-                .then((response) => {
-                    console.log('close success');
+        const setButton = document.createElement('button');
+        setButton.textContent = 'Set Item';
+        setButton.addEventListener('click', (e) => {
+            Promise.all([
+                idb.setItem(objectStoreInfos[1].name, {key: 'hoge', value: 998244353}),
+                idb.setItem(objectStoreInfos[1].name, {key: 'fuga', value: 1000000007})
+            ])
+            .then(
+                (response) => {
+                    console.log('set success');
                     console.log(response);
-                })
-                .catch((error) => {
-                    console.log('close error');
+                },
+                (error) => {
+                    console.log('set error');
                     console.error(error);
-                });
-        });
-        
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', (e) => {
-            IDBManager.deleteDatabase(databaseName, true)
-                .then((response) => {
-                    console.log('delete success');
-                    console.log(response);
-                })
-                .catch((error) => {
-                    console.log('delete error');
-                    console.error(error);
-                });
+                }
+            );
         });
         
         document.getElementsByTagName('body')[0].appendChild(openButton);
-        document.getElementsByTagName('body')[0].appendChild(closeButton);
-        document.getElementsByTagName('body')[0].appendChild(deleteButton);
+        document.getElementsByTagName('body')[0].appendChild(setButton);
         
     } catch (error) {
         console.log('error');
