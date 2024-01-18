@@ -151,6 +151,25 @@ class IDBManager {
             putRequest.onsuccess = (e) => { resolve(e.target.result); };
         });
     }
+    setItems(storeName, entries, hasInlineKeyOrKeyGenerator = true) {
+        return new Promise((resolve, reject) => {
+            if (!Array.isArray(entries)) { throw new TypeError('entries must be an Array.'); }
+            if (typeof hasInlineKeyOrKeyGenerator !== 'boolean') { throw new TypeError('hasInlineKeyOrKeyGenerator must be a boolean.'); }
+            
+            storeName = (storeName).toString();
+            this.#createTransaction(storeName);
+            const store = this.#txs.get(storeName).objectStore(storeName);
+            
+            const tasks = entries.map((val, idx) => {
+                if (hasInlineKeyOrKeyGenerator) return this.setItem(storeName, val);
+                else {
+                    if (!val.hasOwnProperty('key') || !val.hasOwnProperty('value')) throw new TypeError('One of the elements in entries does not have \'key\' or \'value\'.');
+                    return this.setItem(storeName, val.value, val.key);
+                }
+            });
+            Promise.all(tasks).then((response) => { resolve(response); }, (error) => { reject(error); });
+        });
+    }
 }
 
 (async function() {
@@ -183,10 +202,7 @@ class IDBManager {
         const setButton = document.createElement('button');
         setButton.textContent = 'Set Item';
         setButton.addEventListener('click', (e) => {
-            Promise.all([
-                idb.setItem(objectStoreInfos[1].name, {key: 'hoge', value: 998244353}),
-                idb.setItem(objectStoreInfos[1].name, {key: 'fuga', value: 1000000007})
-            ])
+            idb.setItems(objectStoreInfos[1].name, [{key: 'hoge', value: 998244353}, {key: 'fuga', value: 1000000007}])
             .then(
                 (response) => {
                     console.log('set success');
