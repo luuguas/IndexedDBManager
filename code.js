@@ -41,6 +41,13 @@ class IDBManager {
         
         this.#txs.set(storeName, tx);
     }
+    #createKeyRange(obj, objName) {
+        if (typeof obj.full === 'boolean' && obj.full) return null;
+        if (obj.hasOwnProperty('lower') && obj.hasOwnProperty('upper')) return window.IDBKeyRange.bound(obj.lower, obj.upper, obj.lowerOpen, obj.upperOpen);
+        else if (obj.hasOwnProperty('lower')) return window.IDBKeyRange.lowerBound(obj.lower, obj.lowerOpen);
+        else if (obj.hasOwnProperty('upper')) return window.IDBKeyRange.upperBound(obj.upper, obj.upperOpen);
+        else throw new TypeError(`${objName} must have at least one of \'full\', \'lower\', and \'upper\' properties.`);
+    }
     #throwNonExistentStoreError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'${storeName}\'.`); }
     
     constructor(outputWarning = false) {
@@ -177,7 +184,7 @@ class IDBManager {
                     });
                 }
                 else {
-                    if (!val.hasOwnProperty('key') || !val.hasOwnProperty('value')) throw new TypeError('One of the elements in entries does not have \'key\' or \'value\'.');
+                    if (!val.hasOwnProperty('key') || !val.hasOwnProperty('value')) throw new TypeError('One of the elements in entries does not have \'key\' or \'value\' property.');
                     return new Promise((resolve, reject) => {
                         const putRequest = store.put(val.value, val.key);
                         putRequest.onerror = (e) => { reject(e.target.error); };
@@ -193,7 +200,7 @@ class IDBManager {
         return new Promise((resolve, reject) => {
             storeName = (storeName).toString();
             this.#throwNonExistentStoreError(storeName);
-            if (key instanceof window.IDBKeyRange) throw new TypeError('IDBKeyRange is not available as \'key\' for deleteItem; please use deleteItems.');
+            if (key instanceof window.IDBKeyRange) throw new TypeError('IDBKeyRange is not available as key for deleteItem; please use deleteItems.');
             this.#createTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
@@ -201,6 +208,54 @@ class IDBManager {
             deleteRequest.onerror = (e) => { reject(e.target.error); };
             deleteRequest.onsuccess = (e) => { resolve(e.target.result); };
         });
+    }
+    deleteItems(storeName, rangeOrArray) {
+        return new Promise((resolve, reject) => {
+            storeName = (storeName).toString();
+            this.#throwNonExistentStoreError(storeName);
+            this.#createTransaction(storeName);
+            const store = this.#txs.get(storeName).objectStore(storeName);
+            
+            if (rangeOrArray instanceof window.IDBKeyRange) {
+                const deleteRequest = store.delete(rangeOrArray);
+                deleteRequest.onerror = (e) => { reject(e.target.error); };
+                deleteRequest.onsuccess = (e) => { resolve(e.target.result); };
+            }
+            else if (Array.isArray(rangeOrArray)) {
+                const tasks = rangeOrArray.map((val, idx) => {
+                    return new Promise((resolve, reject) => {
+                        const deleteRequest = store.delete(val);
+                        deleteRequest.onerror = (e) => { reject(e.target.error); };
+                        deleteRequest.onsuccess = (e) => { resolve(e.target.result); };
+                    });
+                });
+                Promise.all(tasks).then((response) => { resolve(/* undefined */); }, (error) => { reject(error); });
+            }
+            else if (typeof rangeOrArray === 'object') {
+                const keyRange = this.#createKeyRange(rangeOrArray, 'rangeOrArray');
+                if (keyRange) {
+                    const deleteRequest = store.delete(keyRange);
+                    deleteRequest.onerror = (e) => { reject(e.target.error); };
+                    deleteRequest.onsuccess = (e) => { resolve(e.target.result); };
+                }
+                else {
+                    const clearRequest = store.clear();
+                    clearRequest.onerror = (e) => { reject(e.target.error); };
+                    clearRequest.onsuccess = (e) => { resolve(e.target.result); };
+                }
+            }
+            else throw new TypeError('A single key is not available as rangeOrArray for deleteItems; please use deleteItem.');
+        });
+    }
+    deleteAllItems(storeName) {
+        storeName = (storeName).toString();
+        this.#throwNonExistentStoreError(storeName);
+        this.#createTransaction(storeName);
+        const store = this.#txs.get(storeName).objectStore(storeName);
+        
+        const clearRequest = store.clear();
+        clearRequest.onerror = (e) => { reject(e.target.error); };
+        clearRequest.onsuccess = (e) => { resolve(e.target.result); };
     }
 }
 
@@ -234,7 +289,7 @@ class IDBManager {
         const setButton = document.createElement('button');
         setButton.textContent = 'Set Item';
         setButton.addEventListener('click', (e) => {
-            idb.setItems(objectStoreInfos[1].name, [{key: 'hoge', value: 998244353}, {key: 'fuga', value: 1000000007}])
+            idb.setItems(objectStoreInfos[1].name, [{key: 'aaa', value: 998244353}, {key: 'bbb', value: 1000000007}, {key: 'ccc', value: 100}, {key: 'ddd', value: 57}])
                 .then((response) => {
                     console.log('set success');
                     console.log(response);
@@ -248,7 +303,7 @@ class IDBManager {
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete Item';
         deleteButton.addEventListener('click', (e) => {
-            idb.deleteItem(objectStoreInfos[1].name, 'hoge')
+            idb.deleteItems(objectStoreInfos[1].name, { lower: 'aaa', upper: 'ccc', lowerOpen: true, upperOpen: false })
                 .then((response) => {
                     console.log('delete success');
                     console.log(response);
