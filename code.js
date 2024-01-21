@@ -12,6 +12,7 @@
 class IDBManager {
     #db;
     #txs;
+    #hasKey;
     #outputWarning;
     
     #storeUpdateType = Object.freeze({ 'remain': 0, 'new': 1, 'delete': 2, 'reset': 3 });
@@ -40,10 +41,12 @@ class IDBManager {
         
         this.#txs.set(storeName, tx);
     }
+    #throwNonExistentStoreError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'{storeName}\'.`); }
     
     constructor(outputWarning = false) {
         this.#db = null;
         this.#txs = new Map();
+        this.#hasKey = new Map();
         this.#outputWarning = outputWarning;
     }
 
@@ -68,6 +71,13 @@ class IDBManager {
                 if (this.#db) this.closeDatabase();
                 this.#db = e.target.result;
                 this.#addDatabaseEventHandler();
+                
+                for (const storeInfo of objectStoreInfos) {
+                    this.#hasKey.set(storeInfo.name, false);
+                    for (const op of this.#storeOptions) {
+                        if (storeInfo.hasOwnProperty(op)) this.#hasKey.set(storeInfo.name, true);
+                    }
+                }
                 resolve(upgraded);
             };
             
@@ -120,7 +130,6 @@ class IDBManager {
             };
         });
     }
-    
     closeDatabase() {
         return new Promise((resolve, reject) => {
             if (this.#db) {
@@ -130,7 +139,6 @@ class IDBManager {
             resolve(null);
         });
     }
-    
     static deleteDatabase(databaseName, outputWarning = false) {
         return new Promise((resolve, reject) => {
             const deleteRequest = window.indexedDB.deleteDatabase(databaseName);
@@ -143,6 +151,8 @@ class IDBManager {
     setItem(storeName, value, key) {
         return new Promise((resolve, reject) => {
             storeName = (storeName).toString();
+            this.#throwNonExistentStoreError(storeName);
+            
             this.#createTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
@@ -151,17 +161,19 @@ class IDBManager {
             putRequest.onsuccess = (e) => { resolve(e.target.result); };
         });
     }
-    setItems(storeName, entries, hasInlineKeyOrKeyGenerator = true) {
+    setItems(storeName, entries) {
         return new Promise((resolve, reject) => {
             if (!Array.isArray(entries)) { throw new TypeError('entries must be an Array.'); }
-            if (typeof hasInlineKeyOrKeyGenerator !== 'boolean') { throw new TypeError('hasInlineKeyOrKeyGenerator must be a boolean.'); }
-            
             storeName = (storeName).toString();
+            this.#throwNonExistentStoreError(storeName);
+            
             this.#createTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
             const tasks = entries.map((val, idx) => {
-                if (hasInlineKeyOrKeyGenerator) return this.setItem(storeName, val);
+                if (this.#hasKey.get(storeName)) {
+                    return this.setItem(storeName, val);
+                }
                 else {
                     if (!val.hasOwnProperty('key') || !val.hasOwnProperty('value')) throw new TypeError('One of the elements in entries does not have \'key\' or \'value\'.');
                     return this.setItem(storeName, val.value, val.key);
