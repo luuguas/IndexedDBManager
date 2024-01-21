@@ -41,7 +41,7 @@ class IDBManager {
         
         this.#txs.set(storeName, tx);
     }
-    #throwNonExistentStoreError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'{storeName}\'.`); }
+    #throwNonExistentStoreError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'${storeName}\'.`); }
     
     constructor(outputWarning = false) {
         this.#db = null;
