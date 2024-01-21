@@ -48,7 +48,8 @@ class IDBManager {
         else if (obj.hasOwnProperty('upper')) return window.IDBKeyRange.upperBound(obj.upper, obj.upperOpen);
         else throw new TypeError(`${objName} must have at least one of \'full\', \'lower\', and \'upper\' properties.`);
     }
-    #throwNonExistentStoreError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'${storeName}\'.`); }
+    #throwDatabaseNotOpenError() { if (!this.isOpen) throw new ReferenceError('Database is not open.'); }
+    #throwStoreNotExistError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'${storeName}\'.`); }
     
     constructor(outputWarning = false) {
         this.#db = null;
@@ -57,6 +58,7 @@ class IDBManager {
         this.#outputWarning = outputWarning;
     }
 
+    get isOpen() { return this.#db !== null; }
     get databaseName() { return this.#db ? this.#db.name : null; }
     get databaseVersion() { return this.#db ? this.#db.version : null; }    
     get outputWarning() { return this.#outputWarning; }
@@ -75,7 +77,7 @@ class IDBManager {
             openRequest.onblocked = (e) => { if (this.#outputWarning) console.warn(`The request to open \'${databaseName}\' database is paused until all connections to the database are closed.`); };
             openRequest.onerror = (e) => { reject(e.target.error); };
             openRequest.onsuccess = (e) => {
-                if (this.#db) this.closeDatabase();
+                if (this.isOpen) this.closeDatabase();
                 this.#db = e.target.result;
                 this.#addDatabaseEventHandler();
                 
@@ -139,11 +141,11 @@ class IDBManager {
     }
     closeDatabase() {
         return new Promise((resolve, reject) => {
-            if (this.#db) {
+            if (this.isOpen) {
                 this.#db.close();
                 this.#db = null;
             }
-            resolve(null);
+            resolve();
         });
     }
     static deleteDatabase(databaseName, outputWarning = false) {
@@ -151,14 +153,15 @@ class IDBManager {
             const deleteRequest = window.indexedDB.deleteDatabase(databaseName);
             deleteRequest.onblocked = (e) => { if (outputWarning) console.warn(`The request to delete \'${databaseName}\' database is paused until all connections to the database are closed.`); };
             deleteRequest.onerror = (e) => { reject(e.target.error); };
-            deleteRequest.onsuccess = (e) => { resolve(null); };
+            deleteRequest.onsuccess = (e) => { resolve(); };
         });
     }
     
     setItem(storeName, value, key) {
         return new Promise((resolve, reject) => {
+            this.#throwDatabaseNotOpenError();
             storeName = (storeName).toString();
-            this.#throwNonExistentStoreError(storeName);
+            this.#throwStoreNotExistError(storeName);
             this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
@@ -169,9 +172,10 @@ class IDBManager {
     }
     setItems(storeName, entries) {
         return new Promise((resolve, reject) => {
+            this.#throwDatabaseNotOpenError();
             if (!Array.isArray(entries)) { throw new TypeError('entries must be an Array.'); }
             storeName = (storeName).toString();
-            this.#throwNonExistentStoreError(storeName);
+            this.#throwStoreNotExistError(storeName);
             this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
@@ -198,8 +202,9 @@ class IDBManager {
     
     deleteItem(storeName, key) {
         return new Promise((resolve, reject) => {
+            this.#throwDatabaseNotOpenError();
             storeName = (storeName).toString();
-            this.#throwNonExistentStoreError(storeName);
+            this.#throwStoreNotExistError(storeName);
             if (key instanceof window.IDBKeyRange) throw new TypeError('IDBKeyRange is not available as key for deleteItem; please use deleteItems.');
             this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
@@ -211,8 +216,9 @@ class IDBManager {
     }
     deleteItems(storeName, rangeOrArray) {
         return new Promise((resolve, reject) => {
+            this.#throwDatabaseNotOpenError();
             storeName = (storeName).toString();
-            this.#throwNonExistentStoreError(storeName);
+            this.#throwStoreNotExistError(storeName);
             this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
@@ -248,8 +254,9 @@ class IDBManager {
         });
     }
     deleteAllItems(storeName) {
+        this.#throwDatabaseNotOpenError();
         storeName = (storeName).toString();
-        this.#throwNonExistentStoreError(storeName);
+        this.#throwStoreNotExistError(storeName);
         this.#startTransaction(storeName);
         const store = this.#txs.get(storeName).objectStore(storeName);
         
@@ -285,6 +292,20 @@ class IDBManager {
                     console.error(error);
                 });
         });
+
+        const closeButton = document.createElement('button');
+        closeButton.textContent = 'Close';
+        closeButton.addEventListener('click', (e) => {
+            idb.closeDatabase()
+                .then((response) => {
+                    console.log('close success');
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log('close error');
+                    console.error(error);
+                });
+        });
         
         const setButton = document.createElement('button');
         setButton.textContent = 'Set Item';
@@ -315,6 +336,7 @@ class IDBManager {
         });
         
         document.getElementsByTagName('body')[0].appendChild(openButton);
+        document.getElementsByTagName('body')[0].appendChild(closeButton);
         document.getElementsByTagName('body')[0].appendChild(setButton);
         document.getElementsByTagName('body')[0].appendChild(deleteButton);
         
