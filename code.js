@@ -13,7 +13,7 @@ class IDBManager {
     #db;
     #txs;
     #hasKey;
-    #outputWarning;
+    #warningEnabled;
     
     #storeUpdateType = Object.freeze({ 'remain': 0, 'new': 1, 'delete': 2, 'reset': 3 });
     #storeOptions = Object.freeze([ 'keyPath', 'autoIncrement' ]);
@@ -21,11 +21,11 @@ class IDBManager {
     
     #addDatabaseEventHandler() {
         this.#db.onclose = (e) => {
-            if (this.#outputWarning) console.warn(`\'${this.databaseName}\' database was unexpectedly closed.`);
+            if (this.#warningEnabled) console.warn(`\'${this.databaseName}\' database was unexpectedly closed.`);
             this.#db = null;
         };
         this.#db.onversionchange = (e) => {
-            if (this.#outputWarning) console.warn(`\'${this.databaseName}\' database was closed due to a request to change its structure.`);
+            if (this.#warningEnabled) console.warn(`\'${this.databaseName}\' database was closed due to a request to change its structure.`);
             this.closeDatabase();
         };
     }
@@ -34,7 +34,7 @@ class IDBManager {
         
         const tx = this.#db.transaction(storeName, 'readwrite');
         tx.onabort = (e) => {
-            if (this.#outputWarning) console.warn(`The transaction of \'${storeName}\' object store was aborted.`);
+            if (this.#warningEnabled) console.warn(`The transaction of \'${storeName}\' object store was aborted.`);
             this.#txs.delete(storeName);
         };
         tx.oncomplete = (e) => { this.#txs.delete(storeName); };
@@ -51,18 +51,18 @@ class IDBManager {
     #throwDatabaseNotOpenError() { if (!this.isOpen) throw new ReferenceError('Database is not open.'); }
     #throwStoreNotExistError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'${storeName}\'.`); }
     
-    constructor(outputWarning = false) {
+    constructor(warningEnabled = false) {
         this.#db = null;
         this.#txs = new Map();
         this.#hasKey = new Map();
-        this.#outputWarning = outputWarning;
+        this.#warningEnabled = warningEnabled;
     }
 
     get isOpen() { return this.#db !== null; }
     get databaseName() { return this.#db ? this.#db.name : null; }
     get databaseVersion() { return this.#db ? this.#db.version : null; }    
-    get outputWarning() { return this.#outputWarning; }
-    set outputWarning(bool) { if (typeof bool === 'boolean') this.#outputWarning = bool; }
+    get warningEnabled() { return this.#warningEnabled; }
+    set warningEnabled(bool) { if (typeof bool === 'boolean') this.#warningEnabled = bool; }
     
     //*は省略可
     //objectStoreInfos = [ storeInfo1, storeInfo2, ... ]
@@ -74,7 +74,7 @@ class IDBManager {
             let upgraded = false;
             const openRequest = window.indexedDB.open(databaseName, version);
             
-            openRequest.onblocked = (e) => { if (this.#outputWarning) console.warn(`The request to open \'${databaseName}\' database is paused until all connections to the database are closed.`); };
+            openRequest.onblocked = (e) => { if (this.#warningEnabled) console.warn(`The request to open \'${databaseName}\' database is paused until all connections to the database are closed.`); };
             openRequest.onerror = (e) => { reject(e.target.error); };
             openRequest.onsuccess = (e) => {
                 if (this.isOpen) this.closeDatabase();
@@ -148,10 +148,10 @@ class IDBManager {
             resolve();
         });
     }
-    static deleteDatabase(databaseName, outputWarning = false) {
+    static deleteDatabase(databaseName, warningEnabled = false) {
         return new Promise((resolve, reject) => {
             const deleteRequest = window.indexedDB.deleteDatabase(databaseName);
-            deleteRequest.onblocked = (e) => { if (outputWarning) console.warn(`The request to delete \'${databaseName}\' database is paused until all connections to the database are closed.`); };
+            deleteRequest.onblocked = (e) => { if (warningEnabled) console.warn(`The request to delete \'${databaseName}\' database is paused until all connections to the database are closed.`); };
             deleteRequest.onerror = (e) => { reject(e.target.error); };
             deleteRequest.onsuccess = (e) => { resolve(); };
         });
