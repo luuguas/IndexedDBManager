@@ -253,17 +253,6 @@ class IDBManager {
             else throw new TypeError('A single key is not available as rangeOrArray for deleteItems; please use deleteItem.');
         });
     }
-    deleteAllItems(storeName) {
-        this.#throwDatabaseNotOpenError();
-        storeName = (storeName).toString();
-        this.#throwStoreNotExistError(storeName);
-        this.#startTransaction(storeName);
-        const store = this.#txs.get(storeName).objectStore(storeName);
-        
-        const clearRequest = store.clear();
-        clearRequest.onerror = (e) => { reject(e.target.error); };
-        clearRequest.onsuccess = (e) => { resolve(e.target.result); };
-    }
 }
 
 (async function() {
