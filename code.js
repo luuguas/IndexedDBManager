@@ -152,7 +152,6 @@ class IDBManager {
         return new Promise((resolve, reject) => {
             storeName = (storeName).toString();
             this.#throwNonExistentStoreError(storeName);
-            
             this.#createTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
@@ -166,20 +165,41 @@ class IDBManager {
             if (!Array.isArray(entries)) { throw new TypeError('entries must be an Array.'); }
             storeName = (storeName).toString();
             this.#throwNonExistentStoreError(storeName);
-            
             this.#createTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
             const tasks = entries.map((val, idx) => {
                 if (this.#hasKey.get(storeName)) {
-                    return this.setItem(storeName, val);
+                    return new Promise((resolve, reject) => {
+                        const putRequest = store.put(val);
+                        putRequest.onerror = (e) => { reject(e.target.error); };
+                        putRequest.onsuccess = (e) => { resolve(e.target.result); };
+                    });
                 }
                 else {
                     if (!val.hasOwnProperty('key') || !val.hasOwnProperty('value')) throw new TypeError('One of the elements in entries does not have \'key\' or \'value\'.');
-                    return this.setItem(storeName, val.value, val.key);
+                    return new Promise((resolve, reject) => {
+                        const putRequest = store.put(val.value, val.key);
+                        putRequest.onerror = (e) => { reject(e.target.error); };
+                        putRequest.onsuccess = (e) => { resolve(e.target.result); };
+                    });
                 }
             });
             Promise.all(tasks).then((response) => { resolve(response); }, (error) => { reject(error); });
+        });
+    }
+    
+    deleteItem(storeName, key) {
+        return new Promise((resolve, reject) => {
+            storeName = (storeName).toString();
+            this.#throwNonExistentStoreError(storeName);
+            if (key instanceof window.IDBKeyRange) throw new TypeError('IDBKeyRange is not available as \'key\' for deleteItem; please use deleteItems.');
+            this.#createTransaction(storeName);
+            const store = this.#txs.get(storeName).objectStore(storeName);
+            
+            const deleteRequest = store.delete(key);
+            deleteRequest.onerror = (e) => { reject(e.target.error); };
+            deleteRequest.onsuccess = (e) => { resolve(e.target.result); };
         });
     }
 }
@@ -215,20 +235,33 @@ class IDBManager {
         setButton.textContent = 'Set Item';
         setButton.addEventListener('click', (e) => {
             idb.setItems(objectStoreInfos[1].name, [{key: 'hoge', value: 998244353}, {key: 'fuga', value: 1000000007}])
-            .then(
-                (response) => {
+                .then((response) => {
                     console.log('set success');
                     console.log(response);
-                },
-                (error) => {
+                })
+                .catch((error) => {
                     console.log('set error');
                     console.error(error);
-                }
-            );
+                });
+        });
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete Item';
+        deleteButton.addEventListener('click', (e) => {
+            idb.deleteItem(objectStoreInfos[1].name, 'hoge')
+                .then((response) => {
+                    console.log('delete success');
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log('delete error');
+                    console.error(error);
+                });
         });
         
         document.getElementsByTagName('body')[0].appendChild(openButton);
         document.getElementsByTagName('body')[0].appendChild(setButton);
+        document.getElementsByTagName('body')[0].appendChild(deleteButton);
         
     } catch (error) {
         console.log('error');
