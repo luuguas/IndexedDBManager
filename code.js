@@ -29,7 +29,7 @@ class IDBManager {
             this.closeDatabase();
         };
     }
-    #createTransaction(storeName) {
+    #startTransaction(storeName) {
         if (this.#txs.has(storeName)) return;
         
         const tx = this.#db.transaction(storeName, 'readwrite');
@@ -159,7 +159,7 @@ class IDBManager {
         return new Promise((resolve, reject) => {
             storeName = (storeName).toString();
             this.#throwNonExistentStoreError(storeName);
-            this.#createTransaction(storeName);
+            this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
             const putRequest = store.put(value, key);
@@ -172,7 +172,7 @@ class IDBManager {
             if (!Array.isArray(entries)) { throw new TypeError('entries must be an Array.'); }
             storeName = (storeName).toString();
             this.#throwNonExistentStoreError(storeName);
-            this.#createTransaction(storeName);
+            this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
             const tasks = entries.map((val, idx) => {
@@ -201,7 +201,7 @@ class IDBManager {
             storeName = (storeName).toString();
             this.#throwNonExistentStoreError(storeName);
             if (key instanceof window.IDBKeyRange) throw new TypeError('IDBKeyRange is not available as key for deleteItem; please use deleteItems.');
-            this.#createTransaction(storeName);
+            this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
             const deleteRequest = store.delete(key);
@@ -213,7 +213,7 @@ class IDBManager {
         return new Promise((resolve, reject) => {
             storeName = (storeName).toString();
             this.#throwNonExistentStoreError(storeName);
-            this.#createTransaction(storeName);
+            this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
             if (rangeOrArray instanceof window.IDBKeyRange) {
@@ -250,7 +250,7 @@ class IDBManager {
     deleteAllItems(storeName) {
         storeName = (storeName).toString();
         this.#throwNonExistentStoreError(storeName);
-        this.#createTransaction(storeName);
+        this.#startTransaction(storeName);
         const store = this.#txs.get(storeName).objectStore(storeName);
         
         const clearRequest = store.clear();
