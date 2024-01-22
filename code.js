@@ -46,7 +46,7 @@ class IDBManager {
         if (obj.hasOwnProperty('lower') && obj.hasOwnProperty('upper')) return window.IDBKeyRange.bound(obj.lower, obj.upper, obj.lowerOpen, obj.upperOpen);
         else if (obj.hasOwnProperty('lower')) return window.IDBKeyRange.lowerBound(obj.lower, obj.lowerOpen);
         else if (obj.hasOwnProperty('upper')) return window.IDBKeyRange.upperBound(obj.upper, obj.upperOpen);
-        else throw new TypeError(`${objName} must have at least one of \'full\', \'lower\', and \'upper\' properties.`);
+        else throw new TypeError(`${objName} must have at least one of \'full: true\', \'lower\', and \'upper\' properties.`);
     }
     #throwDatabaseNotOpenError() { if (!this.isOpen) throw new ReferenceError('Database is not open.'); }
     #throwStoreNotExistError(storeName) { if (!this.#hasKey.has(storeName)) throw new ReferenceError(`The database does not have a object store named \'${storeName}\'.`); }
@@ -321,7 +321,7 @@ class IDBManager {
                     ]
             },
             { name: 'get', label: 'Get Item', func: 'getItem', args: [ objectStoreInfos[1].name, 'bbb' ] },
-            { name: 'get first', label: 'Get First Item', func: 'getFirstItem', args: [ objectStoreInfos[1].name, { full: true } ] },
+            { name: 'get first', label: 'Get First Item', func: 'getFirstItem', args: [ objectStoreInfos[1].name, { full: false } ] },
             { name: 'delete', label: 'Delete Items', func: 'deleteItems', args: [ objectStoreInfos[1].name, { lower: 'aaa', upper: 'ccc', lowerOpen: true, upperOpen: false } ] }
         ]
         
