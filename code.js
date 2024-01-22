@@ -116,6 +116,7 @@ class IDBManager {
                 }
                 
                 for (const [name, obj] of m) {
+                    let store;
                     switch (obj.type) {
                         case this.#storeUpdateType['delete']:
                             db.deleteObjectStore(name);
@@ -123,7 +124,7 @@ class IDBManager {
                         case this.#storeUpdateType['reset']:
                             db.deleteObjectStore(name);
                         case this.#storeUpdateType['new']:
-                            const store = db.createObjectStore(name, obj.options);
+                            store = db.createObjectStore(name, obj.options);
                             if (obj.indexInfos) {
                                 for (const indexInfo of obj.indexInfos) {
                                     const options = {};
