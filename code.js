@@ -189,7 +189,7 @@ class IDBManager {
                     });
                 }
                 else {
-                    if (!val.hasOwnProperty('key') || !val.hasOwnProperty('value')) throw new TypeError('One of the elements in entries does not have \'key\' or \'value\' property.');
+                    if (!val.hasOwnProperty('key') || !val.hasOwnProperty('value')) throw new TypeError('the elements in entries must have key and value properties.');
                     return new Promise((resolve, reject) => {
                         const putRequest = store.put(val.value, val.key);
                         putRequest.onerror = (e) => { reject(e.target.error); };
@@ -254,6 +254,21 @@ class IDBManager {
             else throw new TypeError('A single key is not available as rangeOrArray for deleteItems; please use deleteItem.');
         });
     }
+    
+    getItem(storeName, key) {
+        return new Promise((resolve, reject) => {
+            this.#throwDatabaseNotOpenError();
+            storeName = (storeName).toString();
+            this.#throwStoreNotExistError(storeName);
+            if (key instanceof window.IDBKeyRange) throw new TypeError('IDBKeyRange is not available as key for getItem; please use getFirstItem or getItems.');
+            this.#startTransaction(storeName);
+            const store = this.#txs.get(storeName).objectStore(storeName);
+            
+            const getRequest = store.get(key);
+            getRequest.onerror = (e) => { reject(e.target.error); };
+            getRequest.onsuccess = (e) => { resolve(e.target.result); };
+        });
+    }
 }
 
 (async function() {
@@ -269,66 +284,39 @@ class IDBManager {
         
         const idb = new IDBManager(true);
         
-        const openButton = document.createElement('button');
-        openButton.textContent = 'Open';
-        openButton.addEventListener('click', (e) => {
-            idb.openDatabase(databaseName, 1, objectStoreInfos)
-                .then((response) => {
-                    console.log('open success');
-                    console.log(response);
-                })
-                .catch((error) => {
-                    console.log('open error');
-                    console.error(error);
-                });
-        });
-
-        const closeButton = document.createElement('button');
-        closeButton.textContent = 'Close';
-        closeButton.addEventListener('click', (e) => {
-            idb.closeDatabase()
-                .then((response) => {
-                    console.log('close success');
-                    console.log(response);
-                })
-                .catch((error) => {
-                    console.log('close error');
-                    console.error(error);
-                });
-        });
+        const buttons = [
+            { name: 'open', label: 'Open', func: 'openDatabase', args: [ databaseName, 1, objectStoreInfos ] },
+            { name: 'close', label: 'Close', func: 'closeDatabase', args: [] },
+            { name: 'set', label: 'Set Items', func: 'setItems',
+              args: [ objectStoreInfos[1].name,
+                      [ { key: 'aaa', value: 998244353 },
+                        { key: 'bbb', value: 1000000007 },
+                        { key: 'ccc', value: 'Takahashi' },
+                        { key: 'ddd', value: 57 } ]
+                    ]
+            },
+            { name: 'get', label: 'Get Item', func: 'getItem', args: [ objectStoreInfos[1].name, 'bbb' ] },
+            { name: 'delete', label: 'Delete Items', func: 'deleteItems', args: [ objectStoreInfos[1].name, { lower: 'aaa', upper: 'ccc', lowerOpen: true, upperOpen: false } ] }
+        ]
         
-        const setButton = document.createElement('button');
-        setButton.textContent = 'Set Item';
-        setButton.addEventListener('click', (e) => {
-            idb.setItems(objectStoreInfos[1].name, [{key: 'aaa', value: 998244353}, {key: 'bbb', value: 1000000007}, {key: 'ccc', value: 100}, {key: 'ddd', value: 57}])
-                .then((response) => {
-                    console.log('set success');
-                    console.log(response);
-                })
-                .catch((error) => {
-                    console.log('set error');
-                    console.error(error);
-                });
-        });
+        const body = document.getElementsByTagName('body')[0];
         
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete Item';
-        deleteButton.addEventListener('click', (e) => {
-            idb.deleteItems(objectStoreInfos[1].name, { lower: 'aaa', upper: 'ccc', lowerOpen: true, upperOpen: false })
-                .then((response) => {
-                    console.log('delete success');
-                    console.log(response);
-                })
-                .catch((error) => {
-                    console.log('delete error');
-                    console.error(error);
-                });
+        buttons.forEach((val, idx) => {
+            const button = document.createElement('button');
+            button.textContent = val.label;
+            button.addEventListener('click', (e) => {
+                idb[val.func](...val.args)
+                    .then((response) => {
+                        console.log(`${val.name} success`);
+                        console.log(response);
+                    })
+                    .catch((error) => {
+                        console.log(`${val.name} error`);
+                        console.error(error);
+                    });
+            });
+            body.appendChild(button);
         });
-        
-        document.getElementsByTagName('body')[0].appendChild(openButton);
-        document.getElementsByTagName('body')[0].appendChild(closeButton);
-        document.getElementsByTagName('body')[0].appendChild(setButton);
-        document.getElementsByTagName('body')[0].appendChild(deleteButton);
         
     } catch (error) {
         console.log('error');
