@@ -105,11 +105,8 @@ class IDBManager {
                     }
                     
                     if (m.has(storeInfo.name)) {
-                        if (storeInfo.reset) {
-                            m.set(storeInfo.name, { type: this.#storeUpdateType['reset'], options, indexInfos: storeInfo.indexInfos });
-                        } else {
-                            m.set(storeInfo.name, { type: this.#storeUpdateType['remain'], options: null, indexInfos: null });
-                        }
+                        if (storeInfo.reset) m.set(storeInfo.name, { type: this.#storeUpdateType['reset'], options, indexInfos: storeInfo.indexInfos });
+                        else m.set(storeInfo.name, { type: this.#storeUpdateType['remain'], options: null, indexInfos: null });
                     } else {
                         m.set(storeInfo.name, { type: this.#storeUpdateType['new'], options, indexInfos: storeInfo.indexInfos });
                     }
@@ -176,7 +173,7 @@ class IDBManager {
             this.#throwDatabaseNotOpenError();
             storeName = (storeName).toString();
             this.#throwStoreNotExistError(storeName);
-            if (!Array.isArray(entries)) { throw new TypeError('entries must be an Array.'); }
+            if (!Array.isArray(entries)) throw new TypeError('entries must be an Array.');
             this.#startTransaction(storeName);
             const store = this.#txs.get(storeName).objectStore(storeName);
             
@@ -226,8 +223,7 @@ class IDBManager {
             let deleteRequest = null;
             if (rangeOrArray instanceof window.IDBKeyRange) {
                 deleteRequest = store.delete(rangeOrArray);
-            }
-            else if (Array.isArray(rangeOrArray)) {
+            } else if (Array.isArray(rangeOrArray)) {
                 const tasks = rangeOrArray.map((val, idx) => {
                     return new Promise((resolve, reject) => {
                         const deleteRequest = store.delete(val);
@@ -236,13 +232,11 @@ class IDBManager {
                     });
                 });
                 Promise.all(tasks).then((response) => { resolve(/* undefined */); }, (error) => { reject(error); });
-            }
-            else if (typeof rangeOrArray === 'object') {
+            } else if (typeof rangeOrArray === 'object') {
                 const keyRange = this.#createKeyRange(rangeOrArray, 'rangeOrArray');
                 if (keyRange) deleteRequest = store.delete(keyRange);
                 else deleteRequest = store.clear();
-            }
-            else {
+            } else {
                 throw new TypeError('A single key is not available as rangeOrArray for deleteItems; please use deleteItem.');
             }
             
