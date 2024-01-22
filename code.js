@@ -294,6 +294,35 @@ class IDBManager {
             }
         });
     }
+    getLastItem(storeName, range) {
+        return new Promise((resolve, reject) => {
+            this.#throwDatabaseNotOpenError();
+            storeName = (storeName).toString();
+            this.#throwStoreNotExistError(storeName);
+            this.#startTransaction(storeName);
+            const store = this.#txs.get(storeName).objectStore(storeName);
+            
+            let getRequest = null;
+            if (range instanceof window.IDBKeyRange) {
+                getRequest = store.openCursor(range, 'prev');
+            } else if (typeof range === 'object') {
+                const keyRange = this.#createKeyRange(range, 'range');
+                if (keyRange) getRequest = store.openCursor(keyRange, 'prev');
+                else getRequest = store.openCursor(null, 'prev');
+            } else {
+                throw new TypeError('A single key is not available as range for getLastItem; please use getItem.');
+            }
+            
+            if (getRequest) {
+                getRequest.onerror = (e) => { reject(e.target.error); };
+                getRequest.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) resolve(cursor.value);
+                    else resolve();
+                };
+            }
+        });
+    }
 }
 
 (async function() {
@@ -321,7 +350,7 @@ class IDBManager {
                     ]
             },
             { name: 'get', label: 'Get Item', func: 'getItem', args: [ objectStoreInfos[1].name, 'bbb' ] },
-            { name: 'get first', label: 'Get First Item', func: 'getFirstItem', args: [ objectStoreInfos[1].name, { full: false } ] },
+            { name: 'get last', label: 'Get Last Item', func: 'getLastItem', args: [ objectStoreInfos[1].name, { full: true } ] },
             { name: 'delete', label: 'Delete Items', func: 'deleteItems', args: [ objectStoreInfos[1].name, { lower: 'aaa', upper: 'ccc', lowerOpen: true, upperOpen: false } ] }
         ]
         
