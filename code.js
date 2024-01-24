@@ -137,14 +137,12 @@ class IDBManager {
             };
         });
     }
-    closeDatabase() {
-        return new Promise((resolve, reject) => {
-            if (this.isOpen) {
-                this.#db.close();
-                this.#db = null;
-            }
-            resolve();
-        });
+    async closeDatabase() {
+        if (this.isOpen) {
+            this.#db.close();
+            this.#db = null;
+        }
+        return;
     }
     static deleteDatabase(databaseName, warningEnabled = false) {
         return new Promise((resolve, reject) => {
