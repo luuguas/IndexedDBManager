@@ -323,6 +323,54 @@ class IDBManager {
             }
         });
     }
+    
+    async getIterator(storeName, range) {
+        this.#throwDatabaseNotOpenError();
+        storeName = (storeName).toString();
+        this.#throwStoreNotExistError(storeName);
+        this.#startTransaction(storeName);
+        const store = this.#txs.get(storeName).objectStore(storeName);
+        
+        if (range instanceof window.IDBKeyRange) 'd(`・ω・´)ｸﾞｯ';
+        else if (typeof range === 'object') range = this.#createKeyRange(range, 'range');
+        else throw new TypeError('A single key is not available as range for getIterator; please use getItem or getFirstItem.');
+        
+        return {
+            [Symbol.asyncIterator]() {
+                let lastPromise = Promise.resolve();
+                let cursorRequest = null;
+                let prevCursor = null;
+                return {
+                    next() {
+                        const prev = lastPromise;
+                        const p = new Promise((outerResolve, outerReject) => {
+                            prev.then(() => {
+                                return new Promise((resolve, reject) => {
+                                    if (!cursorRequest) {
+                                        cursorRequest = store.openCursor(range);
+                                    }
+                                    else if (!prevCursor) {
+                                        outerResolve({ done: true });
+                                        return;
+                                    }
+                                    cursorRequest.onsuccess = (e) => {
+                                        const cursor = e.target.result;
+                                        prevCursor = cursor;
+                                        if (cursor) outerResolve({ value: cursor.value, done: false });
+                                        else outerResolve({ done: true });
+                                    }
+                                    if (prevCursor) prevCursor.continue();
+                                });
+                            })
+                            .catch((error) => { outerReject(error); });
+                        });
+                        lastPromise = p;
+                        return p;
+                    }
+                };
+            }
+        };
+    }
 }
 
 (async function() {
@@ -350,28 +398,90 @@ class IDBManager {
                     ]
             },
             { name: 'get', label: 'Get Item', func: 'getItem', args: [ objectStoreInfos[1].name, 'bbb' ] },
+            { name: 'get first', label: 'Get First Item', func: 'getFirstItem', args: [ objectStoreInfos[1].name, { full: true } ] },
             { name: 'get last', label: 'Get Last Item', func: 'getLastItem', args: [ objectStoreInfos[1].name, { full: true } ] },
             { name: 'delete', label: 'Delete Items', func: 'deleteItems', args: [ objectStoreInfos[1].name, { lower: 'aaa', upper: 'ccc', lowerOpen: true, upperOpen: false } ] }
         ]
         
-        const body = document.getElementsByTagName('body')[0];
+        //テスト用ボタン追加
+        
+        const style = document.createElement('style');
+        style.textContent = `
+        .test {
+            margin: 10px 0px;
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+        .test > button {
+            margin: 5px;
+        }
+        `;
+        document.getElementsByTagName('head')[0].appendChild(style);
+        
+        const div = document.createElement('div');
+        div.classList.add('test');
+        document.getElementsByTagName('body')[0].appendChild(div);
         
         buttons.forEach((val, idx) => {
             const button = document.createElement('button');
             button.textContent = val.label;
             button.addEventListener('click', (e) => {
                 idb[val.func](...val.args)
-                    .then((response) => {
-                        console.log(`${val.name} success`);
-                        console.log(response);
-                    })
-                    .catch((error) => {
-                        console.log(`${val.name} error`);
-                        console.error(error);
-                    });
+                .then((response) => {
+                    console.log(`${val.name} success`);
+                    console.log(response);
+                })
+                .catch((error) => {
+                    console.log(`${val.name} error`);
+                    console.error(error);
+                });
             });
-            body.appendChild(button);
+            div.appendChild(button);
         });
+        
+        const iterButton = document.createElement('button');
+        iterButton.textContent = 'Get Iterator';
+        iterButton.addEventListener('click', async (e) => {
+            const iterable = await idb.getIterator(objectStoreInfos[1].name, { full: true });
+            const iter = iterable[Symbol.asyncIterator]();
+            
+            console.groupCollapsed('get iterator...');
+            const nexts = [];
+            for (let i = 0; i < 5; ++i) {
+                const n = iter.next();
+                n.then((response) => {
+                    console.log(`${i + 1}...`);
+                    console.log(response);
+                });
+                nexts.push(n);
+            }
+            Promise.all(nexts)
+            .then((response) => {
+                console.groupEnd();
+                console.log(`get iterator success`);
+                console.log(response);
+            })
+            .catch((error) => {
+                console.groupEnd();
+                console.log(`get iterator error`);
+                console.error(error);
+            });
+        });
+        div.appendChild(iterButton);
+        
+        const iterButton2 = document.createElement('button');
+        iterButton2.textContent = 'Get Iterator 2';
+        iterButton2.addEventListener('click', async (e) => {
+            const iterable = await idb.getIterator(objectStoreInfos[1].name, { lower: 'aaa', upper: 'ccc', lowerOpen: true });
+            console.groupCollapsed('get iterator 2...');
+            for await (const value of iterable) {
+                console.log(value);
+            }
+            console.groupEnd();
+            console.log('get iterator 2 success');
+        });
+        div.appendChild(iterButton2);
         
     } catch (error) {
         console.log('error');
