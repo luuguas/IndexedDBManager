@@ -341,26 +341,31 @@ class IDBManager {
                 return {
                     next() {
                         const prev = lastPromise;
-                        const p = new Promise((resolve, reject) => {
+                        const p = new Promise((outerResolve, outerReject) => {
                             prev.then(() => {
-                                if (!cursorRequest) {
-                                    cursorRequest = store.openCursor(range);
-                                } else if (!prevCursor) {
-                                    resolve({ done: true });
-                                    return;
-                                }
-                                
-                                cursorRequest.onerror = (e) => { reject(e.target.error); };
-                                cursorRequest.onsuccess = (e) => {
-                                    const cursor = e.target.result;
-                                    prevCursor = cursor;
-                                    if (cursor) resolve({ value: cursor.value, done: false });
-                                    else resolve({ done: true });
-                                };
-                                
-                                if (prevCursor) prevCursor.continue();
+                                return new Promise((resolve, reject) => {
+                                    if (!cursorRequest) {
+                                        cursorRequest = store.openCursor(range);
+                                    } else if (!prevCursor) {
+                                        resolve({ done: true });
+                                        return;
+                                    }
+                                    
+                                    cursorRequest.onerror = (e) => { reject(e.target.error); };
+                                    cursorRequest.onsuccess = (e) => {
+                                        const cursor = e.target.result;
+                                        prevCursor = cursor;
+                                        if (cursor) resolve({ value: cursor.value, done: false });
+                                        else resolve({ done: true });
+                                    };
+                                    
+                                    if (prevCursor) prevCursor.continue();
+                                });
                             })
-                            .catch((error) => { reject(error); });
+                            .then(
+                                (response) => { outerResolve(response); },
+                                (error) => { outerReject(error); }
+                            );
                         });
                         lastPromise = p;
                         return p;
