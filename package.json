@@ -1,7 +1,7 @@
 {
-  "name": "@luuguas/typescript-template-repository",
-  "version": "1.0.0",
-  "description": "TypeScriptを用いた開発のためのテンプレートリポジトリ",
+  "name": "@luuguas/idbmanager",
+  "version": "2.0.0",
+  "description": "TypeScript class managing IndexedDB",
   "scripts": {
     "build": "yarn tsc",
     "lint": "yarn eslint .",
