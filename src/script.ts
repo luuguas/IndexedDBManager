@@ -1,18 +1,11 @@
 export class IDBManager {
     db: IDBDatabase | null;
+    dbName: string;
+    dbVersion: number;
 
     constructor(databaseName: string, version: number) {
         this.db = null;
-
-        const openReq = window.indexedDB.open(databaseName, version);
-        openReq.onsuccess = (e) => {
-            if (!(e.target instanceof IDBOpenDBRequest)) return;
-
-            this.db = e.target.result;
-        };
-    }
-
-    getDB(): IDBDatabase | null {
-        return this.db;
+        this.dbName = databaseName;
+        this.dbVersion = version;
     }
 }
