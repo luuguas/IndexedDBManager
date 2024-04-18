@@ -22,6 +22,8 @@ module.exports = {
     'import/prefer-default-export': 'off',
     indent: 'off',
     '@typescript-eslint/indent': ['error', 4],
+    'lines-between-class-members': 'off',
+    '@typescript-eslint/lines-between-class-members': 'off',
   },
   overrides: [
     {
