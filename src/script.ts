@@ -9,11 +9,13 @@ export class IDBManager {
     db: IDBDatabase | null;
     dbName: string;
     dbVersion: number;
+    storeInfos: ObjectStoreInfo[];
 
-    constructor(databaseName: string, version: number) {
+    constructor(databaseName: string, version: number, objectStoreInfos: ObjectStoreInfo[]) {
         this.db = null;
         this.dbName = databaseName;
         this.dbVersion = version;
+        this.storeInfos = objectStoreInfos;
     }
     openDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
