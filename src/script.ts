@@ -1,3 +1,10 @@
+interface ObjectStoreInfo {
+    readonly name: string;
+    readonly reset?: boolean;
+    readonly keyPath?: string;
+    readonly autoIncrement?: boolean;
+}
+
 export class IDBManager {
     db: IDBDatabase | null;
     dbName: string;
