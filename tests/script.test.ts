@@ -2,8 +2,8 @@ import 'fake-indexeddb/auto';
 import { IDBManager } from '../src/script';
 
 function dbNameGenerator(dbNamePrefix: string) {
-    const prefix: string = dbNamePrefix;
-    let count: number = 1;
+    const prefix = dbNamePrefix;
+    let count = 1;
 
     return () => {
         const newDBName = `${prefix}${count}`;

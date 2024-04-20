@@ -26,7 +26,7 @@ export class IDBManager {
     openDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
-            let upgraded: boolean = false;
+            let upgraded = false;
 
             openReq.onerror = (e) => {
                 const target = e.target as IDBOpenDBRequest;
