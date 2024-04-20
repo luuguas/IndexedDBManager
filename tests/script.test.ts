@@ -22,4 +22,10 @@ describe('openDatabaseのテスト', () => {
         const idb = new IDBManager(getNewDBName(), 0, []);
         await expect(idb.openDatabase()).rejects.toThrow(TypeError);
     });
+
+    test('オブジェクトストアを作成する', async () => {
+        const idb = new IDBManager(getNewDBName(), 1, [{ name: 'MyStore1' }]);
+        await expect(idb.openDatabase()).resolves.toBe(true);
+        expect(idb.objectStoreNames).toContain('MyStore1');
+    });
 });
