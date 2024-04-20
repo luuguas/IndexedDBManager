@@ -22,6 +22,7 @@ module.exports = {
     'import/prefer-default-export': 'off',
     indent: 'off',
     '@typescript-eslint/indent': ['error', 4],
+    '@typescript-eslint/typedef': ['error', { memberVariableDeclaration: true }],
     'lines-between-class-members': 'off',
     '@typescript-eslint/lines-between-class-members': 'off',
     'arrow-body-style': ['error', 'always'],
