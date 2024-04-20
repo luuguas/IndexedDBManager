@@ -17,6 +17,12 @@ export class IDBManager {
         this.dbVersion = version;
         this.storeInfos = objectStoreInfos;
     }
+
+    get objectStoreNames(): string[] {
+        if (this.db === null) throw new ReferenceError();
+        return Array.from(this.db.objectStoreNames);
+    }
+
     openDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
