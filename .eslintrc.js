@@ -24,6 +24,7 @@ module.exports = {
     '@typescript-eslint/indent': ['error', 4],
     'lines-between-class-members': 'off',
     '@typescript-eslint/lines-between-class-members': 'off',
+    'arrow-body-style': ['error', 'always'],
   },
   overrides: [
     {
