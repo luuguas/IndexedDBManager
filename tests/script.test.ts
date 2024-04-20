@@ -5,7 +5,7 @@ function dbNameGenerator(dbNamePrefix: string) {
     const prefix: string = dbNamePrefix;
     let count: number = 1;
 
-    return function () {
+    return () => {
         const newDBName = `${prefix}${count}`;
         count += 1;
         return newDBName;
