@@ -6,10 +6,10 @@ interface ObjectStoreInfo {
 }
 
 export class IDBManager {
-    db: IDBDatabase | null;
-    dbName: string;
-    dbVersion: number;
-    storeInfos: ObjectStoreInfo[];
+    private db: IDBDatabase | null;
+    private dbName: string;
+    private dbVersion: number;
+    private storeInfos: ObjectStoreInfo[];
 
     constructor(databaseName: string, version: number, objectStoreInfos: ObjectStoreInfo[]) {
         this.db = null;
