@@ -1,3 +1,5 @@
+import { NULL_IDB_DATABASE } from './null';
+
 interface ObjectStoreInfo {
     readonly name: string;
     readonly reset?: boolean;
@@ -6,22 +8,25 @@ interface ObjectStoreInfo {
 }
 
 export class IDBManager {
-    private db: IDBDatabase | null;
+    private db: IDBDatabase;
     private dbName: string;
     private dbVersion: number;
     private storeInfos: ObjectStoreInfo[];
 
     constructor(databaseName: string, version: number, objectStoreInfos: ObjectStoreInfo[]) {
-        this.db = null;
+        this.db = NULL_IDB_DATABASE;
         this.dbName = databaseName;
         this.dbVersion = version;
         this.storeInfos = objectStoreInfos;
     }
 
     get objectStoreNames(): string[] {
-        if (this.db === null) throw new ReferenceError();
+        if (this.isClose()) throw new ReferenceError('Database is not open.');
         return Array.from(this.db.objectStoreNames);
     }
+
+    isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
+    isOpen(): boolean { return !this.isClose(); }
 
     openDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
