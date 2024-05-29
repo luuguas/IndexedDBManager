@@ -30,6 +30,12 @@ export class IDBManager {
 
     openDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
+            // 既にデータベースを開いていたら何もしない
+            if (this.isOpen()) {
+                resolve(false);
+                return;
+            }
+
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
             let upgraded = false;
 
