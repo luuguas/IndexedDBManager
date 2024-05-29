@@ -20,13 +20,13 @@ export class IDBManager {
         this.storeInfos = objectStoreInfos;
     }
 
-    get objectStoreNames(): string[] {
+    isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
+    isOpen(): boolean { return !this.isClose(); }
+
+    getObjectStoreNames(): string[] {
         if (this.isClose()) throw new ReferenceError('Database is not open.');
         return Array.from(this.db.objectStoreNames);
     }
-
-    isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
-    isOpen(): boolean { return !this.isClose(); }
 
     openDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
