@@ -7,10 +7,10 @@ class NullIDBDatabase implements IDBDatabase {
     get version(): number { throw new ReferenceError(this.errorMessage); }
     get objectStoreNames(): DOMStringList { throw new ReferenceError(this.errorMessage); }
 
-    get onclose(): ((this: IDBDatabase, ev: Event) => void) | null { throw new ReferenceError(this.errorMessage); }
-    get onversionchange(): ((this: IDBDatabase, ev: IDBVersionChangeEvent) => void) | null { throw new ReferenceError(this.errorMessage); }
-    get onabort(): ((this: IDBDatabase, ev: Event) => void) | null { throw new ReferenceError(this.errorMessage); }
-    get onerror(): ((this: IDBDatabase, ev: Event) => void) | null { throw new ReferenceError(this.errorMessage); }
+    get onclose(): ((this: IDBDatabase, event: Event) => void) | null { throw new ReferenceError(this.errorMessage); }
+    get onversionchange(): ((this: IDBDatabase, event: IDBVersionChangeEvent) => void) | null { throw new ReferenceError(this.errorMessage); }
+    get onabort(): ((this: IDBDatabase, event: Event) => void) | null { throw new ReferenceError(this.errorMessage); }
+    get onerror(): ((this: IDBDatabase, event: Event) => void) | null { throw new ReferenceError(this.errorMessage); }
 
     close(): void { throw new ReferenceError(this.errorMessage); }
     createObjectStore(name: unknown, options?: unknown): IDBObjectStore { throw new ReferenceError(this.errorMessage); }
