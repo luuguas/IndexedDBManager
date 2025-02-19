@@ -1,17 +1,25 @@
+import { NULL_IDB_DATABASE } from './null';
+
 export class IDBManager {
-    private db: IDBDatabase | null;
+    private db: IDBDatabase;
     private dbName: string;
     private dbVersion: number;
 
     constructor(dbName: string, dbVersion: number) {
-        this.db = null;
+        this.db = NULL_IDB_DATABASE;
         this.dbName = dbName;
         this.dbVersion = dbVersion;
     }
 
+    isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
+    isOpen(): boolean { return !this.isClose(); }
+
     openDatabase(): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (this.db !== null) { return; }
+            if (this.isOpen()) {
+                resolve();
+                return;
+            }
 
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
 
@@ -24,7 +32,9 @@ export class IDBManager {
     }
 
     closeDatabase(): void {
-        this.db?.close();
-        this.db = null;
+        if (this.isOpen()) {
+            this.db.close();
+            this.db = NULL_IDB_DATABASE;
+        }
     }
 }
