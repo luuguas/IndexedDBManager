@@ -28,6 +28,8 @@ module.exports = {
     'arrow-body-style': ['error', 'always'],
     'no-unused-vars': 'off',
     '@typescript-eslint/no-unused-vars': ['error', { vars: 'all', args: 'none', caughtErrors: 'none' }],
+    'brace-style': 'off',
+    '@typescript-eslint/brace-style': ['error', 'stroustrup', { allowSingleLine: true }], // moved to the ESLint stylistic plugin
   },
   overrides: [
     {
