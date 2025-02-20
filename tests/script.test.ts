@@ -5,7 +5,7 @@ import { IDBManager } from '../src/script';
 function dbNameGenerator(prefix: string, digits: number): () => string {
     let count = 1;
     return () => {
-        const dbName = `${prefix}${(count).toString().padStart(digits)}`;
+        const dbName = `${prefix}${(count).toString().padStart(digits, '0')}`;
         count += 1;
         return dbName;
     };
@@ -14,18 +14,18 @@ function dbNameGenerator(prefix: string, digits: number): () => string {
 const createDBName: () => string = dbNameGenerator('MyDB', 3);
 
 describe('DBの開閉テスト(オブジェクトストアなし)', () => {
-    const dbName = createDBName();
-
     test('DBを開く前', () => {
-        const idb = new IDBManager(dbName, 1);
+        const dbName = createDBName();
+        const idb = new IDBManager(dbName, 1, []);
 
         expect(idb.isOpen()).toBe(false);
         expect(idb.isClose()).toBe(true);
     });
     test('DBを正常に開いて閉じる', async () => {
-        const idb = new IDBManager(dbName, 1);
+        const dbName = createDBName();
+        const idb = new IDBManager(dbName, 1, []);
 
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
+        await expect(idb.openDatabase()).resolves.toBe(true);
         expect(idb.isOpen()).toBe(true);
         expect(idb.isClose()).toBe(false);
 
@@ -35,15 +35,17 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
     });
 
     test('DBを連続で開く/閉じる', async () => {
-        const idb = new IDBManager(dbName, 1);
+        const dbName = createDBName();
+        const idb = new IDBManager(dbName, 1, []);
 
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
+        await expect(idb.openDatabase()).resolves.toBe(true);
+        await expect(idb.openDatabase()).resolves.toBe(false);
         expect(idb.closeDatabase()).toBeUndefined();
         expect(idb.closeDatabase()).toBeUndefined();
     });
     test('不正なバージョンを指定するとDBを開けない', async () => {
-        const idb = new IDBManager(createDBName(), 0);
+        const dbName = createDBName();
+        const idb = new IDBManager(dbName, 0, []);
 
         await expect(idb.openDatabase()).rejects.toThrow(TypeError);
     });
