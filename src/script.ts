@@ -1,32 +1,101 @@
 import { NULL_IDB_DATABASE } from './null';
 
+interface ObjectStoreInfo {
+    name: string;
+    keyPath?: string | string[] | null;
+    autoIncrement?: boolean;
+    resetOnUpgrade?: boolean;
+}
+interface ObjectStoreUpgradeInfo {
+    type: 'create' | 'unchanged' | 'remove' | 'reset' | 'exist';
+    keyPath?: string | string[] | null;
+    autoIncrement?: boolean;
+}
+
 export class IDBManager {
     private db: IDBDatabase;
     private dbName: string;
     private dbVersion: number;
+    private storeInfos: ObjectStoreInfo[];
 
-    constructor(dbName: string, dbVersion: number) {
+    constructor(dbName: string, dbVersion: number, storeInfos: ObjectStoreInfo[]) {
         this.db = NULL_IDB_DATABASE;
         this.dbName = dbName;
         this.dbVersion = dbVersion;
+        this.storeInfos = storeInfos;
     }
 
     isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
     isOpen(): boolean { return !this.isClose(); }
 
-    openDatabase(): Promise<void> {
+    openDatabase(): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (this.isOpen()) {
-                resolve();
+                resolve(false);
                 return;
             }
 
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
+            let upgraded = false;
 
             openReq.onerror = (e) => { reject(openReq.error); };
             openReq.onsuccess = (e) => {
                 this.db = openReq.result;
-                resolve();
+                resolve(upgraded);
+            };
+
+            openReq.onupgradeneeded = (e) => {
+                upgraded = true;
+                const db = openReq.result;
+                const existingStoreNames = Array.from(db.objectStoreNames);
+
+                const mp = new Map<string, ObjectStoreUpgradeInfo>();
+
+                existingStoreNames.forEach((storeName) => {
+                    mp.set(storeName, { type: 'exist' });
+                });
+                this.storeInfos.forEach((storeInfo) => {
+                    if (!mp.has(storeInfo.name)) {
+                        mp.set(storeInfo.name, {
+                            type: 'create',
+                            keyPath: storeInfo.keyPath,
+                            autoIncrement: storeInfo.autoIncrement,
+                        });
+                    }
+                    else if (storeInfo.resetOnUpgrade) {
+                        mp.set(storeInfo.name, {
+                            type: 'reset',
+                            keyPath: storeInfo.keyPath,
+                            autoIncrement: storeInfo.autoIncrement,
+                        });
+                    }
+                    else {
+                        mp.set(storeInfo.name, { type: 'unchanged' });
+                    }
+                });
+                existingStoreNames.forEach((storeName) => {
+                    if (mp.get(storeName)?.type === 'exist') {
+                        mp.set(storeName, { type: 'remove' });
+                    }
+                });
+
+                mp.forEach((storeUpgradeInfo, storeName) => {
+                    switch (storeUpgradeInfo.type) {
+                        case 'create':
+                            db.createObjectStore(storeName, storeUpgradeInfo);
+                            break;
+                        case 'remove':
+                            db.deleteObjectStore(storeName);
+                            break;
+                        case 'reset':
+                            db.deleteObjectStore(storeName);
+                            db.createObjectStore(storeName, storeUpgradeInfo);
+                            break;
+
+                        default:
+                            break;
+                    }
+                });
             };
         });
     }
