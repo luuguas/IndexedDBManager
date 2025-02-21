@@ -118,7 +118,7 @@ export class IDBManager {
     }
 
     // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
-    verifyObjectStoreNames(): boolean {
+    private verifyObjectStoreNames(): boolean {
         if (this.isClose()) { throw ReferenceError(this.dbNotOpenErrMsg); }
 
         const existingStoreNames = Array.from(this.db.objectStoreNames);

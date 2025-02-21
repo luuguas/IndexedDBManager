@@ -90,18 +90,11 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         { name: 'MyStore3', autoIncrement: false, resetOnUpgrade: true },
     ];
 
-    test('DBを開く前', () => {
-        const dbName = createDBName();
-        const idb = new IDBManager(dbName, 1, oldStoreInfos);
-
-        expect(() => { idb.verifyObjectStoreNames(); }).toThrow(ReferenceError);
-    });
     test('オブジェクトストアを作成してDBを開く', async () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 1, oldStoreInfos);
 
         await expect(idb.openDatabase()).resolves.toBeUndefined();
-        expect(idb.verifyObjectStoreNames()).toBe(true);
         idb.closeDatabase();
     });
     test('オブジェクトストアの構成を更新する(アップグレード)', async () => {
@@ -109,12 +102,10 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         const oldIDB = new IDBManager(dbName, 1, oldStoreInfos);
 
         await expect(oldIDB.openDatabase()).resolves.toBeUndefined();
-        expect(oldIDB.verifyObjectStoreNames()).toBe(true);
         oldIDB.closeDatabase();
 
         const newIDB = new IDBManager(dbName, 2, newStoreInfos);
         await expect(newIDB.openDatabase()).resolves.toBeUndefined();
-        expect(newIDB.verifyObjectStoreNames()).toBe(true);
         newIDB.closeDatabase();
     });
     test('アップグレードせずにstoreInfosを変更するとDBを開けない', async () => {
