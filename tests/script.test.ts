@@ -81,7 +81,7 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
     ];
     const newStoreInfos: ObjectStoreInfo[] = [
         // create
-        { name: 'MyStore4' },
+        { name: 'MyStore4', keyPath: 'key', autoIncrement: true },
         // unchanged
         { name: 'MyStore1' },
         // remove
@@ -102,5 +102,34 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
 
         await expect(idb.openDatabase()).resolves.toBeUndefined();
         expect(idb.verifyObjectStoreNames()).toBe(true);
+        idb.closeDatabase();
+    });
+    test('オブジェクトストアの構成を更新する(アップグレード)', async () => {
+        const dbName = createDBName();
+        const oldIDB = new IDBManager(dbName, 1, oldStoreInfos);
+
+        await expect(oldIDB.openDatabase()).resolves.toBeUndefined();
+        expect(oldIDB.verifyObjectStoreNames()).toBe(true);
+        oldIDB.closeDatabase();
+
+        const newIDB = new IDBManager(dbName, 2, newStoreInfos);
+        await expect(newIDB.openDatabase()).resolves.toBeUndefined();
+        expect(newIDB.verifyObjectStoreNames()).toBe(true);
+        newIDB.closeDatabase();
+    });
+    test('アップグレードせずにstoreInfosを変更するとDBを開けない', async () => {
+        const dbName = createDBName();
+        const oldIDB = new IDBManager(dbName, 1, oldStoreInfos);
+
+        await expect(oldIDB.openDatabase()).resolves.toBeUndefined();
+        oldIDB.closeDatabase();
+
+        const wrongIDB = new IDBManager(dbName, 1, newStoreInfos);
+        await expect(wrongIDB.openDatabase()).rejects.toThrow(TypeError);
+
+        // アップグレード(バージョンアップ)するとDBを開ける
+        const newIDB = new IDBManager(dbName, 2, newStoreInfos);
+        await expect(newIDB.openDatabase()).resolves.toBeUndefined();
+        newIDB.closeDatabase();
     });
 });
