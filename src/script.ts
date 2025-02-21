@@ -30,15 +30,14 @@ export class IDBManager {
     isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
     isOpen(): boolean { return !this.isClose(); }
 
-    openDatabase(): Promise<boolean> {
+    openDatabase(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isOpen()) {
-                resolve(false);
+                resolve();
                 return;
             }
 
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
-            let upgraded = false;
 
             openReq.onerror = (e) => {
                 reject(openReq.error);
@@ -46,13 +45,16 @@ export class IDBManager {
             openReq.onsuccess = (e) => {
                 this.db = openReq.result;
                 if (!this.verifyObjectStoreNames()) {
-                    throw TypeError('storeInfos does not match the object stores in the database. The database version should be upgraded.');
+                    reject(new TypeError('storeInfos does not match the object stores in the database. The database version should be upgraded.'));
+                    return;
                 }
-                resolve(upgraded);
+                resolve();
             };
 
+            openReq.onblocked = (e) => {
+                reject(new ReferenceError('The database cannot be upgraded because another instance has the database open.'));
+            };
             openReq.onupgradeneeded = (e) => {
-                upgraded = true;
                 const db = openReq.result;
                 const existingStoreNames = Array.from(db.objectStoreNames);
                 const mp = new Map<string, ObjectStoreUpgradeInfo>();
