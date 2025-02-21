@@ -1,6 +1,6 @@
 import { NULL_IDB_DATABASE } from './null';
 
-interface ObjectStoreInfo {
+export interface ObjectStoreInfo {
     name: string;
     keyPath?: string | string[] | null;
     autoIncrement?: boolean;

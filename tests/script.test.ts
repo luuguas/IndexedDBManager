@@ -1,11 +1,11 @@
 import 'fake-indexeddb/auto';
-import { IDBManager } from '../src/script';
+import { IDBManager, ObjectStoreInfo } from '../src/script';
 
 // データベース名を連番で生成するクロージャ
 function dbNameGenerator(prefix: string, digits: number): () => string {
     let count = 1;
     return () => {
-        const dbName = `${prefix}${(count).toString().padStart(digits, '0')}`;
+        const dbName = `${prefix}${count.toString().padStart(digits, '0')}`;
         count += 1;
         return dbName;
     };
@@ -48,5 +48,37 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const idb = new IDBManager(dbName, 0, []);
 
         await expect(idb.openDatabase()).rejects.toThrow(TypeError);
+    });
+});
+
+describe('DBの開閉テスト(オブジェクトストアあり)', () => {
+    const oldStoreInfos: ObjectStoreInfo[] = [
+        { name: 'MyStore1' },
+        { name: 'MyStore2', keyPath: 'key' },
+        { name: 'MyStore3', autoIncrement: true },
+    ];
+    const newStoreInfos: ObjectStoreInfo[] = [
+        // create
+        { name: 'MyStore4' },
+        // unchanged
+        { name: 'MyStore1' },
+        // remove
+        // { name: 'MyStore2', keyPath: 'key' },
+        // reset
+        { name: 'MyStore3', autoIncrement: false, resetOnUpgrade: true },
+    ];
+
+    test('DBを開く前', () => {
+        const dbName = createDBName();
+        const idb = new IDBManager(dbName, 1, oldStoreInfos);
+
+        expect(() => { idb.verifyObjectStoreNames(); }).toThrow(ReferenceError);
+    });
+    test('オブジェクトストアを作成してDBを開く', async () => {
+        const dbName = createDBName();
+        const idb = new IDBManager(dbName, 1, oldStoreInfos);
+
+        await expect(idb.openDatabase()).resolves.toBe(true);
+        expect(idb.verifyObjectStoreNames()).toBe(true);
     });
 });
