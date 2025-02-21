@@ -45,6 +45,8 @@ export class IDBManager {
             openReq.onsuccess = (e) => {
                 this.db = openReq.result;
                 if (!this.verifyObjectStoreNames()) {
+                    this.db.close();
+                    this.db = NULL_IDB_DATABASE;
                     reject(new TypeError('storeInfos does not match the object stores in the database. The database version should be upgraded.'));
                     return;
                 }
