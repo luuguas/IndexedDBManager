@@ -18,6 +18,8 @@ export class IDBManager {
     private dbVersion: number;
     private storeInfos: ObjectStoreInfo[];
 
+    private dbNotOpenErrMsg: string = 'Database is not open.';
+
     constructor(dbName: string, dbVersion: number, storeInfos: ObjectStoreInfo[]) {
         this.db = NULL_IDB_DATABASE;
         this.dbName = dbName;
@@ -38,9 +40,14 @@ export class IDBManager {
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
             let upgraded = false;
 
-            openReq.onerror = (e) => { reject(openReq.error); };
+            openReq.onerror = (e) => {
+                reject(openReq.error);
+            };
             openReq.onsuccess = (e) => {
                 this.db = openReq.result;
+                if (!this.verifyObjectStoreNames()) {
+                    throw TypeError('storeInfos does not match the object stores in the database. The database version should be upgraded.');
+                }
                 resolve(upgraded);
             };
 
@@ -48,7 +55,6 @@ export class IDBManager {
                 upgraded = true;
                 const db = openReq.result;
                 const existingStoreNames = Array.from(db.objectStoreNames);
-
                 const mp = new Map<string, ObjectStoreUpgradeInfo>();
 
                 existingStoreNames.forEach((storeName) => {
@@ -105,5 +111,21 @@ export class IDBManager {
             this.db.close();
             this.db = NULL_IDB_DATABASE;
         }
+    }
+
+    // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
+    verifyObjectStoreNames(): boolean {
+        if (this.isClose()) { throw ReferenceError(this.dbNotOpenErrMsg); }
+
+        const existingStoreNames = Array.from(this.db.objectStoreNames);
+        const st = new Set<string>();
+
+        this.storeInfos.forEach((storeInfo) => {
+            st.add(storeInfo.name);
+        });
+        return this.storeInfos.length === existingStoreNames.length
+            && existingStoreNames.every((storeName) => {
+                return st.has(storeName);
+            });
     }
 }
