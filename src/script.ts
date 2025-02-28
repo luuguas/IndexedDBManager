@@ -188,4 +188,26 @@ export class IDBManager {
             deleteReq.onsuccess = () => { resolve(); };
         });
     }
+
+    removeItems(
+        storeName: string,
+        keys: IDBValidKey[],
+    ): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+
+            const promises: Promise<void>[] = keys.map((key) => {
+                return new Promise<void>((res, rej) => {
+                    const deleteReq = store.delete(key);
+                    deleteReq.onerror = () => { rej(deleteReq.error); };
+                    deleteReq.onsuccess = () => { res(); };
+                });
+            });
+
+            Promise.all(promises)
+                .then((value: void[]) => { resolve(); })
+                .catch((reason: DOMException) => { reject(reason); });
+        });
+    }
 }
