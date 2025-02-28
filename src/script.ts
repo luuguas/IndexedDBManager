@@ -174,4 +174,18 @@ export class IDBManager {
                 .catch((reason: DOMException) => { reject(reason); });
         });
     }
+
+    removeItem(
+        storeName: string,
+        key: IDBValidKey,
+    ): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+
+            const deleteReq = store.delete(key);
+            deleteReq.onerror = () => { reject(deleteReq.error); };
+            deleteReq.onsuccess = () => { resolve(); };
+        });
+    }
 }
