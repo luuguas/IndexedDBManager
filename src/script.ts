@@ -38,11 +38,10 @@ export class IDBManager {
             }
 
             const openReq = window.indexedDB.open(this.dbName, this.dbVersion);
-
-            openReq.onerror = (e) => {
+            openReq.onerror = () => {
                 reject(openReq.error);
             };
-            openReq.onsuccess = (e) => {
+            openReq.onsuccess = () => {
                 this.db = openReq.result;
                 if (!this.verifyObjectStoreNames()) {
                     this.db.close();
@@ -53,10 +52,10 @@ export class IDBManager {
                 resolve();
             };
 
-            openReq.onblocked = (e) => {
+            openReq.onblocked = () => {
                 reject(new ReferenceError('The database cannot be upgraded because another instance has the database open.'));
             };
-            openReq.onupgradeneeded = (e) => {
+            openReq.onupgradeneeded = () => {
                 const db = openReq.result;
                 const existingStoreNames = Array.from(db.objectStoreNames);
                 const mp = new Map<string, ObjectStoreUpgradeInfo>();
@@ -131,5 +130,20 @@ export class IDBManager {
             && existingStoreNames.every((storeName) => {
                 return st.has(storeName);
             });
+    }
+
+    setItem<ItemT>(
+        storeName: string,
+        item: ItemT,
+        key?: IDBValidKey,
+    ): Promise<IDBValidKey> {
+        return new Promise<IDBValidKey>((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+
+            const putReq = store.put(item, key);
+            putReq.onerror = () => { reject(putReq.error); };
+            putReq.onsuccess = () => { resolve(putReq.result); };
+        });
     }
 }
