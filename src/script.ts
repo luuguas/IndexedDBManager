@@ -146,4 +146,32 @@ export class IDBManager {
             putReq.onsuccess = () => { resolve(putReq.result); };
         });
     }
+
+    setItems<ItemT>(
+        storeName: string,
+        items: ItemT[],
+        keys?: IDBValidKey[],
+    ): Promise<IDBValidKey[]> {
+        return new Promise<IDBValidKey[]>((resolve, reject) => {
+            if (keys instanceof Array && items.length !== keys.length) {
+                reject(new TypeError('The length of items and keys must be the same.'));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+
+            const promises = Array.from({ length: items.length }, (val, idx) => {
+                return new Promise<IDBValidKey>((res, rej) => {
+                    const putReq = store.put(items[idx], keys?.[idx]);
+                    putReq.onerror = () => { rej(putReq.error); };
+                    putReq.onsuccess = () => { res(putReq.result); };
+                });
+            });
+
+            Promise.all(promises)
+                .then((value: IDBValidKey[]) => { resolve(value); })
+                .catch((reason: DOMException) => { reject(reason); });
+        });
+    }
 }
