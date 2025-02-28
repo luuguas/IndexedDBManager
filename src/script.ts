@@ -161,9 +161,9 @@ export class IDBManager {
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
 
-            const promises = Array.from({ length: items.length }, (val, idx) => {
-                return new Promise<IDBValidKey>((res, rej) => {
-                    const putReq = store.put(items[idx], keys?.[idx]);
+            const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
+                return new Promise((res, rej) => {
+                    const putReq = store.put(item, keys?.[idx]);
                     putReq.onerror = () => { rej(putReq.error); };
                     putReq.onsuccess = () => { res(putReq.result); };
                 });
