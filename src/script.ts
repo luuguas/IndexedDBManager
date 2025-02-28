@@ -175,10 +175,7 @@ export class IDBManager {
         });
     }
 
-    removeItem(
-        storeName: string,
-        key: IDBValidKey,
-    ): Promise<void> {
+    removeItem(storeName: string, key: IDBValidKey): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
@@ -189,10 +186,7 @@ export class IDBManager {
         });
     }
 
-    removeItems(
-        storeName: string,
-        keys: IDBValidKey[],
-    ): Promise<void> {
+    removeItems(storeName: string, keys: IDBValidKey[]): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
@@ -208,6 +202,17 @@ export class IDBManager {
             Promise.all(promises)
                 .then((value: void[]) => { resolve(); })
                 .catch((reason: DOMException) => { reject(reason); });
+        });
+    }
+
+    removeAllItems(storeName: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+
+            const clearReq = store.clear();
+            clearReq.onerror = () => { reject(clearReq.error); };
+            clearReq.onsuccess = () => { resolve(); };
         });
     }
 }
