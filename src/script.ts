@@ -205,7 +205,7 @@ export class IDBManager {
         });
     }
 
-    removeAllItems(storeName: string): Promise<void> {
+    clearItems(storeName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
