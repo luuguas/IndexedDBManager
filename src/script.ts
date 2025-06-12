@@ -1,12 +1,12 @@
 import { NULL_IDB_DATABASE } from './null';
 
-export interface ObjectStoreInfo {
+export interface IDBMStoreInfo {
     name: string;
     keyPath?: string | string[] | null;
     autoIncrement?: boolean;
     resetOnUpgrade?: boolean;
 }
-interface ObjectStoreUpgradeInfo {
+interface IDBMStoreUpgradeInfo {
     type: 'create' | 'unchanged' | 'remove' | 'reset' | 'exist';
     keyPath?: string | string[] | null;
     autoIncrement?: boolean;
@@ -16,11 +16,11 @@ export class IDBManager {
     private db: IDBDatabase;
     private dbName: string;
     private dbVersion: number;
-    private storeInfos: ObjectStoreInfo[];
+    private storeInfos: IDBMStoreInfo[];
 
     private dbNotOpenErrMsg: string = 'Database is not open.';
 
-    constructor(dbName: string, dbVersion: number, storeInfos: ObjectStoreInfo[]) {
+    constructor(dbName: string, dbVersion: number, storeInfos: IDBMStoreInfo[]) {
         this.db = NULL_IDB_DATABASE;
         this.dbName = dbName;
         this.dbVersion = dbVersion;
@@ -58,7 +58,7 @@ export class IDBManager {
             openReq.onupgradeneeded = () => {
                 const db = openReq.result;
                 const existingStoreNames = Array.from(db.objectStoreNames);
-                const mp = new Map<string, ObjectStoreUpgradeInfo>();
+                const mp = new Map<string, IDBMStoreUpgradeInfo>();
 
                 existingStoreNames.forEach((storeName) => {
                     mp.set(storeName, { type: 'exist' });

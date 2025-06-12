@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { IDBManager, ObjectStoreInfo } from '../src/script';
+import { IDBManager, IDBMStoreInfo } from '../src/script';
 
 // データベース名を連番で生成するクロージャ
 function dbNameGenerator(prefix: string, digits: number): () => string {
@@ -74,12 +74,12 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
 });
 
 describe('DBの開閉テスト(オブジェクトストアあり)', () => {
-    const oldStoreInfos: ObjectStoreInfo[] = [
+    const oldStoreInfos: IDBMStoreInfo[] = [
         { name: 'MyStore1' },
         { name: 'MyStore2', keyPath: 'key' },
         { name: 'MyStore3', autoIncrement: true },
     ];
-    const newStoreInfos: ObjectStoreInfo[] = [
+    const newStoreInfos: IDBMStoreInfo[] = [
         // create
         { name: 'MyStore4', keyPath: 'key', autoIncrement: true },
         // unchanged
