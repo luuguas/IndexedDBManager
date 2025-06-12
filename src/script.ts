@@ -215,4 +215,15 @@ export class IDBManager {
             clearReq.onsuccess = () => { resolve(); };
         });
     }
+
+    getItem<RecordT>(storeName: string, key: IDBValidKey): Promise<RecordT | void> {
+        return new Promise<RecordT | void>((resolve, reject) => {
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const getReq = store.get(key);
+            getReq.onerror = () => { reject(getReq.error); };
+            getReq.onsuccess = () => { resolve(getReq.result as RecordT | void); };
+        });
+    }
 }
