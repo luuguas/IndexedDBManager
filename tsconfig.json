@@ -9,6 +9,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "moduleResolution": "node",
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
     "strict": true,
