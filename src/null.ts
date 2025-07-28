@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 type Listener = ((this: IDBDatabase, ev: Event) => unknown) | null;
 
 class NullIDBDatabase implements IDBDatabase {
@@ -10,9 +8,13 @@ class NullIDBDatabase implements IDBDatabase {
     get objectStoreNames(): DOMStringList { throw new ReferenceError(this.errorMessage); }
 
     close(): void { throw new ReferenceError(this.errorMessage); }
-    createObjectStore(name: string, options?: IDBObjectStoreParameters): IDBObjectStore { throw new ReferenceError(this.errorMessage); }
+    createObjectStore(name: string, options?: IDBObjectStoreParameters): IDBObjectStore {
+        throw new ReferenceError(this.errorMessage);
+    }
     deleteObjectStore(name: string): void { throw new ReferenceError(this.errorMessage); }
-    transaction(storeNames: unknown, mode?: unknown, options?: unknown): IDBTransaction { throw new ReferenceError(this.errorMessage); }
+    transaction(storeNames: unknown, mode?: unknown, options?: unknown): IDBTransaction {
+        throw new ReferenceError(this.errorMessage);
+    }
 
     get onclose(): Listener { throw new ReferenceError(this.errorMessage); }
     set onclose(listener: Listener) { throw new ReferenceError(this.errorMessage); }
@@ -23,8 +25,12 @@ class NullIDBDatabase implements IDBDatabase {
     get onerror(): Listener { throw new ReferenceError(this.errorMessage); }
     set onerror(listener: Listener) { throw new ReferenceError(this.errorMessage); }
 
-    addEventListener(type: unknown, listener: unknown, options?: unknown): void { throw new ReferenceError(this.errorMessage); }
-    removeEventListener(type: unknown, listener: unknown, options?: unknown): void { throw new ReferenceError(this.errorMessage); }
+    addEventListener(type: unknown, listener: unknown, options?: unknown): void {
+        throw new ReferenceError(this.errorMessage);
+    }
+    removeEventListener(type: unknown, listener: unknown, options?: unknown): void {
+        throw new ReferenceError(this.errorMessage);
+    }
     dispatchEvent(event: Event): boolean { throw new ReferenceError(this.errorMessage); }
 }
 
