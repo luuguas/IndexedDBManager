@@ -13,12 +13,12 @@ interface IDBMStoreUpgradeInfo {
 }
 
 export class IDBManager {
-    private db: IDBDatabase;
-    private dbName: string;
-    private dbVersion: number;
-    private storeInfos: IDBMStoreInfo[];
+    protected db: IDBDatabase;
+    protected dbName: string;
+    protected dbVersion: number;
+    protected storeInfos: IDBMStoreInfo[];
 
-    private dbNotOpenErrMsg: string = 'Database is not open.';
+    protected dbNotOpenErrMsg: string = 'Database is not open.';
 
     constructor(dbName: string, dbVersion: number, storeInfos: IDBMStoreInfo[]) {
         this.db = NULL_IDB_DATABASE;
@@ -117,7 +117,7 @@ export class IDBManager {
     }
 
     // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
-    private verifyObjectStoreNames(): boolean {
+    protected verifyObjectStoreNames(): boolean {
         if (this.isClose()) { throw ReferenceError(this.dbNotOpenErrMsg); }
 
         const existingStoreNames = Array.from(this.db.objectStoreNames);
