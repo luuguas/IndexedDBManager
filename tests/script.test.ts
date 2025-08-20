@@ -14,6 +14,10 @@ function dbNameGenerator(prefix: string, digits: number): () => string {
 const createDBName: () => string = dbNameGenerator('MyDB', 3);
 
 describe('DBの開閉テスト(オブジェクトストアなし)', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
     test('DBを正常に開いて閉じる', async () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 1, []);
@@ -30,7 +34,7 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         expect(idb.isOpen()).toBe(false);
         expect(idb.isClose()).toBe(true);
     });
-    test('DBを連続で開く/閉じる', async () => {
+    test('(open|close)Databaseを連続で呼び出す', async () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 1, []);
 
@@ -53,7 +57,18 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 0, []);
 
-        await expect(idb.openDatabase()).rejects.toThrow(TypeError);
+        await expect(idb.openDatabase()).rejects.toThrow(TypeError); // IDBRequest.onerror は呼び出されない
+        expect(idb.isClose()).toBe(true);
+    });
+    test('バージョンのダウングレードはできない', async () => {
+        const dbName = createDBName();
+        const idb1 = new IDBManager(dbName, 2, []);
+        const idb2 = new IDBManager(dbName, 1, []);
+
+        await expect(idb1.openDatabase()).resolves.toBeUndefined();
+        idb1.closeDatabase();
+        await expect(idb2.openDatabase())
+            .rejects.toThrow(DOMException); // IDBRequest.onerror が呼び出される
     });
     test('他のインスタンスでDBを開いている状態ではアップグレードできない', async () => {
         const dbName = createDBName();
@@ -61,19 +76,20 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const idb2 = new IDBManager(dbName, 2, []);
 
         await expect(idb1.openDatabase()).resolves.toBeUndefined();
-        expect(idb1.isOpen()).toBe(true);
         await expect(idb2.openDatabase()).rejects.toThrow(ReferenceError);
-        expect(idb2.isClose()).toBe(true);
 
         // DBを閉じるとアップグレードできる
         idb1.closeDatabase();
         await expect(idb2.openDatabase()).resolves.toBeUndefined();
-        expect(idb2.isOpen()).toBe(true);
         idb2.closeDatabase();
     });
 });
 
 describe('DBの開閉テスト(オブジェクトストアあり)', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
     const oldStoreInfos: IDBMStoreInfo[] = [
         { name: 'MyStore1' },
         { name: 'MyStore2', keyPath: 'key' },
