@@ -152,3 +152,55 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         expect(() => { idb.p_verifyObjectStoreNames(); }).toThrow(ReferenceError);
     });
 });
+
+describe('データの追加・更新・削除テスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [
+        { name: 'MyStore1' },
+        { name: 'MyStore2', keyPath: 'key' },
+        { name: 'MyStore3', autoIncrement: true },
+        { name: 'MyStore4', keyPath: 'key', autoIncrement: true },
+    ];
+    const idb = new IDBManager(dbName, 1, storeInfos);
+
+    beforeEach(async () => {
+        await idb.openDatabase();
+    });
+    afterEach(() => {
+        idb.closeDatabase();
+    });
+
+    test('単体データを追加する', async () => {
+        // keyPath: なし, autoIncrement: false
+        await expect(idb.setItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
+
+        // keyPath: あり, autoIncrement: false
+        await expect(idb.setItem('MyStore2', { key: 'B', value: 'Banana' })).resolves.toBe('B');
+        await expect(idb.getItem('MyStore2', 'B')).resolves.toEqual({ key: 'B', value: 'Banana' });
+
+        // keyPath: なし, autoIncrement: true
+        await expect(idb.setItem('MyStore3', { name: 'Cherry' })).resolves.toBe(1);
+        await expect(idb.getItem('MyStore3', 1)).resolves.toEqual({ name: 'Cherry' });
+
+        // keyPath: あり, autoIncrement: true
+        await expect(idb.setItem('MyStore4', { key: 'D', value: 'Donut' })).resolves.toBe('D');
+        await expect(idb.setItem('MyStore4', { name: 'Egg' })).resolves.toBe(1);
+        await expect(idb.getItem('MyStore4', 'D')).resolves.toEqual({ key: 'D', value: 'Donut' });
+        await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, name: 'Egg' });
+    });
+    test('単体データを更新する', async () => {
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple'); // 更新前
+        await expect(idb.setItem('MyStore1', 'Alice', 'A')).resolves.toBe('A');
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Alice'); // 更新後
+    });
+    test('単体データを削除する', async () => {
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined(); // 削除前
+        await expect(idb.removeItem('MyStore1', 'A')).resolves.toBeUndefined();
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeUndefined(); // 削除後
+    });
+});
