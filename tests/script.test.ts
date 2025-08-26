@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
 import { IDBManager, IDBMStoreInfo } from '../src/script';
+import { PublicIDBManager } from './env/public';
 
 // データベース名を連番で生成するクロージャ
 function dbNameGenerator(prefix: string, digits: number): () => string {
@@ -76,7 +77,9 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const idb2 = new IDBManager(dbName, 2, []);
 
         await expect(idb1.openDatabase()).resolves.toBeUndefined();
-        await expect(idb2.openDatabase()).rejects.toThrow(ReferenceError);
+        const exp = expect(idb2.openDatabase());
+        await exp.rejects.toThrow(ReferenceError);
+        await exp.rejects.toThrow('The database cannot be upgraded because another instance has the database open.');
 
         // DBを閉じるとアップグレードできる
         idb1.closeDatabase();
@@ -124,6 +127,7 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         await expect(newIDB.openDatabase()).resolves.toBeUndefined();
         newIDB.closeDatabase();
     });
+
     test('アップグレードせずにstoreInfosを変更するとDBを開けない', async () => {
         const dbName = createDBName();
         const oldIDB = new IDBManager(dbName, 1, oldStoreInfos);
@@ -132,11 +136,19 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         oldIDB.closeDatabase();
 
         const wrongIDB = new IDBManager(dbName, 1, newStoreInfos);
-        await expect(wrongIDB.openDatabase()).rejects.toThrow(TypeError);
+        const exp = expect(wrongIDB.openDatabase());
+        await exp.rejects.toThrow(TypeError);
+        await exp.rejects.toThrow('storeInfos does not match the object stores in the database. The database version should be upgraded.');
 
         // アップグレード(バージョンアップ)するとDBを開ける
         const newIDB = new IDBManager(dbName, 2, newStoreInfos);
         await expect(newIDB.openDatabase()).resolves.toBeUndefined();
         newIDB.closeDatabase();
+    });
+    test('DBを開いていないときverifyObjectStores(protectedなメンバ関数)を呼び出すとエラー', () => {
+        const dbName = createDBName();
+        const idb = new PublicIDBManager(dbName, 1, []);
+
+        expect(() => { idb.p_verifyObjectStoreNames(); }).toThrow(ReferenceError);
     });
 });
