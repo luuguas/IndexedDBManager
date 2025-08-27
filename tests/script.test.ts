@@ -153,7 +153,7 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
     });
 });
 
-describe('データの追加・更新・削除テスト', () => {
+describe('単体データの追加・更新・削除テスト', () => {
     beforeAll(() => {
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
     });
@@ -176,22 +176,30 @@ describe('データの追加・更新・削除テスト', () => {
 
     test('単体データを追加する', async () => {
         // keyPath: なし, autoIncrement: false
+        // itemは任意の値
         await expect(idb.setItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
 
         // keyPath: あり, autoIncrement: false
+        // itemはオブジェクトのみ
         await expect(idb.setItem('MyStore2', { key: 'B', value: 'Banana' })).resolves.toBe('B');
         await expect(idb.getItem('MyStore2', 'B')).resolves.toEqual({ key: 'B', value: 'Banana' });
 
         // keyPath: なし, autoIncrement: true
-        await expect(idb.setItem('MyStore3', { name: 'Cherry' })).resolves.toBe(1);
-        await expect(idb.getItem('MyStore3', 1)).resolves.toEqual({ name: 'Cherry' });
+        // itemは任意の値
+        await expect(idb.setItem('MyStore3', 'Cherry')).resolves.toBe(1); // 外部キー指定なし、連番が割り当てられる
+        await expect(idb.setItem('MyStore3', { name: 'Donut' }, 'D')).resolves.toBe('D'); // 外部キー指定あり
+        await expect(idb.setItem('MyStore3', ['Egg', 'Eggplant'])).resolves.toBe(2); // 連番は外部キー指定ありのとき増えない
+        await expect(idb.getItem('MyStore3', 1)).resolves.toBe('Cherry');
+        await expect(idb.getItem('MyStore3', 'D')).resolves.toEqual({ name: 'Donut' });
+        await expect(idb.getItem('MyStore3', 2)).resolves.toEqual(['Egg', 'Eggplant']);
 
         // keyPath: あり, autoIncrement: true
-        await expect(idb.setItem('MyStore4', { key: 'D', value: 'Donut' })).resolves.toBe('D');
-        await expect(idb.setItem('MyStore4', { name: 'Egg' })).resolves.toBe(1);
-        await expect(idb.getItem('MyStore4', 'D')).resolves.toEqual({ key: 'D', value: 'Donut' });
-        await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, name: 'Egg' });
+        // itemはオブジェクトのみ
+        await expect(idb.setItem('MyStore4', { key: 'F', value: 'Fish' })).resolves.toBe('F'); // 内部キー指定あり
+        await expect(idb.setItem('MyStore4', { value: 'Grape' })).resolves.toBe(1); // 内部キー指定なし、連番が割り当てられる
+        await expect(idb.getItem('MyStore4', 'F')).resolves.toEqual({ key: 'F', value: 'Fish' });
+        await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Grape' }); // 内部キー指定なし、itemにkeyプロパティが増える
     });
     test('単体データを更新する', async () => {
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple'); // 更新前
@@ -202,5 +210,27 @@ describe('データの追加・更新・削除テスト', () => {
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined(); // 削除前
         await expect(idb.removeItem('MyStore1', 'A')).resolves.toBeUndefined();
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBeUndefined(); // 削除後
+        await expect(idb.removeItem('MyStore1', 'A')).resolves.toBeUndefined(); // ストアに存在しないデータを指定しても成功(何もしない)
+    });
+
+    test('キー指定を間違えると追加できない', async () => {
+        // keyPath: なし, autoIncrement: false
+        await expect(idb.setItem('MyStore1', 'Hamburger')).rejects.toThrow(DOMException); // 外部キー指定なし
+
+        // keyPath: あり, autoIncrement: false
+        await expect(idb.setItem('MyStore2', { key: 'I', value: 'Icecream' }, 'I')).rejects.toThrow(DOMException); // 外部キー指定あり
+        await expect(idb.setItem('MyStore2', { value: 'Icecream' })).rejects.toThrow(DOMException); // 内部キー指定なし
+        await expect(idb.setItem('MyStore2', { value: 'Icecream' }, 'I')).rejects.toThrow(DOMException); // 内部キー指定なし・外部キー指定あり
+
+        // keyPath: あり, autoIncrement: true
+        await expect(idb.setItem('MyStore4', { key: 'J', value: 'Juice' }, 'J')).rejects.toThrow(DOMException); // 外部キー指定あり
+        await expect(idb.setItem('MyStore4', { value: 'Juice' }, 'J')).rejects.toThrow(DOMException); // 内部キー指定なし・外部キー指定あり
+    });
+    test('itemの種類を間違えると追加できない', async () => {
+        // keyPath: あり, autoIncrement: false
+        await expect(idb.setItem('MyStore2', 'Kiwi')).rejects.toThrow(DOMException);
+
+        // keyPath: あり, autoIncrement: true
+        await expect(idb.setItem('MyStore4', 'Lemon')).rejects.toThrow(DOMException);
     });
 });
