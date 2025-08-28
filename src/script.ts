@@ -150,7 +150,7 @@ export class IDBManager {
     setItems<ItemT>(
         storeName: string,
         items: ItemT[],
-        keys?: IDBValidKey[],
+        keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
         return new Promise<IDBValidKey[]>((resolve, reject) => {
             if (keys instanceof Array && items.length !== keys.length) {
