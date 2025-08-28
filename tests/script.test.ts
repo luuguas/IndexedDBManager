@@ -174,7 +174,7 @@ describe('単体データの追加・更新・削除テスト', () => {
         idb.closeDatabase();
     });
 
-    test('単体データを追加する', async () => {
+    test('1個のデータを追加する', async () => {
         // keyPath: なし, autoIncrement: false
         // itemは任意の値
         await expect(idb.setItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
@@ -187,7 +187,7 @@ describe('単体データの追加・更新・削除テスト', () => {
 
         // keyPath: なし, autoIncrement: true
         // itemは任意の値
-        await expect(idb.setItem('MyStore3', 'Cherry')).resolves.toBe(1); // 外部キー指定なし、連番が割り当てられる
+        await expect(idb.setItem('MyStore3', 'Cherry', undefined)).resolves.toBe(1); // 外部キー指定なし、連番が割り当てられる
         await expect(idb.setItem('MyStore3', { name: 'Donut' }, 'D')).resolves.toBe('D'); // 外部キー指定あり
         await expect(idb.setItem('MyStore3', ['Egg', 'Eggplant'])).resolves.toBe(2); // 連番は外部キー指定ありのとき増えない
         await expect(idb.getItem('MyStore3', 1)).resolves.toBe('Cherry');
@@ -201,12 +201,12 @@ describe('単体データの追加・更新・削除テスト', () => {
         await expect(idb.getItem('MyStore4', 'F')).resolves.toEqual({ key: 'F', value: 'Fish' });
         await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Grape' }); // 内部キー指定なし、itemにkeyプロパティが増える
     });
-    test('単体データを更新する', async () => {
+    test('1個のデータを更新する', async () => {
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple'); // 更新前
         await expect(idb.setItem('MyStore1', 'Alice', 'A')).resolves.toBe('A');
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Alice'); // 更新後
     });
-    test('単体データを削除する', async () => {
+    test('1個のデータを削除する', async () => {
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined(); // 削除前
         await expect(idb.removeItem('MyStore1', 'A')).resolves.toBeUndefined();
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBeUndefined(); // 削除後
@@ -232,5 +232,60 @@ describe('単体データの追加・更新・削除テスト', () => {
 
         // keyPath: あり, autoIncrement: true
         await expect(idb.setItem('MyStore4', 'Lemon')).rejects.toThrow(DOMException);
+    });
+});
+
+describe('複数データの追加・更新・削除テスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [
+        { name: 'MyStore1' },
+        { name: 'MyStore2', keyPath: 'key' },
+        { name: 'MyStore3', autoIncrement: true },
+        { name: 'MyStore4', keyPath: 'key', autoIncrement: true },
+    ];
+    const idb = new IDBManager(dbName, 1, storeInfos);
+
+    beforeEach(async () => {
+        await idb.openDatabase();
+    });
+    afterEach(() => {
+        idb.closeDatabase();
+    });
+
+    test('複数のデータを追加する', async () => {
+        // keyPath: なし, autoIncrement: false
+        // itemは任意の値
+        const items1 = ['Apple', { name: 'Banana' }];
+        const keys1 = ['A', 'B'];
+        await expect(idb.setItems('MyStore1', items1, keys1)).resolves.toEqual(keys1);
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
+        await expect(idb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
+
+        // keyPath: あり, autoIncrement: false
+        // itemはオブジェクトのみ
+        const items2 = [{ key: 'C', value: 'Cherry' }, { key: 'D', value: 'Donut' }];
+        await expect(idb.setItems('MyStore2', items2)).resolves.toEqual(['C', 'D']);
+        await expect(idb.getItem('MyStore2', 'C')).resolves.toEqual({ key: 'C', value: 'Cherry' });
+        await expect(idb.getItem('MyStore2', 'D')).resolves.toEqual({ key: 'D', value: 'Donut' });
+
+        // keyPath: なし, autoIncrement: true
+        // itemは任意の値
+        const items3 = ['Egg', { name: 'Fish' }, ['Grape', 'Grapefruit']];
+        const keys3 = [undefined, 'F', undefined];
+        await expect(idb.setItems('MyStore3', items3, keys3)).resolves.toEqual([1, 'F', 2]);
+        await expect(idb.getItem('MyStore3', 1)).resolves.toBe('Egg');
+        await expect(idb.getItem('MyStore3', 'F')).resolves.toEqual({ name: 'Fish' });
+        await expect(idb.getItem('MyStore3', 2)).resolves.toEqual(['Grape', 'Grapefruit']);
+
+        // keyPath: あり, autoIncrement: true
+        // itemはオブジェクトのみ
+        const items4 = [{ key: 'H', value: 'Hamburger' }, { value: 'Icecream' }];
+        await expect(idb.setItems('MyStore4', items4)).resolves.toEqual(['H', 1]);
+        await expect(idb.getItem('MyStore4', 'H')).resolves.toEqual({ key: 'H', value: 'Hamburger' });
+        await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Icecream' });
     });
 });
