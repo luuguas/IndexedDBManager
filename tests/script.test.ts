@@ -288,4 +288,46 @@ describe('複数データの追加・更新・削除テスト', () => {
         await expect(idb.getItem('MyStore4', 'H')).resolves.toEqual({ key: 'H', value: 'Hamburger' });
         await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Icecream' });
     });
+    test('複数のデータを更新する', async () => {
+        const items = [{ name: 'Alice' }, 'Bob', ['Chris', 'Charlie']]; // 最後は追加データ
+        const keys = ['A', 'B', 'C'];
+
+        // 更新前
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
+        await expect(idb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
+        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
+
+        await expect(idb.setItems('MyStore1', items, keys)).resolves.toEqual(keys);
+
+        // 更新後
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toEqual({ name: 'Alice' });
+        await expect(idb.getItem('MyStore1', 'B')).resolves.toBe('Bob');
+        await expect(idb.getItem('MyStore1', 'C')).resolves.toEqual(['Chris', 'Charlie']);
+    });
+    test('複数のデータを削除する', async () => {
+        const keys = ['B', 'C'];
+
+        // 削除前
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined();
+        await expect(idb.getItem('MyStore1', 'B')).resolves.toBeDefined();
+        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeDefined();
+
+        await expect(idb.removeItems('MyStore1', keys)).resolves.toBeUndefined();
+
+        // 削除後
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined();
+        await expect(idb.getItem('MyStore1', 'B')).resolves.toBeUndefined();
+        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
+    });
+    test('全てのデータを削除する', async () => {
+        // 削除前
+        await expect(idb.getItem('MyStore2', 'C')).resolves.toBeDefined();
+        await expect(idb.getItem('MyStore2', 'D')).resolves.toBeDefined();
+
+        await expect(idb.clearItems('MyStore2')).resolves.toBeUndefined();
+
+        // 削除後
+        await expect(idb.getItem('MyStore2', 'C')).resolves.toBeUndefined();
+        await expect(idb.getItem('MyStore2', 'D')).resolves.toBeUndefined();
+    });
 });
