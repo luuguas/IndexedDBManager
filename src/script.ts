@@ -171,7 +171,10 @@ export class IDBManager {
 
             Promise.all(promises)
                 .then((value: IDBValidKey[]) => { resolve(value); })
-                .catch((reason: DOMException) => { reject(reason); });
+                .catch((reason: DOMException) => {
+                    tx.abort();
+                    reject(reason);
+                });
         });
     }
 
@@ -201,7 +204,10 @@ export class IDBManager {
 
             Promise.all(promises)
                 .then((value: void[]) => { resolve(); })
-                .catch((reason: DOMException) => { reject(reason); });
+                .catch((reason: DOMException) => {
+                    tx.abort();
+                    reject(reason);
+                });
         });
     }
 
