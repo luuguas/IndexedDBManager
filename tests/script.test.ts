@@ -336,6 +336,7 @@ describe('複数データの追加・更新・削除テスト', () => {
         const items1 = ['Juice', 'Kiwi'];
         const keys1 = ['J', undefined]; // keys[1]: 外部キー指定なし
         await expect(idb.setItems('MyStore1', items1, keys1)).rejects.toThrow(DOMException);
+        await expect(idb.getItem('MyStore1', 'J')).resolves.toBeUndefined(); // ロールバック
 
         // keyPath: あり, autoIncrement: false
         const items2 = [{ key: 'L', value: 'Lemon' }, { value: 'Melon' }];
@@ -346,6 +347,7 @@ describe('複数データの追加・更新・削除テスト', () => {
         const items4 = [{ key: 'N', value: 'Noodle' }, { key: 'O', value: 'Orange' }];
         const keys4 = [undefined, 'O']; // keys[1]: 外部キー指定あり
         await expect(idb.setItems('MyStore4', items4, keys4)).rejects.toThrow(DOMException);
+        await expect(idb.getItem('MyStore1', 'N')).resolves.toBeUndefined(); // ロールバック
     });
     test('itemsとkeysの長さが違うと追加できない', async () => {
         const items = ['Pear', 'Quince'];
@@ -355,5 +357,6 @@ describe('複数データの追加・更新・削除テスト', () => {
     test('不正なキーを渡すと削除できない', async () => {
         const keys = ['A', null];
         await expect(idb.removeItems('MyStore1', keys as IDBValidKey[])).rejects.toThrow(DOMException);
+        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined(); // ロールバック
     });
 });
