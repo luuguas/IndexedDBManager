@@ -153,6 +153,23 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
     });
 });
 
+describe('CRUDs共通の例外処理', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    test('DBを開いていない状態で呼び出すとエラー', async () => {
+        const idb = new IDBManager('', 1, []);
+
+        await expect(idb.setItem('', {})).rejects.toThrow(ReferenceError);
+        await expect(idb.setItems('', [])).rejects.toThrow(ReferenceError);
+        await expect(idb.removeItem('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.removeItems('', [])).rejects.toThrow(ReferenceError);
+        await expect(idb.clearItems('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getItem('', '')).rejects.toThrow(ReferenceError);
+    });
+});
+
 describe('単体データの追加・更新・削除テスト', () => {
     beforeAll(() => {
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
