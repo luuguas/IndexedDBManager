@@ -12,6 +12,13 @@ interface IDBMStoreUpgradeInfo {
     autoIncrement?: boolean;
 }
 
+export interface IDBMKeyRange {
+    lower?: IDBValidKey;
+    upper?: IDBValidKey;
+    lowerOpen?: boolean;
+    upperOpen?: boolean;
+}
+
 export class IDBManager {
     protected db: IDBDatabase;
     protected dbName: string;
@@ -44,6 +51,25 @@ export class IDBManager {
             && existingStoreNames.every((storeName) => {
                 return st.has(storeName);
             });
+    }
+
+    static generateRawKeyRange(keyRange?: IDBMKeyRange): IDBKeyRange | null {
+        if (typeof keyRange === 'undefined') { return null; }
+
+        const lowerUnbounded = (typeof keyRange.lower === 'undefined');
+        const upperUnbounded = (typeof keyRange.upper === 'undefined');
+
+        if (lowerUnbounded && upperUnbounded) {
+            return null;
+        }
+        if (lowerUnbounded) {
+            return window.IDBKeyRange.upperBound(keyRange.upper, keyRange.upperOpen);
+        }
+        if (upperUnbounded) {
+            return window.IDBKeyRange.lowerBound(keyRange.lower, keyRange.lowerOpen);
+        }
+        return window.IDBKeyRange
+            .bound(keyRange.lower, keyRange.upper, keyRange.lowerOpen, keyRange.upperOpen);
     }
 
     openDatabase(): Promise<void> {
