@@ -246,8 +246,8 @@ export class IDBManager {
         });
     }
 
-    getItem<RecordT>(storeName: string, key: IDBValidKey): Promise<RecordT | void> {
-        return new Promise<RecordT | void>((resolve, reject) => {
+    getItem<ItemT>(storeName: string, key: IDBValidKey): Promise<ItemT | void> {
+        return new Promise<ItemT | void>((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -258,7 +258,7 @@ export class IDBManager {
 
             const getReq = store.get(key);
             getReq.onerror = () => { reject(getReq.error); };
-            getReq.onsuccess = () => { resolve(getReq.result as RecordT | void); };
+            getReq.onsuccess = () => { resolve(getReq.result as ItemT | void); };
         });
     }
 }
