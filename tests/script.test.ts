@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { IDBManager, IDBMStoreInfo } from '../src/script';
+import { IDBManager, IDBMStoreInfo, IDBMKeyRange } from '../src/script';
 import { PublicIDBManager } from './env/public';
 
 // データベース名を連番で生成するクロージャ
@@ -167,6 +167,7 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.removeItems('', [])).rejects.toThrow(ReferenceError);
         await expect(idb.clearItems('')).rejects.toThrow(ReferenceError);
         await expect(idb.getItem('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getFirstItem('')).rejects.toThrow(ReferenceError);
     });
 });
 
@@ -375,5 +376,87 @@ describe('複数データの追加・更新・削除テスト', () => {
         const keys = ['A', null];
         await expect(idb.removeItems('MyStore1', keys as IDBValidKey[])).rejects.toThrow(DOMException);
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined(); // ロールバック
+    });
+});
+
+describe('generateKeyRangeの動作テスト', () => {
+    type IDBKeyRangeInfo = {
+        lower: unknown,
+        upper: unknown,
+        lowerOpen: boolean,
+        upperOpen: boolean,
+    } | null;
+    function getKeyRangeInfo(rawKeyRange: IDBKeyRange | null): IDBKeyRangeInfo {
+        if (rawKeyRange) {
+            return {
+                lower: rawKeyRange.lower,
+                upper: rawKeyRange.upper,
+                lowerOpen: rawKeyRange.lowerOpen,
+                upperOpen: rawKeyRange.upperOpen,
+            };
+        }
+        return null;
+    }
+
+    const testCases: { exp: IDBMKeyRange, toEq: IDBKeyRangeInfo }[] = [
+        // 下限なし・上限なし (全範囲)
+        { exp: {}, toEq: null },
+        { exp: { lowerOpen: true, upperOpen: false }, toEq: null }, // lowerOpen, upperOpen は無視
+        // 下限あり・上限なし
+        {
+            exp: { lower: 'A' },
+            toEq: {
+                lower: 'A', upper: undefined, lowerOpen: false, upperOpen: true,
+            },
+        },
+        {
+            exp: { lower: 'A', lowerOpen: true, upperOpen: false }, // upperOpen は無視
+            toEq: {
+                lower: 'A', upper: undefined, lowerOpen: true, upperOpen: true,
+            },
+        },
+        // 下限なし・上限あり
+        {
+            exp: { upper: 'Z' },
+            toEq: {
+                lower: undefined, upper: 'Z', lowerOpen: true, upperOpen: false,
+            },
+        },
+        {
+            exp: { upper: 'Z', lowerOpen: false, upperOpen: true }, // lowerOpen は無視
+            toEq: {
+                lower: undefined, upper: 'Z', lowerOpen: true, upperOpen: true,
+            },
+        },
+        // 下限あり・上限あり
+        {
+            exp: { lower: 'A', upper: 'Z' },
+            toEq: {
+                lower: 'A', upper: 'Z', lowerOpen: false, upperOpen: false,
+            },
+        },
+        {
+            exp: { lower: 'A', upper: 'Z', upperOpen: true },
+            toEq: {
+                lower: 'A', upper: 'Z', lowerOpen: false, upperOpen: true,
+            },
+        },
+        {
+            exp: {
+                lower: 'A', upper: 'Z', lowerOpen: true, upperOpen: true,
+            },
+            toEq: {
+                lower: 'A', upper: 'Z', lowerOpen: true, upperOpen: true,
+            },
+        },
+    ];
+
+    test('引数なしの場合はnullを返す', () => {
+        expect(IDBManager.generateRawKeyRange()).toBeNull();
+    });
+    test('引数にIDBMKeyRangeを渡すとプロパティに応じてIDBKeyRangeまたはnullを返す', () => {
+        testCases.forEach((val) => {
+            expect(getKeyRangeInfo(IDBManager.generateRawKeyRange(val.exp))).toEqual(val.toEq);
+        });
     });
 });
