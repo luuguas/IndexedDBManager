@@ -118,7 +118,7 @@ export class IDBManager {
 
     // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
     protected verifyObjectStoreNames(): boolean {
-        if (this.isClose()) { throw ReferenceError(this.dbNotOpenErrMsg); }
+        if (this.isClose()) { throw new ReferenceError(this.dbNotOpenErrMsg); }
 
         const existingStoreNames = Array.from(this.db.objectStoreNames);
         const st = new Set<string>();
@@ -138,6 +138,11 @@ export class IDBManager {
         key?: IDBValidKey,
     ): Promise<IDBValidKey> {
         return new Promise<IDBValidKey>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
 
@@ -153,6 +158,10 @@ export class IDBManager {
         keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
         return new Promise<IDBValidKey[]>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
             if (keys instanceof Array && items.length !== keys.length) {
                 reject(new TypeError('The length of items and keys must be the same.'));
                 return;
@@ -180,6 +189,11 @@ export class IDBManager {
 
     removeItem(storeName: string, key: IDBValidKey): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
 
@@ -191,6 +205,11 @@ export class IDBManager {
 
     removeItems(storeName: string, keys: IDBValidKey[]): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
 
@@ -213,6 +232,11 @@ export class IDBManager {
 
     clearItems(storeName: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
 
@@ -224,6 +248,11 @@ export class IDBManager {
 
     getItem<RecordT>(storeName: string, key: IDBValidKey): Promise<RecordT | void> {
         return new Promise<RecordT | void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
             const tx = this.db.transaction(storeName, 'readonly');
             const store = tx.objectStore(storeName);
 
