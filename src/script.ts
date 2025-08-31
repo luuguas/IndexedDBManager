@@ -30,6 +30,22 @@ export class IDBManager {
     isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
     isOpen(): boolean { return !this.isClose(); }
 
+    // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
+    protected verifyObjectStoreNames(): boolean {
+        if (this.isClose()) { throw new ReferenceError(this.dbNotOpenErrMsg); }
+
+        const existingStoreNames = Array.from(this.db.objectStoreNames);
+        const st = new Set<string>();
+
+        this.storeInfos.forEach((storeInfo) => {
+            st.add(storeInfo.name);
+        });
+        return this.storeInfos.length === existingStoreNames.length
+            && existingStoreNames.every((storeName) => {
+                return st.has(storeName);
+            });
+    }
+
     openDatabase(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isOpen()) {
@@ -114,22 +130,6 @@ export class IDBManager {
             this.db.close();
             this.db = NULL_IDB_DATABASE;
         }
-    }
-
-    // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
-    protected verifyObjectStoreNames(): boolean {
-        if (this.isClose()) { throw new ReferenceError(this.dbNotOpenErrMsg); }
-
-        const existingStoreNames = Array.from(this.db.objectStoreNames);
-        const st = new Set<string>();
-
-        this.storeInfos.forEach((storeInfo) => {
-            st.add(storeInfo.name);
-        });
-        return this.storeInfos.length === existingStoreNames.length
-            && existingStoreNames.every((storeName) => {
-                return st.has(storeName);
-            });
     }
 
     setItem<ItemT>(
