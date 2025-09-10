@@ -168,6 +168,9 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.clearItems('')).rejects.toThrow(ReferenceError);
         await expect(idb.getItem('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstItem('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getLastItem('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getFirstKey('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getLastKey('')).rejects.toThrow(ReferenceError);
     });
 });
 
@@ -458,5 +461,105 @@ describe('generateKeyRangeの動作テスト', () => {
         testCases.forEach((val) => {
             expect(getKeyRangeInfo(IDBManager.generateRawKeyRange(val.exp))).toEqual(val.toEq);
         });
+    });
+});
+
+describe('単体データの取得テスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [{ name: 'MyStore' }];
+    const idb = new IDBManager(dbName, 1, storeInfos);
+
+    const items = ['Banana', 'Donut', 'Egg', 'Grape', 'Juice', 'Lemon', 'Noodle', 'Orange', 'Strawberry', 'Vegetable'];
+    const keys = ['B', 'D', 'E', 'G', 'J', 'L', 'N', 'O', 'S', 'V'];
+
+    beforeAll(async () => {
+        await idb.openDatabase();
+        await idb.setItems('MyStore', items, keys);
+        idb.closeDatabase();
+    });
+
+    beforeEach(async () => {
+        await idb.openDatabase();
+    });
+    afterEach(() => {
+        idb.closeDatabase();
+    });
+
+    test('getItem', async () => {
+        await expect(idb.getItem('MyStore', 'B')).resolves.toBe('Banana');
+        await expect(idb.getItem('MyStore', 'G')).resolves.toBe('Grape');
+        await expect(idb.getItem('MyStore', 'M')).resolves.toBeUndefined();
+    });
+
+    test('getFirstItem', async () => {
+        // lower指定なし
+        await expect(idb.getFirstItem('MyStore')).resolves.toBe('Banana');
+        await expect(idb.getFirstItem('MyStore', {})).resolves.toBe('Banana');
+        await expect(idb.getFirstItem('MyStore', { upper: 'M' })).resolves.toBe('Banana');
+        await expect(idb.getFirstItem('MyStore', { upper: 'A' })).resolves.toBeUndefined();
+        await expect(idb.getFirstItem('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
+
+        // lower指定あり
+        await expect(idb.getFirstItem('MyStore', { lower: 'A' })).resolves.toBe('Banana');
+        await expect(idb.getFirstItem('MyStore', { lower: 'B' })).resolves.toBe('Banana');
+        await expect(idb.getFirstItem('MyStore', { lower: 'B', lowerOpen: true })).resolves.toBe('Donut');
+        await expect(idb.getFirstItem('MyStore', { lower: 'V' })).resolves.toBe('Vegetable');
+        await expect(idb.getFirstItem('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getFirstItem('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
+    });
+
+    test('getFirstKey', async () => {
+        // lower指定なし
+        await expect(idb.getFirstKey('MyStore')).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', {})).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { upper: 'M' })).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { upper: 'A' })).resolves.toBeUndefined();
+        await expect(idb.getFirstKey('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
+
+        // lower指定あり
+        await expect(idb.getFirstKey('MyStore', { lower: 'A' })).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { lower: 'B' })).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { lower: 'B', lowerOpen: true })).resolves.toBe('D');
+        await expect(idb.getFirstKey('MyStore', { lower: 'V' })).resolves.toBe('V');
+        await expect(idb.getFirstKey('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getFirstKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
+    });
+
+    test('getLastItem', async () => {
+        // upper指定なし
+        await expect(idb.getLastItem('MyStore')).resolves.toBe('Vegetable');
+        await expect(idb.getLastItem('MyStore', {})).resolves.toBe('Vegetable');
+        await expect(idb.getLastItem('MyStore', { lower: 'H' })).resolves.toBe('Vegetable');
+        await expect(idb.getLastItem('MyStore', { lower: 'W' })).resolves.toBeUndefined();
+        await expect(idb.getLastItem('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
+
+        // upper指定あり
+        await expect(idb.getLastItem('MyStore', { upper: 'Z' })).resolves.toBe('Vegetable');
+        await expect(idb.getLastItem('MyStore', { upper: 'V' })).resolves.toBe('Vegetable');
+        await expect(idb.getLastItem('MyStore', { upper: 'V', upperOpen: true })).resolves.toBe('Strawberry');
+        await expect(idb.getLastItem('MyStore', { upper: 'B' })).resolves.toBe('Banana');
+        await expect(idb.getLastItem('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getLastItem('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
+    });
+
+    test('getLastKey', async () => {
+        // upper指定なし
+        await expect(idb.getLastKey('MyStore')).resolves.toBe('V');
+        await expect(idb.getLastKey('MyStore', {})).resolves.toBe('V');
+        await expect(idb.getLastKey('MyStore', { lower: 'H' })).resolves.toBe('V');
+        await expect(idb.getLastKey('MyStore', { lower: 'W' })).resolves.toBeUndefined();
+        await expect(idb.getLastKey('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
+
+        // upper指定あり
+        await expect(idb.getLastKey('MyStore', { upper: 'Z' })).resolves.toBe('V');
+        await expect(idb.getLastKey('MyStore', { upper: 'V' })).resolves.toBe('V');
+        await expect(idb.getLastKey('MyStore', { upper: 'V', upperOpen: true })).resolves.toBe('S');
+        await expect(idb.getLastKey('MyStore', { upper: 'B' })).resolves.toBe('B');
+        await expect(idb.getLastKey('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getLastKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
 });
