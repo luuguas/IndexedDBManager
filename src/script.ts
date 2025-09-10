@@ -163,7 +163,7 @@ export class IDBManager {
         item: ItemT,
         key?: IDBValidKey,
     ): Promise<IDBValidKey> {
-        return new Promise<IDBValidKey>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -183,7 +183,7 @@ export class IDBManager {
         items: ItemT[],
         keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
-        return new Promise<IDBValidKey[]>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -214,7 +214,7 @@ export class IDBManager {
     }
 
     removeItem(storeName: string, key: IDBValidKey): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -230,7 +230,7 @@ export class IDBManager {
     }
 
     removeItems(storeName: string, keys: IDBValidKey[]): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -240,7 +240,7 @@ export class IDBManager {
             const store = tx.objectStore(storeName);
 
             const promises: Promise<void>[] = keys.map((key) => {
-                return new Promise<void>((res, rej) => {
+                return new Promise((res, rej) => {
                     const deleteReq = store.delete(key);
                     deleteReq.onerror = () => { rej(deleteReq.error); };
                     deleteReq.onsuccess = () => { res(); };
@@ -257,7 +257,7 @@ export class IDBManager {
     }
 
     clearItems(storeName: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -273,7 +273,7 @@ export class IDBManager {
     }
 
     getItem<ItemT>(storeName: string, key: IDBValidKey): Promise<ItemT | void> {
-        return new Promise<ItemT | void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -289,7 +289,7 @@ export class IDBManager {
     }
 
     getFirstItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | void> {
-        return new Promise<ItemT | void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -311,7 +311,7 @@ export class IDBManager {
     }
 
     getLastItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | void> {
-        return new Promise<ItemT | void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -333,7 +333,7 @@ export class IDBManager {
     }
 
     getFirstKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | void> {
-        return new Promise<IDBValidKey | void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
@@ -355,7 +355,7 @@ export class IDBManager {
     }
 
     getLastKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | void> {
-        return new Promise<IDBValidKey | void>((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
                 return;
