@@ -287,4 +287,92 @@ export class IDBManager {
             getReq.onsuccess = () => { resolve(getReq.result as ItemT | void); };
         });
     }
+
+    getFirstItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | void> {
+        return new Promise<ItemT | void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+            const cursorReq = store.openCursor(rawKeyRange, 'next');
+            cursorReq.onerror = () => { reject(cursorReq.error); };
+            cursorReq.onsuccess = () => {
+                const cursor = cursorReq.result;
+
+                if (cursor) { resolve(cursor.value as ItemT); }
+                else { resolve(); }
+            };
+        });
+    }
+
+    getLastItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | void> {
+        return new Promise<ItemT | void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+            const cursorReq = store.openCursor(rawKeyRange, 'prev');
+            cursorReq.onerror = () => { reject(cursorReq.error); };
+            cursorReq.onsuccess = () => {
+                const cursor = cursorReq.result;
+
+                if (cursor) { resolve(cursor.value as ItemT); }
+                else { resolve(); }
+            };
+        });
+    }
+
+    getFirstKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | void> {
+        return new Promise<IDBValidKey | void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+            const cursorReq = store.openKeyCursor(rawKeyRange, 'next');
+            cursorReq.onerror = () => { reject(cursorReq.error); };
+            cursorReq.onsuccess = () => {
+                const cursor = cursorReq.result;
+
+                if (cursor) { resolve(cursor.key); }
+                else { resolve(); }
+            };
+        });
+    }
+
+    getLastKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | void> {
+        return new Promise<IDBValidKey | void>((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+            const cursorReq = store.openKeyCursor(rawKeyRange, 'prev');
+            cursorReq.onerror = () => { reject(cursorReq.error); };
+            cursorReq.onsuccess = () => {
+                const cursor = cursorReq.result;
+
+                if (cursor) { resolve(cursor.key); }
+                else { resolve(); }
+            };
+        });
+    }
 }
