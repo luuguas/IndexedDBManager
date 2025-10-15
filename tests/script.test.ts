@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto';
 import { IDBManager, IDBMStoreInfo, IDBMKeyRange } from '../src/script';
 import { PublicIDBManager } from './env/public';
 
+/* eslint-disable no-restricted-syntax */
+
 // データベース名を連番で生成するクロージャ
 function dbNameGenerator(prefix: string, digits: number): () => string {
     let count = 1;
@@ -171,6 +173,7 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getLastItem('')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstKey('')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastKey('')).rejects.toThrow(ReferenceError);
+        expect(() => { idb.getIterator(''); }).toThrow(ReferenceError);
     });
 });
 
@@ -561,5 +564,77 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getLastKey('MyStore', { upper: 'B' })).resolves.toBe('B');
         await expect(idb.getLastKey('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
         await expect(idb.getLastKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
+    });
+});
+
+describe('複数データの取得テスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [{ name: 'MyStore' }];
+    const idb = new IDBManager(dbName, 1, storeInfos);
+
+    const items = ['Banana', 'Donut', 'Egg', 'Grape', 'Juice', 'Lemon', 'Noodle', 'Orange', 'Strawberry', 'Vegetable'];
+    const keys = ['B', 'D', 'E', 'G', 'J', 'L', 'N', 'O', 'S', 'V'];
+
+    beforeAll(async () => {
+        await idb.openDatabase();
+        await idb.setItems('MyStore', items, keys);
+        idb.closeDatabase();
+    });
+
+    beforeEach(async () => {
+        await idb.openDatabase();
+    });
+    afterEach(() => {
+        idb.closeDatabase();
+    });
+
+    test('getIterator(範囲指定なし)', async () => {
+        // for await ... of による取得
+        const iter1 = idb.getIterator<string>('MyStore');
+        const result: string[] = [];
+        for await (const item of iter1) {
+            result.push(item);
+        }
+        expect(result).toEqual(items);
+
+        // イテレータの next() を await なしで呼び出して取得
+        const iter2 = idb.getIterator<string>('MyStore');
+        const promises = [];
+        for (let i = 0; i < items.length; i += 1) {
+            // eslint-disable-next-line @typescript-eslint/no-loop-func
+            promises.push(iter2.next().then((response) => {
+                expect(response.value).toBe(items[i]);
+                expect(response.done).toBe(false);
+            }));
+        }
+        promises.push(iter2.next().then((response) => {
+            expect(response.value).toBeUndefined();
+            expect(response.done).toBe(true);
+        }));
+        promises.push(iter2.next().then((response) => {
+            expect(response.value).toBeUndefined();
+            expect(response.done).toBe(true);
+        }));
+        await Promise.all(promises);
+    });
+
+    test('getIterator(範囲指定あり)', async () => {
+        const iter1 = idb.getIterator<string>('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
+        const result1: string[] = [];
+        for await (const item of iter1) {
+            result1.push(item);
+        }
+        expect(result1).toEqual(['Grape', 'Juice', 'Lemon', 'Noodle', 'Orange']);
+
+        const iter2 = idb.getIterator<string>('MyStore', { lower: 'P', upper: 'R' });
+        const result2: string[] = [];
+        for await (const item of iter2) {
+            result2.push(item);
+        }
+        expect(result2).toEqual([]);
     });
 });
