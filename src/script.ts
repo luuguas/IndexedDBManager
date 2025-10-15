@@ -475,4 +475,104 @@ export class IDBManager {
             [Symbol.asyncIterator](): AsyncIterableIterator<ItemT> { return this; },
         };
     }
+
+    getKeyIterator(
+        storeName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<IDBValidKey> {
+        if (this.isClose()) {
+            throw new ReferenceError(this.dbNotOpenErrMsg);
+        }
+
+        const tx = this.db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+
+        const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+        const cursorReq = store.openKeyCursor(rawKeyRange, 'next');
+
+        let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
+            { value: undefined, done: false },
+        );
+        return {
+            next(): Promise<IteratorResult<IDBValidKey>> {
+                const p = prev.then(
+                    (prevResponse) => {
+                        return new Promise<IteratorResult<IDBValidKey>>((resolve, reject) => {
+                            if (prevResponse.done) {
+                                resolve({ value: undefined, done: true });
+                                return;
+                            }
+
+                            cursorReq.onerror = () => { reject(cursorReq.error); };
+                            cursorReq.onsuccess = () => {
+                                const cursor = cursorReq.result;
+
+                                if (cursor) {
+                                    resolve({ value: cursor.key, done: false });
+                                    cursor.continue();
+                                }
+                                else {
+                                    resolve({ value: undefined, done: true });
+                                }
+                            };
+                        });
+                    },
+                    (prevError) => { return Promise.reject(prevError); },
+                );
+                prev = p;
+                return p;
+            },
+            [Symbol.asyncIterator](): AsyncIterableIterator<IDBValidKey> { return this; },
+        };
+    }
+
+    getReversedKeyIterator(
+        storeName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<IDBValidKey> {
+        if (this.isClose()) {
+            throw new ReferenceError(this.dbNotOpenErrMsg);
+        }
+
+        const tx = this.db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+
+        const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+        const cursorReq = store.openKeyCursor(rawKeyRange, 'prev');
+
+        let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
+            { value: undefined, done: false },
+        );
+        return {
+            next(): Promise<IteratorResult<IDBValidKey>> {
+                const p = prev.then(
+                    (prevResponse) => {
+                        return new Promise<IteratorResult<IDBValidKey>>((resolve, reject) => {
+                            if (prevResponse.done) {
+                                resolve({ value: undefined, done: true });
+                                return;
+                            }
+
+                            cursorReq.onerror = () => { reject(cursorReq.error); };
+                            cursorReq.onsuccess = () => {
+                                const cursor = cursorReq.result;
+
+                                if (cursor) {
+                                    resolve({ value: cursor.key, done: false });
+                                    cursor.continue();
+                                }
+                                else {
+                                    resolve({ value: undefined, done: true });
+                                }
+                            };
+                        });
+                    },
+                    (prevError) => { return Promise.reject(prevError); },
+                );
+                prev = p;
+                return p;
+            },
+            [Symbol.asyncIterator](): AsyncIterableIterator<IDBValidKey> { return this; },
+        };
+    }
 }
