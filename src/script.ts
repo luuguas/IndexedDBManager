@@ -25,7 +25,7 @@ export class IDBManager {
     protected dbVersion: number;
     protected storeInfos: IDBMStoreInfo[];
 
-    protected dbNotOpenErrMsg: string = 'Database is not open.';
+    protected dbNotOpenErrMsg: string = 'The database is not open.';
 
     constructor(dbName: string, dbVersion: number, storeInfos: IDBMStoreInfo[]) {
         this.db = NULL_IDB_DATABASE;
@@ -88,14 +88,14 @@ export class IDBManager {
                 if (!this.verifyObjectStoreNames()) {
                     this.db.close();
                     this.db = NULL_IDB_DATABASE;
-                    reject(new TypeError('storeInfos does not match the object stores in the database. The database version should be upgraded.'));
+                    reject(new TypeError('The storeInfos does not match the object stores in the database. The database version needs upgrading.'));
                     return;
                 }
                 resolve();
             };
 
             openReq.onblocked = () => {
-                reject(new ReferenceError('The database cannot be upgraded because another instance has the database open.'));
+                reject(new ReferenceError('The database cannot be upgraded because it is currently open on another instance.'));
             };
             openReq.onupgradeneeded = () => {
                 const db = openReq.result;
