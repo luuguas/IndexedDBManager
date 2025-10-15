@@ -205,10 +205,10 @@ export class IDBManager {
             });
 
             Promise.all(promises)
-                .then((value: IDBValidKey[]) => { resolve(value); })
-                .catch((reason: DOMException) => {
+                .then((response: IDBValidKey[]) => { resolve(response); })
+                .catch((error: DOMException) => {
                     tx.abort();
-                    reject(reason);
+                    reject(error);
                 });
         });
     }
@@ -248,10 +248,10 @@ export class IDBManager {
             });
 
             Promise.all(promises)
-                .then((value: void[]) => { resolve(); })
-                .catch((reason: DOMException) => {
+                .then(() => { resolve(); })
+                .catch((error: DOMException) => {
                     tx.abort();
-                    reject(reason);
+                    reject(error);
                 });
         });
     }
@@ -272,7 +272,7 @@ export class IDBManager {
         });
     }
 
-    getItem<ItemT>(storeName: string, key: IDBValidKey): Promise<ItemT | void> {
+    getItem<ItemT>(storeName: string, key: IDBValidKey): Promise<ItemT | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -284,11 +284,11 @@ export class IDBManager {
 
             const getReq = store.get(key);
             getReq.onerror = () => { reject(getReq.error); };
-            getReq.onsuccess = () => { resolve(getReq.result as ItemT | void); };
+            getReq.onsuccess = () => { resolve(getReq.result as ItemT | undefined); };
         });
     }
 
-    getFirstItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | void> {
+    getFirstItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -305,12 +305,12 @@ export class IDBManager {
                 const cursor = cursorReq.result;
 
                 if (cursor) { resolve(cursor.value as ItemT); }
-                else { resolve(); }
+                else { resolve(undefined); }
             };
         });
     }
 
-    getLastItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | void> {
+    getLastItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -327,12 +327,12 @@ export class IDBManager {
                 const cursor = cursorReq.result;
 
                 if (cursor) { resolve(cursor.value as ItemT); }
-                else { resolve(); }
+                else { resolve(undefined); }
             };
         });
     }
 
-    getFirstKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | void> {
+    getFirstKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -349,12 +349,12 @@ export class IDBManager {
                 const cursor = cursorReq.result;
 
                 if (cursor) { resolve(cursor.key); }
-                else { resolve(); }
+                else { resolve(undefined); }
             };
         });
     }
 
-    getLastKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | void> {
+    getLastKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -371,7 +371,7 @@ export class IDBManager {
                 const cursor = cursorReq.result;
 
                 if (cursor) { resolve(cursor.key); }
-                else { resolve(); }
+                else { resolve(undefined); }
             };
         });
     }
@@ -390,8 +390,8 @@ export class IDBManager {
         const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
         const cursorReq = store.openCursor(rawKeyRange, 'next');
 
-        let prev: Promise<IteratorResult<ItemT>> = Promise.resolve(
-            { value: undefined as ItemT, done: false },
+        let prev: Promise<IteratorResult<ItemT | void>> = Promise.resolve(
+            { value: undefined, done: false },
         );
         return {
             next(): Promise<IteratorResult<ItemT>> {
@@ -440,8 +440,8 @@ export class IDBManager {
         const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
         const cursorReq = store.openCursor(rawKeyRange, 'prev');
 
-        let prev: Promise<IteratorResult<ItemT>> = Promise.resolve(
-            { value: undefined as ItemT, done: false },
+        let prev: Promise<IteratorResult<ItemT | void>> = Promise.resolve(
+            { value: undefined, done: false },
         );
         return {
             next(): Promise<IteratorResult<ItemT>> {
