@@ -375,4 +375,51 @@ export class IDBManager {
             };
         });
     }
+
+    getIterator<ItemT>(storeName: string, keyRange?: IDBMKeyRange): AsyncIterableIterator<ItemT> {
+        if (this.isClose()) {
+            throw new ReferenceError(this.dbNotOpenErrMsg);
+        }
+
+        const tx = this.db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+
+        const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+        const cursorReq = store.openCursor(rawKeyRange, 'next');
+
+        let prev: Promise<IteratorResult<ItemT>> = Promise.resolve(
+            { value: undefined as ItemT, done: false },
+        );
+        return {
+            next(): Promise<IteratorResult<ItemT>> {
+                const p = prev.then(
+                    (prevResponse) => {
+                        return new Promise<IteratorResult<ItemT>>((resolve, reject) => {
+                            if (prevResponse.done) {
+                                resolve({ value: undefined, done: true });
+                                return;
+                            }
+
+                            cursorReq.onerror = () => { reject(cursorReq.error); };
+                            cursorReq.onsuccess = () => {
+                                const cursor = cursorReq.result;
+
+                                if (cursor) {
+                                    resolve({ value: cursor.value as ItemT, done: false });
+                                    cursor.continue();
+                                }
+                                else {
+                                    resolve({ value: undefined, done: true });
+                                }
+                            };
+                        });
+                    },
+                    (prevError) => { return Promise.reject(prevError); },
+                );
+                prev = p;
+                return p;
+            },
+            [Symbol.asyncIterator](): AsyncIterableIterator<ItemT> { return this; },
+        };
+    }
 }
