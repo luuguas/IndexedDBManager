@@ -175,6 +175,8 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getLastKey('')).rejects.toThrow(ReferenceError);
         expect(() => { idb.getIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getReversedIterator(''); }).toThrow(ReferenceError);
+        expect(() => { idb.getKeyIterator(''); }).toThrow(ReferenceError);
+        expect(() => { idb.getReversedKeyIterator(''); }).toThrow(ReferenceError);
     });
 });
 
@@ -658,6 +660,58 @@ describe('複数データの取得テスト', () => {
         const result3: string[] = [];
         for await (const item of iter3) {
             result3.push(item);
+        }
+        expect(result3).toEqual([]);
+    });
+
+    test('getKeyIterator', async () => {
+        const iter1 = idb.getKeyIterator('MyStore');
+        const result1: IDBValidKey[] = [];
+        for await (const key of iter1) {
+            result1.push(key);
+        }
+        expect(result1).toEqual(keys);
+
+        // 列挙後に追加で next() を呼び出しても正常に返す
+        await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
+
+        const iter2 = idb.getKeyIterator('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
+        const result2: IDBValidKey[] = [];
+        for await (const key of iter2) {
+            result2.push(key);
+        }
+        expect(result2).toEqual(['G', 'J', 'L', 'N', 'O']);
+
+        const iter3 = idb.getKeyIterator('MyStore', { lower: 'P', upper: 'R' });
+        const result3: IDBValidKey[] = [];
+        for await (const key of iter3) {
+            result3.push(key);
+        }
+        expect(result3).toEqual([]);
+    });
+
+    test('getReversedKeyIterator', async () => {
+        const iter1 = idb.getReversedKeyIterator('MyStore');
+        const result1: IDBValidKey[] = [];
+        for await (const key of iter1) {
+            result1.push(key);
+        }
+        expect(result1).toEqual(Array.from(keys).reverse());
+
+        // 列挙後に追加で next() を呼び出しても正常に返す
+        await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
+
+        const iter2 = idb.getReversedKeyIterator('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
+        const result2: IDBValidKey[] = [];
+        for await (const key of iter2) {
+            result2.push(key);
+        }
+        expect(result2).toEqual(['O', 'N', 'L', 'J', 'G']);
+
+        const iter3 = idb.getReversedKeyIterator('MyStore', { lower: 'P', upper: 'R' });
+        const result3: IDBValidKey[] = [];
+        for await (const key of iter3) {
+            result3.push(key);
         }
         expect(result3).toEqual([]);
     });
