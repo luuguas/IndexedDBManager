@@ -376,6 +376,85 @@ export class IDBManager {
         });
     }
 
+    getItems<TItem>(storeName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
+    getItems<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
+    getItems<TItem>(
+        storeName: string,
+        keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
+    ): Promise<(TItem | undefined)[]> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            if (keysOrKeyRange instanceof Array) {
+                // keys: IDBValidKey[]
+                const promises: Promise<TItem | undefined>[] = keysOrKeyRange.map((key) => {
+                    return new Promise((res, rej) => {
+                        const getReq = store.get(key);
+                        getReq.onerror = () => { rej(getReq.error); };
+                        getReq.onsuccess = () => { res(getReq.result as TItem | undefined); };
+                    });
+                });
+
+                Promise.all(promises)
+                    .then((response: (TItem | undefined)[]) => { resolve(response); })
+                    .catch((error: DOMException) => {
+                        tx.abort();
+                        reject(error);
+                    });
+            }
+            else {
+                // keyRange?: IDBMKeyRange
+                const rawKeyRange = IDBManager.generateRawKeyRange(keysOrKeyRange);
+                const getAllReq = store.getAll(rawKeyRange);
+                getAllReq.onerror = () => { reject(getAllReq.error); };
+                getAllReq.onsuccess = () => { resolve(getAllReq.result as TItem[]); };
+            }
+        });
+    }
+
+    getKeys(
+        storeName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<IDBValidKey[]> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+            const getAllReq = store.getAllKeys(rawKeyRange);
+            getAllReq.onerror = () => { reject(getAllReq.error); };
+            getAllReq.onsuccess = () => { resolve(getAllReq.result); };
+        });
+    }
+
+    countItems(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+            const countReq = store.count(rawKeyRange || undefined);
+            countReq.onerror = () => { reject(countReq.error); };
+            countReq.onsuccess = () => { resolve(countReq.result); };
+        });
+    }
+
     getIterator<TItem>(
         storeName: string,
         keyRange?: IDBMKeyRange,
@@ -574,84 +653,5 @@ export class IDBManager {
             },
             [Symbol.asyncIterator](): AsyncIterableIterator<IDBValidKey> { return this; },
         };
-    }
-
-    getItems<TItem>(storeName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
-    getItems<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
-    getItems<TItem>(
-        storeName: string,
-        keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
-    ): Promise<(TItem | undefined)[]> {
-        return new Promise((resolve, reject) => {
-            if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
-                return;
-            }
-
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            if (keysOrKeyRange instanceof Array) {
-                // keys: IDBValidKey[]
-                const promises: Promise<TItem | undefined>[] = keysOrKeyRange.map((key) => {
-                    return new Promise((res, rej) => {
-                        const getReq = store.get(key);
-                        getReq.onerror = () => { rej(getReq.error); };
-                        getReq.onsuccess = () => { res(getReq.result as TItem | undefined); };
-                    });
-                });
-
-                Promise.all(promises)
-                    .then((response: (TItem | undefined)[]) => { resolve(response); })
-                    .catch((error: DOMException) => {
-                        tx.abort();
-                        reject(error);
-                    });
-            }
-            else {
-                // keyRange?: IDBMKeyRange
-                const rawKeyRange = IDBManager.generateRawKeyRange(keysOrKeyRange);
-                const getAllReq = store.getAll(rawKeyRange);
-                getAllReq.onerror = () => { reject(getAllReq.error); };
-                getAllReq.onsuccess = () => { resolve(getAllReq.result as TItem[]); };
-            }
-        });
-    }
-
-    getKeys(
-        storeName: string,
-        keyRange?: IDBMKeyRange,
-    ): Promise<IDBValidKey[]> {
-        return new Promise((resolve, reject) => {
-            if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
-                return;
-            }
-
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-            const getAllReq = store.getAllKeys(rawKeyRange);
-            getAllReq.onerror = () => { reject(getAllReq.error); };
-            getAllReq.onsuccess = () => { resolve(getAllReq.result); };
-        });
-    }
-
-    countItems(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
-        return new Promise((resolve, reject) => {
-            if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
-                return;
-            }
-
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-            const countReq = store.count(rawKeyRange || undefined);
-            countReq.onerror = () => { reject(countReq.error); };
-            countReq.onsuccess = () => { resolve(countReq.result); };
-        });
     }
 }

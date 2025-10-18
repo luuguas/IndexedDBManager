@@ -595,6 +595,33 @@ describe('複数データの取得テスト', () => {
         idb.closeDatabase();
     });
 
+    test('getItems', async () => {
+        // keys: IDBValidKey[]
+        const keys1 = ['L', 'E', 'M', 'O', 'N'];
+        await expect(idb.getItems('MyStore', keys1)).resolves.toEqual(['Lemon', 'Egg', undefined, 'Orange', 'Noodle']);
+
+        // keyRange?: IDBMKeyRange
+        await expect(idb.getItems('MyStore')).resolves.toEqual(items); // 全範囲
+        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
+        await expect(idb.getItems('MyStore', keyRange1)).resolves.toEqual(['Grape', 'Juice', 'Lemon', 'Noodle', 'Orange']);
+        const keyRange2 = { lower: 'P', upper: 'R' };
+        await expect(idb.getItems('MyStore', keyRange2)).resolves.toEqual([]);
+    });
+    test('getKeys', async () => {
+        await expect(idb.getKeys('MyStore')).resolves.toEqual(keys); // 全範囲
+        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
+        await expect(idb.getKeys('MyStore', keyRange1)).resolves.toEqual(['G', 'J', 'L', 'N', 'O']);
+        const keyRange2 = { lower: 'P', upper: 'R' };
+        await expect(idb.getKeys('MyStore', keyRange2)).resolves.toEqual([]);
+    });
+    test('countItems', async () => {
+        await expect(idb.countItems('MyStore')).resolves.toEqual(10); // 全範囲
+        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
+        await expect(idb.countItems('MyStore', keyRange1)).resolves.toEqual(5);
+        const keyRange2 = { lower: 'P', upper: 'R' };
+        await expect(idb.countItems('MyStore', keyRange2)).resolves.toEqual(0);
+    });
+
     test('getIterator(範囲指定なし)', async () => {
         // for await ... of による取得
         const iter1 = idb.getIterator<string>('MyStore');
@@ -710,32 +737,5 @@ describe('複数データの取得テスト', () => {
             result3.push(key);
         }
         expect(result3).toEqual([]);
-    });
-
-    test('getItems', async () => {
-        // keys: IDBValidKey[]
-        const keys1 = ['L', 'E', 'M', 'O', 'N'];
-        await expect(idb.getItems('MyStore', keys1)).resolves.toEqual(['Lemon', 'Egg', undefined, 'Orange', 'Noodle']);
-
-        // keyRange?: IDBMKeyRange
-        await expect(idb.getItems('MyStore')).resolves.toEqual(items); // 全範囲
-        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
-        await expect(idb.getItems('MyStore', keyRange1)).resolves.toEqual(['Grape', 'Juice', 'Lemon', 'Noodle', 'Orange']);
-        const keyRange2 = { lower: 'P', upper: 'R' };
-        await expect(idb.getItems('MyStore', keyRange2)).resolves.toEqual([]);
-    });
-    test('getKeys', async () => {
-        await expect(idb.getKeys('MyStore')).resolves.toEqual(keys); // 全範囲
-        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
-        await expect(idb.getKeys('MyStore', keyRange1)).resolves.toEqual(['G', 'J', 'L', 'N', 'O']);
-        const keyRange2 = { lower: 'P', upper: 'R' };
-        await expect(idb.getKeys('MyStore', keyRange2)).resolves.toEqual([]);
-    });
-    test('countItems', async () => {
-        await expect(idb.countItems('MyStore')).resolves.toEqual(10); // 全範囲
-        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
-        await expect(idb.countItems('MyStore', keyRange1)).resolves.toEqual(5);
-        const keyRange2 = { lower: 'P', upper: 'R' };
-        await expect(idb.countItems('MyStore', keyRange2)).resolves.toEqual(0);
     });
 });
