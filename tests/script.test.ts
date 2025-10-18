@@ -179,6 +179,7 @@ describe('CRUDs共通の例外処理', () => {
         expect(() => { idb.getReversedKeyIterator(''); }).toThrow(ReferenceError);
         await expect(idb.getItems('')).rejects.toThrow(ReferenceError);
         await expect(idb.getKeys('')).rejects.toThrow(ReferenceError);
+        await expect(idb.countItems('')).rejects.toThrow(ReferenceError);
     });
 });
 
@@ -729,5 +730,12 @@ describe('複数データの取得テスト', () => {
         await expect(idb.getKeys('MyStore', keyRange1)).resolves.toEqual(['G', 'J', 'L', 'N', 'O']);
         const keyRange2 = { lower: 'P', upper: 'R' };
         await expect(idb.getKeys('MyStore', keyRange2)).resolves.toEqual([]);
+    });
+    test('countItems', async () => {
+        await expect(idb.countItems('MyStore')).resolves.toEqual(10); // 全範囲
+        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
+        await expect(idb.countItems('MyStore', keyRange1)).resolves.toEqual(5);
+        const keyRange2 = { lower: 'P', upper: 'R' };
+        await expect(idb.countItems('MyStore', keyRange2)).resolves.toEqual(0);
     });
 });
