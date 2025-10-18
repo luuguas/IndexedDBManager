@@ -637,4 +637,21 @@ export class IDBManager {
             getAllReq.onsuccess = () => { resolve(getAllReq.result); };
         });
     }
+
+    countItems(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readonly');
+            const store = tx.objectStore(storeName);
+
+            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
+            const countReq = store.count(rawKeyRange || undefined);
+            countReq.onerror = () => { reject(countReq.error); };
+            countReq.onsuccess = () => { resolve(countReq.result); };
+        });
+    }
 }
