@@ -158,9 +158,9 @@ export class IDBManager {
         }
     }
 
-    setItem<ItemT>(
+    setItem<TItem>(
         storeName: string,
-        item: ItemT,
+        item: TItem,
         key?: IDBValidKey,
     ): Promise<IDBValidKey> {
         return new Promise((resolve, reject) => {
@@ -178,9 +178,9 @@ export class IDBManager {
         });
     }
 
-    setItems<ItemT>(
+    setItems<TItem>(
         storeName: string,
-        items: ItemT[],
+        items: TItem[],
         keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
@@ -272,7 +272,7 @@ export class IDBManager {
         });
     }
 
-    getItem<ItemT>(storeName: string, key: IDBValidKey): Promise<ItemT | undefined> {
+    getItem<TItem>(storeName: string, key: IDBValidKey): Promise<TItem | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -284,11 +284,11 @@ export class IDBManager {
 
             const getReq = store.get(key);
             getReq.onerror = () => { reject(getReq.error); };
-            getReq.onsuccess = () => { resolve(getReq.result as ItemT | undefined); };
+            getReq.onsuccess = () => { resolve(getReq.result as TItem | undefined); };
         });
     }
 
-    getFirstItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | undefined> {
+    getFirstItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -304,13 +304,13 @@ export class IDBManager {
             cursorReq.onsuccess = () => {
                 const cursor = cursorReq.result;
 
-                if (cursor) { resolve(cursor.value as ItemT); }
+                if (cursor) { resolve(cursor.value as TItem); }
                 else { resolve(undefined); }
             };
         });
     }
 
-    getLastItem<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT | undefined> {
+    getLastItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -326,7 +326,7 @@ export class IDBManager {
             cursorReq.onsuccess = () => {
                 const cursor = cursorReq.result;
 
-                if (cursor) { resolve(cursor.value as ItemT); }
+                if (cursor) { resolve(cursor.value as TItem); }
                 else { resolve(undefined); }
             };
         });
@@ -376,10 +376,10 @@ export class IDBManager {
         });
     }
 
-    getIterator<ItemT>(
+    getIterator<TItem>(
         storeName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<ItemT> {
+    ): AsyncIterableIterator<TItem> {
         if (this.isClose()) {
             throw new ReferenceError(this.dbNotOpenErrMsg);
         }
@@ -390,14 +390,14 @@ export class IDBManager {
         const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
         const cursorReq = store.openCursor(rawKeyRange, 'next');
 
-        let prev: Promise<IteratorResult<ItemT | void>> = Promise.resolve(
+        let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
             { value: undefined, done: false },
         );
         return {
-            next(): Promise<IteratorResult<ItemT>> {
+            next(): Promise<IteratorResult<TItem>> {
                 const p = prev.then(
                     (prevResponse) => {
-                        return new Promise<IteratorResult<ItemT>>((resolve, reject) => {
+                        return new Promise<IteratorResult<TItem>>((resolve, reject) => {
                             if (prevResponse.done) {
                                 resolve({ value: undefined, done: true });
                                 return;
@@ -408,7 +408,7 @@ export class IDBManager {
                                 const cursor = cursorReq.result;
 
                                 if (cursor) {
-                                    resolve({ value: cursor.value as ItemT, done: false });
+                                    resolve({ value: cursor.value as TItem, done: false });
                                     cursor.continue();
                                 }
                                 else {
@@ -422,14 +422,14 @@ export class IDBManager {
                 prev = p;
                 return p;
             },
-            [Symbol.asyncIterator](): AsyncIterableIterator<ItemT> { return this; },
+            [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
         };
     }
 
-    getReversedIterator<ItemT>(
+    getReversedIterator<TItem>(
         storeName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<ItemT> {
+    ): AsyncIterableIterator<TItem> {
         if (this.isClose()) {
             throw new ReferenceError(this.dbNotOpenErrMsg);
         }
@@ -440,14 +440,14 @@ export class IDBManager {
         const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
         const cursorReq = store.openCursor(rawKeyRange, 'prev');
 
-        let prev: Promise<IteratorResult<ItemT | void>> = Promise.resolve(
+        let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
             { value: undefined, done: false },
         );
         return {
-            next(): Promise<IteratorResult<ItemT>> {
+            next(): Promise<IteratorResult<TItem>> {
                 const p = prev.then(
                     (prevResponse) => {
-                        return new Promise<IteratorResult<ItemT>>((resolve, reject) => {
+                        return new Promise<IteratorResult<TItem>>((resolve, reject) => {
                             if (prevResponse.done) {
                                 resolve({ value: undefined, done: true });
                                 return;
@@ -458,7 +458,7 @@ export class IDBManager {
                                 const cursor = cursorReq.result;
 
                                 if (cursor) {
-                                    resolve({ value: cursor.value as ItemT, done: false });
+                                    resolve({ value: cursor.value as TItem, done: false });
                                     cursor.continue();
                                 }
                                 else {
@@ -472,7 +472,7 @@ export class IDBManager {
                 prev = p;
                 return p;
             },
-            [Symbol.asyncIterator](): AsyncIterableIterator<ItemT> { return this; },
+            [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
         };
     }
 
@@ -576,12 +576,12 @@ export class IDBManager {
         };
     }
 
-    getItems<ItemT>(storeName: string, keys: IDBValidKey[]): Promise<(ItemT | undefined)[]>;
-    getItems<ItemT>(storeName: string, keyRange?: IDBMKeyRange): Promise<ItemT[]>;
-    getItems<ItemT>(
+    getItems<TItem>(storeName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
+    getItems<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
+    getItems<TItem>(
         storeName: string,
         keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
-    ): Promise<(ItemT | undefined)[]> {
+    ): Promise<(TItem | undefined)[]> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(new ReferenceError(this.dbNotOpenErrMsg));
@@ -593,16 +593,16 @@ export class IDBManager {
 
             if (keysOrKeyRange instanceof Array) {
                 // keys: IDBValidKey[]
-                const promises: Promise<ItemT | undefined>[] = keysOrKeyRange.map((key) => {
+                const promises: Promise<TItem | undefined>[] = keysOrKeyRange.map((key) => {
                     return new Promise((res, rej) => {
                         const getReq = store.get(key);
                         getReq.onerror = () => { rej(getReq.error); };
-                        getReq.onsuccess = () => { res(getReq.result as ItemT | undefined); };
+                        getReq.onsuccess = () => { res(getReq.result as TItem | undefined); };
                     });
                 });
 
                 Promise.all(promises)
-                    .then((response: (ItemT | undefined)[]) => { resolve(response); })
+                    .then((response: (TItem | undefined)[]) => { resolve(response); })
                     .catch((error: DOMException) => {
                         tx.abort();
                         reject(error);
@@ -613,7 +613,7 @@ export class IDBManager {
                 const rawKeyRange = IDBManager.generateRawKeyRange(keysOrKeyRange);
                 const getAllReq = store.getAll(rawKeyRange);
                 getAllReq.onerror = () => { reject(getAllReq.error); };
-                getAllReq.onsuccess = () => { resolve(getAllReq.result as ItemT[]); };
+                getAllReq.onsuccess = () => { resolve(getAllReq.result as TItem[]); };
             }
         });
     }
