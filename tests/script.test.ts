@@ -177,6 +177,8 @@ describe('CRUDs共通の例外処理', () => {
         expect(() => { idb.getReversedIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getKeyIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getReversedKeyIterator(''); }).toThrow(ReferenceError);
+        await expect(idb.getItems('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getKeys('')).rejects.toThrow(ReferenceError);
     });
 });
 
@@ -517,7 +519,6 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getFirstItem('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
         await expect(idb.getFirstItem('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
-
     test('getFirstKey', async () => {
         // lower指定なし
         await expect(idb.getFirstKey('MyStore')).resolves.toBe('B');
@@ -534,7 +535,6 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getFirstKey('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
         await expect(idb.getFirstKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
-
     test('getLastItem', async () => {
         // upper指定なし
         await expect(idb.getLastItem('MyStore')).resolves.toBe('Vegetable');
@@ -551,7 +551,6 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getLastItem('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
         await expect(idb.getLastItem('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
-
     test('getLastKey', async () => {
         // upper指定なし
         await expect(idb.getLastKey('MyStore')).resolves.toBe('V');
@@ -621,7 +620,6 @@ describe('複数データの取得テスト', () => {
         }));
         await expect(Promise.all(promises)).resolves.toBeDefined();
     });
-
     test('getIterator(範囲指定あり)', async () => {
         const iter1 = idb.getIterator<string>('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
         const result1: string[] = [];
@@ -637,7 +635,6 @@ describe('複数データの取得テスト', () => {
         }
         expect(result2).toEqual([]);
     });
-
     test('getReversedIterator', async () => {
         const iter1 = idb.getReversedIterator<string>('MyStore');
         const result1: string[] = [];
@@ -663,7 +660,6 @@ describe('複数データの取得テスト', () => {
         }
         expect(result3).toEqual([]);
     });
-
     test('getKeyIterator', async () => {
         const iter1 = idb.getKeyIterator('MyStore');
         const result1: IDBValidKey[] = [];
@@ -689,7 +685,6 @@ describe('複数データの取得テスト', () => {
         }
         expect(result3).toEqual([]);
     });
-
     test('getReversedKeyIterator', async () => {
         const iter1 = idb.getReversedKeyIterator('MyStore');
         const result1: IDBValidKey[] = [];
@@ -714,5 +709,25 @@ describe('複数データの取得テスト', () => {
             result3.push(key);
         }
         expect(result3).toEqual([]);
+    });
+
+    test('getItems', async () => {
+        // keys: IDBValidKey[]
+        const keys1 = ['L', 'E', 'M', 'O', 'N'];
+        await expect(idb.getItems('MyStore', keys1)).resolves.toEqual(['Lemon', 'Egg', undefined, 'Orange', 'Noodle']);
+
+        // keyRange?: IDBMKeyRange
+        await expect(idb.getItems('MyStore')).resolves.toEqual(items); // 全範囲
+        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
+        await expect(idb.getItems('MyStore', keyRange1)).resolves.toEqual(['Grape', 'Juice', 'Lemon', 'Noodle', 'Orange']);
+        const keyRange2 = { lower: 'P', upper: 'R' };
+        await expect(idb.getItems('MyStore', keyRange2)).resolves.toEqual([]);
+    });
+    test('getKeys', async () => {
+        await expect(idb.getKeys('MyStore')).resolves.toEqual(keys); // 全範囲
+        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
+        await expect(idb.getKeys('MyStore', keyRange1)).resolves.toEqual(['G', 'J', 'L', 'N', 'O']);
+        const keyRange2 = { lower: 'P', upper: 'R' };
+        await expect(idb.getKeys('MyStore', keyRange2)).resolves.toEqual([]);
     });
 });
