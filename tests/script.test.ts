@@ -622,6 +622,11 @@ describe('複数データの取得テスト', () => {
         await expect(idb.countItems('MyStore', keyRange2)).resolves.toEqual(0);
     });
 
+    test('getItemsで不正なキーを渡すと取得できない', async () => {
+        const keys1 = ['A', null];
+        await expect(idb.getItems('MyStore', keys1 as IDBValidKey[])).rejects.toThrow(DOMException);
+    });
+
     test('getIterator(範囲指定なし)', async () => {
         // for await ... of による取得
         const iter1 = idb.getIterator<string>('MyStore');
