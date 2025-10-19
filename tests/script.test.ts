@@ -474,6 +474,21 @@ describe('generateKeyRangeの動作テスト', () => {
             expect(getKeyRangeInfo(IDBManager.generateRawKeyRange(val.exp))).toEqual(val.toEq);
         });
     });
+
+    test('キー指定を間違えると失敗する', () => {
+        // キーがIDBValidkeyでない
+        expect(() => {
+            IDBManager.generateRawKeyRange({ lower: 'A', upper: null as unknown as IDBValidKey });
+        }).toThrow(DOMException);
+        // lower > upper
+        expect(() => {
+            IDBManager.generateRawKeyRange({ lower: 'Z', upper: 'A' });
+        }).toThrow(DOMException);
+        // lower == upper かついずれかの境界が開いている
+        expect(() => {
+            IDBManager.generateRawKeyRange({ lower: 'A', upper: 'A', lowerOpen: true });
+        }).toThrow(DOMException);
+    });
 });
 
 describe('単体データの取得テスト', () => {
