@@ -168,18 +168,21 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.removeItem('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.removeItems('', [])).rejects.toThrow(ReferenceError);
         await expect(idb.clearItems('')).rejects.toThrow(ReferenceError);
+
         await expect(idb.getItem('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstItem('')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastItem('')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstKey('')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastKey('')).rejects.toThrow(ReferenceError);
+        await expect(idb.hasItem('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getItems('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getKeys('')).rejects.toThrow(ReferenceError);
+        await expect(idb.countItems('')).rejects.toThrow(ReferenceError);
+        await expect(idb.hasAnyItems('')).rejects.toThrow(ReferenceError);
         expect(() => { idb.getIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getReversedIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getKeyIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getReversedKeyIterator(''); }).toThrow(ReferenceError);
-        await expect(idb.getItems('')).rejects.toThrow(ReferenceError);
-        await expect(idb.getKeys('')).rejects.toThrow(ReferenceError);
-        await expect(idb.countItems('')).rejects.toThrow(ReferenceError);
     });
 });
 
@@ -568,6 +571,11 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getLastKey('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
         await expect(idb.getLastKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
+    test('hasItem', async () => {
+        await expect(idb.hasItem('MyStore', 'B')).resolves.toBe(true);
+        await expect(idb.hasItem('MyStore', 'G')).resolves.toBe(true);
+        await expect(idb.hasItem('MyStore', 'M')).resolves.toBe(false);
+    });
 });
 
 describe('複数データの取得テスト', () => {
@@ -620,6 +628,13 @@ describe('複数データの取得テスト', () => {
         await expect(idb.countItems('MyStore', keyRange1)).resolves.toEqual(5);
         const keyRange2 = { lower: 'P', upper: 'R' };
         await expect(idb.countItems('MyStore', keyRange2)).resolves.toEqual(0);
+    });
+    test('hasAnyItems', async () => {
+        await expect(idb.hasAnyItems('MyStore')).resolves.toBe(true); // 全範囲
+        const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
+        await expect(idb.hasAnyItems('MyStore', keyRange1)).resolves.toBe(true);
+        const keyRange2 = { lower: 'P', upper: 'R' };
+        await expect(idb.hasAnyItems('MyStore', keyRange2)).resolves.toBe(false);
     });
 
     test('getItemsで不正なキーを渡すと取得できない', async () => {
