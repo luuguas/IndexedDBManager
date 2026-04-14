@@ -1,15 +1,23 @@
 import { NULL_IDB_DATABASE } from './null';
 
+export interface IDBMIndexInfo {
+    indexName: string;
+    keyPath: string | string[],
+    unique?: boolean;
+    multiEntry?: boolean;
+}
 export interface IDBMStoreInfo {
     name: string;
     keyPath?: string | string[] | null;
     autoIncrement?: boolean;
-    resetOnUpgrade?: boolean;
+    resetOnUpgrade?: 'all' | 'index' | 'none';
+    indexInfos?: IDBMIndexInfo[];
 }
 interface IDBMStoreUpgradeInfo {
-    type: 'create' | 'unchanged' | 'remove' | 'reset' | 'exist';
+    type: 'create' | 'unchanged' | 'remove' | 'resetAll' | 'resetIndex' | 'exist';
     keyPath?: string | string[] | null;
     autoIncrement?: boolean;
+    indexInfos?: IDBMIndexInfo[];
 }
 
 export interface IDBMKeyRange {
@@ -111,13 +119,21 @@ export class IDBManager {
                             type: 'create',
                             keyPath: storeInfo.keyPath,
                             autoIncrement: storeInfo.autoIncrement,
+                            indexInfos: storeInfo.indexInfos,
                         });
                     }
-                    else if (storeInfo.resetOnUpgrade) {
+                    else if (storeInfo.resetOnUpgrade === 'all') {
                         mp.set(storeInfo.name, {
-                            type: 'reset',
+                            type: 'resetAll',
                             keyPath: storeInfo.keyPath,
                             autoIncrement: storeInfo.autoIncrement,
+                            indexInfos: storeInfo.indexInfos,
+                        });
+                    }
+                    else if (storeInfo.resetOnUpgrade === 'index') {
+                        mp.set(storeInfo.name, {
+                            type: 'resetIndex',
+                            indexInfos: storeInfo.indexInfos,
                         });
                     }
                     else {
@@ -131,16 +147,44 @@ export class IDBManager {
                 });
 
                 mp.forEach((storeUpgradeInfo, storeName) => {
+                    let store: IDBObjectStore;
                     switch (storeUpgradeInfo.type) {
                         case 'create':
-                            db.createObjectStore(storeName, storeUpgradeInfo);
+                            store = db.createObjectStore(storeName, storeUpgradeInfo);
+                            storeUpgradeInfo.indexInfos?.forEach((indexInfo) => {
+                                const option: IDBIndexParameters = {
+                                    unique: indexInfo.unique,
+                                    multiEntry: indexInfo.multiEntry,
+                                };
+                                store.createIndex(indexInfo.indexName, indexInfo.keyPath, option);
+                            });
                             break;
                         case 'remove':
                             db.deleteObjectStore(storeName);
                             break;
-                        case 'reset':
+                        case 'resetAll':
                             db.deleteObjectStore(storeName);
-                            db.createObjectStore(storeName, storeUpgradeInfo);
+                            store = db.createObjectStore(storeName, storeUpgradeInfo);
+                            storeUpgradeInfo.indexInfos?.forEach((indexInfo) => {
+                                const option: IDBIndexParameters = {
+                                    unique: indexInfo.unique,
+                                    multiEntry: indexInfo.multiEntry,
+                                };
+                                store.createIndex(indexInfo.indexName, indexInfo.keyPath, option);
+                            });
+                            break;
+                        case 'resetIndex':
+                            store = db.transaction(storeName, 'versionchange').objectStore(storeName);
+                            Array.from(store.indexNames).forEach((indexName) => {
+                                store.deleteIndex(indexName);
+                            });
+                            storeUpgradeInfo.indexInfos?.forEach((indexInfo) => {
+                                const option: IDBIndexParameters = {
+                                    unique: indexInfo.unique,
+                                    multiEntry: indexInfo.multiEntry,
+                                };
+                                store.createIndex(indexInfo.indexName, indexInfo.keyPath, option);
+                            });
                             break;
 
                         default:
