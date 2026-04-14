@@ -108,7 +108,7 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         // remove
         // { name: 'MyStore2', keyPath: 'key' },
         // reset
-        { name: 'MyStore3', autoIncrement: false, resetOnUpgrade: true },
+        { name: 'MyStore3', autoIncrement: false, resetOnUpgrade: 'all' },
     ];
 
     test('オブジェクトストアを作成してDBを開く', async () => {
@@ -149,9 +149,9 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
     });
     test('DBを開いていないときverifyObjectStores(protectedなメンバ関数)を呼び出すとエラー', () => {
         const dbName = createDBName();
-        const idb = new PublicIDBManager(dbName, 1, []);
+        const pidb = new PublicIDBManager(dbName, 1, []);
 
-        expect(() => { idb.p_verifyObjectStoreNames(); }).toThrow(ReferenceError);
+        expect(() => { pidb.p_verifyObjectStoreNames(); }).toThrow(ReferenceError);
     });
 });
 
