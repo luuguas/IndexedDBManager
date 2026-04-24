@@ -774,3 +774,120 @@ describe('複数データの取得テスト', () => {
         expect(result3).toEqual([]);
     });
 });
+
+describe('DBの開閉テスト(インデックスあり)', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    type Person = {
+        name: string,
+        age: number,
+        address: string,
+    };
+    type Item = {
+        item: string,
+        id: number,
+        weight: number,
+        value: number,
+        color: string,
+    };
+
+    const oldStoreInfos: IDBMStoreInfo[] = [
+        {
+            name: 'MyStore1',
+            keyPath: 'name',
+            indexInfos: [
+                { indexName: 'ageIdx', keyPath: 'age' },
+                { indexName: 'addressIdx', keyPath: 'address' },
+            ],
+        },
+        {
+            name: 'MyStore2',
+            keyPath: 'item',
+            indexInfos: [
+                { indexName: 'idIdx', keyPath: 'id', unique: true },
+                { indexName: 'weightIdx', keyPath: 'weight', multiEntry: true },
+                { indexName: 'valueIdx', keyPath: 'value' },
+            ],
+        },
+    ];
+    const newStoreInfos: IDBMStoreInfo[] = [
+        {
+            name: 'MyStore1',
+            keyPath: 'name',
+            indexInfos: [
+                { indexName: 'ageIdx', keyPath: 'age' },
+            ],
+            resetOnUpgrade: 'all',
+        },
+        {
+            name: 'MyStore2',
+            keyPath: 'item',
+            indexInfos: [
+                { indexName: 'idIdx', keyPath: 'id' },
+                { indexName: 'weightIdx', keyPath: 'weight', multiEntry: true },
+                { indexName: 'colorIdx', keyPath: 'color' },
+            ],
+            resetOnUpgrade: 'index',
+        },
+    ];
+
+    const dbName = createDBName();
+
+    test('インデックス付きオブジェクトストアを作成してDBを開く', async () => {
+        const pidb = new PublicIDBManager(dbName, 1, oldStoreInfos);
+        await expect(pidb.openDatabase()).resolves.toBeUndefined();
+
+        await expect(pidb.setItem<Person>('MyStore1', {
+            name: 'Alice', age: 20, address: 'US',
+        })).resolves.toBe('Alice');
+
+        // インデックスが作成されていることをテスト
+        const tx = pidb.p_db.transaction(['MyStore1', 'MyStore2'], 'readonly');
+        const indexNames1 = Array.from(tx.objectStore('MyStore1').indexNames).sort();
+        expect(indexNames1).toEqual(['addressIdx', 'ageIdx']);
+        const indexNames2 = Array.from(tx.objectStore('MyStore2').indexNames).sort();
+        expect(indexNames2).toEqual(['idIdx', 'valueIdx', 'weightIdx']);
+
+        pidb.closeDatabase();
+    });
+    test('uniqueオプションのテスト', async () => {
+        const idb = new IDBManager(dbName, 1, oldStoreInfos);
+        await expect(idb.openDatabase()).resolves.toBeUndefined();
+
+        await expect(idb.setItems<Item>('MyStore2', [
+            {
+                item: 'Apple', id: 1, weight: 20, value: 100, color: 'red',
+            },
+            {
+                item: 'Banana', id: 2, weight: 15, value: 150, color: 'yellow',
+            },
+        ])).resolves.toEqual(['Apple', 'Banana']);
+
+        // 重複するidを指定すると失敗
+        await expect(idb.setItem<Item>('MyStore2', {
+            item: 'Cherry', id: 2, weight: 5, value: 50, color: 'red',
+        })).rejects.toThrow(DOMException);
+
+        idb.closeDatabase();
+    });
+    test('オブジェクトストア内のインデックスの構成を更新する(アップグレード)', async () => {
+        const pidb = new PublicIDBManager(dbName, 2, newStoreInfos);
+        await expect(pidb.openDatabase()).resolves.toBeUndefined();
+
+        // インデックスが変更されていることをテスト
+        const tx = pidb.p_db.transaction(['MyStore1', 'MyStore2'], 'readonly');
+        const indexNames1 = Array.from(tx.objectStore('MyStore1').indexNames).sort();
+        expect(indexNames1).toEqual(['ageIdx']);
+        const indexNames2 = Array.from(tx.objectStore('MyStore2').indexNames).sort();
+        expect(indexNames2).toEqual(['colorIdx', 'idIdx', 'weightIdx']);
+
+        // resetOnUpgrade: 'all' のとき、データもリセット
+        await expect(pidb.hasItem('MyStore1', 'Alice')).resolves.toBe(false);
+        // resetOnUpgrade: 'index' のとき、データは残る
+        await expect(pidb.hasItem('MyStore2', 'Apple')).resolves.toBe(true);
+
+        pidb.closeDatabase();
+    });
+});
