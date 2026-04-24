@@ -163,6 +163,8 @@ describe('CRUDs共通の例外処理', () => {
     test('DBを開いていない状態で呼び出すとエラー', async () => {
         const idb = new IDBManager('', 1, []);
 
+        await expect(idb.addItem('', {})).rejects.toThrow(ReferenceError);
+        await expect(idb.addItems('', [])).rejects.toThrow(ReferenceError);
         await expect(idb.setItem('', {})).rejects.toThrow(ReferenceError);
         await expect(idb.setItems('', [])).rejects.toThrow(ReferenceError);
         await expect(idb.removeItem('', '')).rejects.toThrow(ReferenceError);
@@ -207,15 +209,15 @@ describe('単体データの追加・更新・削除テスト', () => {
         idb.closeDatabase();
     });
 
-    test('1個のデータを追加する', async () => {
+    test('1個のデータを追加する(addItem, setItem)', async () => {
         // keyPath: なし, autoIncrement: false
         // itemは任意の値
-        await expect(idb.setItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
+        await expect(idb.addItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
 
         // keyPath: あり, autoIncrement: false
         // itemはオブジェクトのみ
-        await expect(idb.setItem('MyStore2', { key: 'B', value: 'Banana' })).resolves.toBe('B');
+        await expect(idb.addItem('MyStore2', { key: 'B', value: 'Banana' })).resolves.toBe('B');
         await expect(idb.getItem('MyStore2', 'B')).resolves.toEqual({ key: 'B', value: 'Banana' });
 
         // keyPath: なし, autoIncrement: true
@@ -246,6 +248,20 @@ describe('単体データの追加・更新・削除テスト', () => {
         await expect(idb.removeItem('MyStore1', 'A')).resolves.toBeUndefined(); // ストアに存在しないデータを指定しても成功(何もしない)
     });
 
+    test('addItemに既存のキーを指定すると追加できない', async () => {
+        // keyPath: なし, autoIncrement: false
+        await expect(idb.setItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
+        await expect(idb.addItem('MyStore1', 'Avocado', 'A')).rejects.toThrow(DOMException);
+
+        // keyPath: あり, autoIncrement: false
+        await expect(idb.addItem('MyStore2', { key: 'B', value: 'Blueberry' })).rejects.toThrow(DOMException);
+
+        // keyPath: なし, autoIncrement: true
+        await expect(idb.addItem('MyStore3', 'Chocolate', 1)).rejects.toThrow(DOMException);
+
+        // keyPath: あり, autoIncrement: true
+        await expect(idb.addItem('MyStore4', { key: 'F', value: 'French fries' })).rejects.toThrow(DOMException);
+    });
     test('キー指定を間違えると追加できない', async () => {
         // keyPath: なし, autoIncrement: false
         await expect(idb.setItem('MyStore1', 'Hamburger')).rejects.toThrow(DOMException); // 外部キー指定なし
@@ -289,19 +305,19 @@ describe('複数データの追加・更新・削除テスト', () => {
         idb.closeDatabase();
     });
 
-    test('複数のデータを追加する', async () => {
+    test('複数のデータを追加する(addItems, setItems)', async () => {
         // keyPath: なし, autoIncrement: false
         // itemは任意の値
         const items1 = ['Apple', { name: 'Banana' }];
         const keys1 = ['A', 'B'];
-        await expect(idb.setItems('MyStore1', items1, keys1)).resolves.toEqual(keys1);
+        await expect(idb.addItems('MyStore1', items1, keys1)).resolves.toEqual(keys1);
         await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
         await expect(idb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
 
         // keyPath: あり, autoIncrement: false
         // itemはオブジェクトのみ
         const items2 = [{ key: 'C', value: 'Cherry' }, { key: 'D', value: 'Donut' }];
-        await expect(idb.setItems('MyStore2', items2)).resolves.toEqual(['C', 'D']);
+        await expect(idb.addItems('MyStore2', items2)).resolves.toEqual(['C', 'D']);
         await expect(idb.getItem('MyStore2', 'C')).resolves.toEqual({ key: 'C', value: 'Cherry' });
         await expect(idb.getItem('MyStore2', 'D')).resolves.toEqual({ key: 'D', value: 'Donut' });
 
@@ -364,10 +380,21 @@ describe('複数データの追加・更新・削除テスト', () => {
         await expect(idb.getItem('MyStore2', 'D')).resolves.toBeUndefined();
     });
 
+    test('addItemsに既存のキーを指定すると追加できない', async () => {
+        const items1 = ['Apple', { name: 'Banana' }];
+        const keys1 = ['A', 'B'];
+        await expect(idb.setItems('MyStore1', items1, keys1)).resolves.toEqual(keys1);
+
+        const items2 = ['Chocolate', { name: 'Blueberry' }];
+        const keys2 = ['C', 'B'];
+        await expect(idb.addItems('MyStore1', items2, keys2)).rejects.toThrow(DOMException);
+        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeUndefined(); // ロールバック
+    });
     test('キー指定を間違えると追加できない', async () => {
         // keyPath: なし, autoIncrement: false
         const items1 = ['Juice', 'Kiwi'];
         const keys1 = ['J', undefined]; // keys[1]: 外部キー指定なし
+        await expect(idb.addItems('MyStore1', items1, keys1)).rejects.toThrow(DOMException);
         await expect(idb.setItems('MyStore1', items1, keys1)).rejects.toThrow(DOMException);
         await expect(idb.getItem('MyStore1', 'J')).resolves.toBeUndefined(); // ロールバック
 
@@ -385,6 +412,7 @@ describe('複数データの追加・更新・削除テスト', () => {
     test('itemsとkeysの長さが違うと追加できない', async () => {
         const items = ['Pear', 'Quince'];
         const keys = ['P', 'Q', 'R'];
+        await expect(idb.addItems('MyStore1', items, keys)).rejects.toThrow(TypeError);
         await expect(idb.setItems('MyStore1', items, keys)).rejects.toThrow(TypeError);
     });
     test('不正なキーを渡すと削除できない', async () => {
