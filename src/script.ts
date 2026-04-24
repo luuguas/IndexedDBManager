@@ -205,6 +205,61 @@ export class IDBManager {
         }
     }
 
+    addItem<TItem>(
+        storeName: string,
+        item: TItem,
+        key?: IDBValidKey,
+    ): Promise<IDBValidKey> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+
+            const addReq = store.add(item, key);
+            addReq.onerror = () => { reject(addReq.error); };
+            addReq.onsuccess = () => { resolve(addReq.result); };
+        });
+    }
+
+    addItems<TItem>(
+        storeName: string,
+        items: TItem[],
+        keys?: (IDBValidKey | undefined)[],
+    ): Promise<IDBValidKey[]> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                return;
+            }
+            if (keys instanceof Array && items.length !== keys.length) {
+                reject(new TypeError('The length of items and keys must be the same.'));
+                return;
+            }
+
+            const tx = this.db.transaction(storeName, 'readwrite');
+            const store = tx.objectStore(storeName);
+
+            const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
+                return new Promise((res, rej) => {
+                    const addReq = store.add(item, keys?.[idx]);
+                    addReq.onerror = () => { rej(addReq.error); };
+                    addReq.onsuccess = () => { res(addReq.result); };
+                });
+            });
+
+            Promise.all(promises)
+                .then((response: IDBValidKey[]) => { resolve(response); })
+                .catch((error: DOMException) => {
+                    tx.abort();
+                    reject(error);
+                });
+        });
+    }
+
     setItem<TItem>(
         storeName: string,
         item: TItem,
