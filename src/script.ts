@@ -174,7 +174,10 @@ export class IDBManager {
                             });
                             break;
                         case 'resetIndex':
-                            store = db.transaction(storeName, 'versionchange').objectStore(storeName);
+                            if (!openReq.transaction) {
+                                throw new ReferenceError('There is no transaction for upgrading the version.');
+                            }
+                            store = openReq.transaction.objectStore(storeName);
                             Array.from(store.indexNames).forEach((indexName) => {
                                 store.deleteIndex(indexName);
                             });
