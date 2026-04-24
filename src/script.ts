@@ -243,6 +243,10 @@ export class IDBManager {
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
 
+            let settled = false;
+            tx.onerror = () => { settled = true; };
+            tx.oncomplete = () => { settled = true; };
+
             const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
                 return new Promise((res, rej) => {
                     const addReq = store.add(item, keys?.[idx]);
@@ -254,7 +258,9 @@ export class IDBManager {
             Promise.all(promises)
                 .then((response: IDBValidKey[]) => { resolve(response); })
                 .catch((error: DOMException) => {
-                    tx.abort();
+                    if (!settled) {
+                        tx.abort();
+                    }
                     reject(error);
                 });
         });
@@ -298,6 +304,10 @@ export class IDBManager {
             const tx = this.db.transaction(storeName, 'readwrite');
             const store = tx.objectStore(storeName);
 
+            let settled = false;
+            tx.onerror = () => { settled = true; };
+            tx.oncomplete = () => { settled = true; };
+
             const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
                 return new Promise((res, rej) => {
                     const putReq = store.put(item, keys?.[idx]);
@@ -309,7 +319,9 @@ export class IDBManager {
             Promise.all(promises)
                 .then((response: IDBValidKey[]) => { resolve(response); })
                 .catch((error: DOMException) => {
-                    tx.abort();
+                    if (!settled) {
+                        tx.abort();
+                    }
                     reject(error);
                 });
         });
