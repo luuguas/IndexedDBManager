@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto';
-import { IDBManager, IDBMStoreInfo, IDBMKeyRange } from '../src/script';
+import { IDBManager, IDBMStoreInfo, IDBMKeyRange } from '../src/manager';
 import { PublicIDBManager } from './env/public';
 
 /* eslint-disable no-restricted-syntax */

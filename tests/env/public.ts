@@ -1,4 +1,4 @@
-import { IDBManager, IDBMStoreInfo } from '../../src/script';
+import { IDBManager, IDBMStoreInfo } from '../../src/manager';
 
 export class PublicIDBManager extends IDBManager {
     // accessor methods for testing protected members
