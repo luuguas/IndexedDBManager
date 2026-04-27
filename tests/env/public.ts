@@ -10,7 +10,7 @@ export class PublicIDBManager extends IDBManager {
     set p_dbVersion(value: number) { this.dbVersion = value; }
     get p_storeInfos(): IDBMStoreInfo[] { return this.storeInfos; }
     set p_storeInfos(value: IDBMStoreInfo[]) { this.storeInfos = value; }
-    get p_dbNotOpenErrMsg(): string { return this.dbNotOpenErrMsg; }
 
+    static p_dbNotOpenError(): ReferenceError { return IDBManager.dbNotOpenError(); }
     p_verifyObjectStoreNames(): boolean { return this.verifyObjectStoreNames(); }
 }

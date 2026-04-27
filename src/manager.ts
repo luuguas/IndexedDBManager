@@ -33,7 +33,9 @@ export class IDBManager {
     protected dbVersion: number;
     protected storeInfos: IDBMStoreInfo[];
 
-    protected dbNotOpenErrMsg: string = 'The database is not open.';
+    protected static dbNotOpenError(): ReferenceError {
+        return new ReferenceError('The database is not open.');
+    }
 
     constructor(dbName: string, dbVersion: number, storeInfos: IDBMStoreInfo[]) {
         this.db = NULL_IDB_DATABASE;
@@ -47,7 +49,7 @@ export class IDBManager {
 
     // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
     protected verifyObjectStoreNames(): boolean {
-        if (this.isClose()) { throw new ReferenceError(this.dbNotOpenErrMsg); }
+        if (this.isClose()) { throw IDBManager.dbNotOpenError(); }
 
         const existingStoreNames = Array.from(this.db.objectStoreNames);
         const st = new Set<string>();
@@ -212,7 +214,7 @@ export class IDBManager {
     ): Promise<IDBValidKey> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -232,7 +234,7 @@ export class IDBManager {
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
             if (keys instanceof Array && items.length !== keys.length) {
@@ -273,7 +275,7 @@ export class IDBManager {
     ): Promise<IDBValidKey> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -293,7 +295,7 @@ export class IDBManager {
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
             if (keys instanceof Array && items.length !== keys.length) {
@@ -330,7 +332,7 @@ export class IDBManager {
     removeItem(storeName: string, key: IDBValidKey): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -346,7 +348,7 @@ export class IDBManager {
     removeItems(storeName: string, keys: IDBValidKey[]): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -373,7 +375,7 @@ export class IDBManager {
     clearItems(storeName: string): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -389,7 +391,7 @@ export class IDBManager {
     getItem<TItem>(storeName: string, key: IDBValidKey): Promise<TItem | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -405,7 +407,7 @@ export class IDBManager {
     getFirstItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -427,7 +429,7 @@ export class IDBManager {
     getLastItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -449,7 +451,7 @@ export class IDBManager {
     getFirstKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -471,7 +473,7 @@ export class IDBManager {
     getLastKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -493,7 +495,7 @@ export class IDBManager {
     hasItem(storeName: string, key: IDBValidKey): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -514,7 +516,7 @@ export class IDBManager {
     ): Promise<(TItem | undefined)[]> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -554,7 +556,7 @@ export class IDBManager {
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -571,7 +573,7 @@ export class IDBManager {
     countItems(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -588,7 +590,7 @@ export class IDBManager {
     hasAnyItems(storeName: string, keyRange?: IDBMKeyRange): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
-                reject(new ReferenceError(this.dbNotOpenErrMsg));
+                reject(IDBManager.dbNotOpenError());
                 return;
             }
 
@@ -607,7 +609,7 @@ export class IDBManager {
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<TItem> {
         if (this.isClose()) {
-            throw new ReferenceError(this.dbNotOpenErrMsg);
+            throw IDBManager.dbNotOpenError();
         }
 
         const tx = this.db.transaction(storeName, 'readonly');
@@ -657,7 +659,7 @@ export class IDBManager {
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<TItem> {
         if (this.isClose()) {
-            throw new ReferenceError(this.dbNotOpenErrMsg);
+            throw IDBManager.dbNotOpenError();
         }
 
         const tx = this.db.transaction(storeName, 'readonly');
@@ -707,7 +709,7 @@ export class IDBManager {
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<IDBValidKey> {
         if (this.isClose()) {
-            throw new ReferenceError(this.dbNotOpenErrMsg);
+            throw IDBManager.dbNotOpenError();
         }
 
         const tx = this.db.transaction(storeName, 'readonly');
@@ -757,7 +759,7 @@ export class IDBManager {
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<IDBValidKey> {
         if (this.isClose()) {
-            throw new ReferenceError(this.dbNotOpenErrMsg);
+            throw IDBManager.dbNotOpenError();
         }
 
         const tx = this.db.transaction(storeName, 'readonly');

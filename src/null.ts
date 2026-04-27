@@ -1,37 +1,40 @@
 type Listener = ((this: IDBDatabase, ev: Event) => unknown) | null;
 
 class NullIDBDatabase implements IDBDatabase {
-    private errorMessage: string = 'Referenced a null database.';
+    // eslint-disable-next-line class-methods-use-this
+    protected nullDBError(): ReferenceError {
+        return new ReferenceError('Referenced a null database.');
+    }
 
-    get name(): string { throw new ReferenceError(this.errorMessage); }
-    get version(): number { throw new ReferenceError(this.errorMessage); }
-    get objectStoreNames(): DOMStringList { throw new ReferenceError(this.errorMessage); }
+    get name(): string { throw this.nullDBError(); }
+    get version(): number { throw this.nullDBError(); }
+    get objectStoreNames(): DOMStringList { throw this.nullDBError(); }
 
-    close(): void { throw new ReferenceError(this.errorMessage); }
+    close(): void { throw this.nullDBError(); }
     createObjectStore(name: string, options?: IDBObjectStoreParameters): IDBObjectStore {
-        throw new ReferenceError(this.errorMessage);
+        throw this.nullDBError();
     }
-    deleteObjectStore(name: string): void { throw new ReferenceError(this.errorMessage); }
+    deleteObjectStore(name: string): void { throw this.nullDBError(); }
     transaction(storeNames: unknown, mode?: unknown, options?: unknown): IDBTransaction {
-        throw new ReferenceError(this.errorMessage);
+        throw this.nullDBError();
     }
 
-    get onclose(): Listener { throw new ReferenceError(this.errorMessage); }
-    set onclose(listener: Listener) { throw new ReferenceError(this.errorMessage); }
-    get onversionchange(): Listener { throw new ReferenceError(this.errorMessage); }
-    set onversionchange(listener: Listener) { throw new ReferenceError(this.errorMessage); }
-    get onabort(): Listener { throw new ReferenceError(this.errorMessage); }
-    set onabort(listener: Listener) { throw new ReferenceError(this.errorMessage); }
-    get onerror(): Listener { throw new ReferenceError(this.errorMessage); }
-    set onerror(listener: Listener) { throw new ReferenceError(this.errorMessage); }
+    get onclose(): Listener { throw this.nullDBError(); }
+    set onclose(listener: Listener) { throw this.nullDBError(); }
+    get onversionchange(): Listener { throw this.nullDBError(); }
+    set onversionchange(listener: Listener) { throw this.nullDBError(); }
+    get onabort(): Listener { throw this.nullDBError(); }
+    set onabort(listener: Listener) { throw this.nullDBError(); }
+    get onerror(): Listener { throw this.nullDBError(); }
+    set onerror(listener: Listener) { throw this.nullDBError(); }
 
     addEventListener(type: unknown, listener: unknown, options?: unknown): void {
-        throw new ReferenceError(this.errorMessage);
+        throw this.nullDBError();
     }
     removeEventListener(type: unknown, listener: unknown, options?: unknown): void {
-        throw new ReferenceError(this.errorMessage);
+        throw this.nullDBError();
     }
-    dispatchEvent(event: Event): boolean { throw new ReferenceError(this.errorMessage); }
+    dispatchEvent(event: Event): boolean { throw this.nullDBError(); }
 }
 
 export const NULL_IDB_DATABASE = new NullIDBDatabase();

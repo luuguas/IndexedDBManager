@@ -3,8 +3,12 @@ export class IDBMTransaction {
     protected tx: IDBTransaction;
 
     protected active: boolean;
-    protected errorMessage: string | null;
+    protected error: Error | null;
     protected settlement: Promise<void>;
+
+    protected static txNotActiveError(): DOMException {
+        return new DOMException('The transaction is not active.', 'TransactionInactiveError');
+    }
 
     constructor(
         db: IDBDatabase,
@@ -15,12 +19,12 @@ export class IDBMTransaction {
         this.db = db;
         this.tx = db.transaction(storeNames, mode, { durability });
         this.active = true;
-        this.errorMessage = null;
+        this.error = null;
         this.settlement = new Promise((resolve, reject) => {
             this.tx.onerror = () => {
                 this.active = true;
                 if (this.tx.error) { reject(this.tx.error); }
-                else if (this.errorMessage) { reject(new DOMException(this.errorMessage, 'AbortError')); }
+                else if (this.error) { reject(this.error); }
                 else { reject(new DOMException('The transaction failed for some reason.', 'AbortError')); }
             };
             this.tx.oncomplete = () => {
@@ -33,12 +37,13 @@ export class IDBMTransaction {
     isActive(): boolean { return this.active; }
     getSettlement(): Promise<void> { return this.settlement; }
 
-    abort(): void {
-        if (!this.isActive()) { throw new DOMException('The transaction is not active.', 'TransactionInactiveError'); }
+    abort(error?: Error): void {
+        if (!this.isActive()) { throw IDBMTransaction.txNotActiveError(); }
+        this.error = error || null;
         this.tx.abort();
     }
     commit(): void {
-        if (!this.isActive()) { throw new DOMException('The transaction is not active.', 'TransactionInactiveError'); }
+        if (!this.isActive()) { throw IDBMTransaction.txNotActiveError(); }
         this.tx.commit();
     }
 }
