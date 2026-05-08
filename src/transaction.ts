@@ -21,14 +21,14 @@ export class IDBMTransaction {
         this.active = true;
         this.error = null;
         this.settlement = new Promise((resolve, reject) => {
-            this.tx.onerror = () => {
-                this.active = true;
+            this.tx.onabort = () => {
+                this.active = false;
                 if (this.tx.error) { reject(this.tx.error); }
                 else if (this.error) { reject(this.error); }
                 else { reject(new DOMException('The transaction failed for some reason.', 'AbortError')); }
             };
             this.tx.oncomplete = () => {
-                this.active = true;
+                this.active = false;
                 resolve();
             };
         });
