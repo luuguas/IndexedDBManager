@@ -21,6 +21,7 @@ export class IDBMTransaction {
         this.active = true;
         this.error = null;
         this.settlement = new Promise((resolve, reject) => {
+            this.tx.onerror = () => { this.active = false; };
             this.tx.onabort = () => {
                 this.active = false;
                 if (this.tx.error) { reject(this.tx.error); }
@@ -37,7 +38,7 @@ export class IDBMTransaction {
     isActive(): boolean { return this.active; }
     getSettlement(): Promise<void> { return this.settlement; }
 
-    abort(error?: Error): void {
+    abort(error?: Error | null): void {
         if (!this.isActive()) { throw IDBMTransaction.txNotActiveError(); }
         this.error = error || null;
         this.tx.abort();
