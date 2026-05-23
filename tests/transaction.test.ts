@@ -3,17 +3,18 @@ import { IDBMStoreInfo } from '../src/manager';
 import { IDBMTransaction } from '../src/transaction';
 import { PublicIDBManager } from './env/public';
 
+const dbName = 'MyDB001';
+const storeInfos: IDBMStoreInfo[] = [
+    { name: 'MyStore1' },
+    { name: 'MyStore2', keyPath: 'key' },
+    { name: 'MyStore3', autoIncrement: true },
+];
+
 describe('トランザクションの生成テスト', () => {
     beforeAll(() => {
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
     });
 
-    const dbName = 'MyDB001';
-    const storeInfos: IDBMStoreInfo[] = [
-        { name: 'MyStore1' },
-        { name: 'MyStore2', keyPath: 'key' },
-        { name: 'MyStore3', autoIncrement: true },
-    ];
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
@@ -61,6 +62,30 @@ describe('トランザクションの生成テスト', () => {
         expect(() => { tx.abort(); }).toThrow(DOMException);
         expect(() => { tx.abort(); }).toThrow('The transaction is not active.');
         expect(() => { tx.commit(); }).toThrow(DOMException);
-        expect(() => { tx.abort(); }).toThrow('The transaction is not active.');
+        expect(() => { tx.commit(); }).toThrow('The transaction is not active.');
+    });
+    test('存在しないオブジェクトストアを指定するとエラー', () => {
+        expect(() => {
+            const tx = new IDBMTransaction(pidb.p_db, 'MyStoreX');
+            tx.commit();
+        }).toThrow(DOMException);
+    });
+});
+
+describe('CRUD共通の例外処理', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    const pidb = new PublicIDBManager(dbName, 1, storeInfos);
+
+    beforeEach(async () => {
+        await pidb.openDatabase();
+    });
+    afterEach(() => {
+        pidb.closeDatabase();
+    });
+
+    test('存在しないオブジェクトストアを指定するとエラー', async () => {
     });
 });
