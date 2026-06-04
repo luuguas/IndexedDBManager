@@ -47,4 +47,34 @@ export class IDBMTransaction {
         if (!this.isActive()) { throw IDBMTransaction.txNotActiveError(); }
         this.tx.commit();
     }
+
+    addItem<TItem>(
+        storeName: string,
+        item: TItem,
+        key?: IDBValidKey,
+    ): Promise<IDBValidKey> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const addReq = store.add(item, key);
+                addReq.onerror = () => {
+                    reject(addReq.error);
+                    if (this.isActive()) { this.abort(addReq.error); }
+                };
+                addReq.onsuccess = () => { resolve(addReq.result); };
+            }
+            catch (error) {
+                reject(error);
+                if (this.isActive()) {
+                    if (error instanceof Error) { this.abort(error); }
+                    else { this.abort(); }
+                }
+            }
+        });
+    }
 }
