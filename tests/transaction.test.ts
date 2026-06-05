@@ -86,18 +86,33 @@ describe('CRUD共通の例外処理', () => {
         pidb.closeDatabase();
     });
 
+    test('トランザクションが非アクティブなときに呼び出すとエラー', async () => {
+        const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
+        tx.commit();
+        await expect(tx.getSettlement()).resolves.toBeUndefined();
+
+        await expect(tx.addItem('MyStore1', '')).rejects.toThrow(DOMException);
+        await expect(tx.addItems('MyStore1', [])).rejects.toThrow(DOMException);
+    });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         let tx: IDBMTransaction;
 
-        // eslint-disable-next-line prefer-const
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
-        await expect(tx.addItem('MyStoreX', 'Apple', 'A')).rejects.toThrow(DOMException);
+        await expect(tx.addItem('MyStoreX', '')).rejects.toThrow(DOMException);
         // settlementもrejectされることをexpectで確認する これをしないとテストが落ちる
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
+        await expect(tx.addItems('MyStoreX', [])).rejects.toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
     });
 });
 
 describe('addItemのテスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
@@ -114,7 +129,7 @@ describe('addItemのテスト', () => {
         await expect(pidb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
     });
 
-    test('キー指定を間違えるとabort', async () => {
+    test('キー指定を間違えると追加できない', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
         await expect(tx.addItem('MyStore1', 'Banana', 'B')).resolves.toBe('B');
         // addReq.add() が直接例外を投げる addReq.onerror は発火しない
@@ -124,7 +139,7 @@ describe('addItemのテスト', () => {
         // トランザクションがabortされているため、データは追加されていない
         await expect(pidb.getItem('MyStore1', 'B')).resolves.toBeUndefined();
     });
-    test('既に存在するキーを指定するとエラー', async () => {
+    test('既に存在するキーを指定すると追加できない', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
         await expect(tx.addItem('MyStore1', 'Banana', 'B')).resolves.toBe('B');
         // addReq.onerror が発火する
@@ -133,6 +148,61 @@ describe('addItemのテスト', () => {
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
         // トランザクションがabortされているため、データは追加されていない
         await expect(pidb.getItem('MyStore1', 'B')).resolves.toBeUndefined();
+    });
+});
+
+describe('addItemsのテスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    const pidb = new PublicIDBManager(dbName, 1, storeInfos);
+
+    beforeEach(async () => {
+        await pidb.openDatabase();
+    });
+    afterEach(() => {
+        pidb.closeDatabase();
+    });
+
+    test('複数のアイテムを追加する', async () => {
+        const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
+        const items1 = ['Apple', { name: 'Banana' }];
+        const keys1 = ['A', 'B'];
+        await expect(tx.addItems('MyStore1', items1, keys1)).resolves.toEqual(keys1);
+
+        await expect(tx.getSettlement()).resolves.toBeUndefined();
+        await expect(pidb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
+        await expect(pidb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
+    });
+
+    test('itemsとkeysの長さが違うと追加できない', async () => {
+        const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
+        const items = ['Cherry', 'Donuts'];
+        const keys = ['C', 'D', 'E'];
+        await expect(tx.addItems('MyStore1', items, keys)).rejects.toThrow(TypeError);
+    });
+    test('キー指定を間違えると追加できない', async () => {
+        const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
+        const items = ['Cherry', 'Donuts'];
+        const keys = ['C', undefined];
+        await expect(tx.addItems('MyStore1', items, keys)).rejects.toThrow(DOMException);
+
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+        // トランザクションがabortされているため、データは追加されていない
+        await expect(pidb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(pidb.getItem('MyStore1', 'D')).resolves.toBeUndefined();
+    });
+    test('既存のキーを指定すると追加できない', async () => {
+        const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
+        const items1 = ['Cherry', { name: 'Blueberry' }];
+        const keys1 = ['C', 'B'];
+        await expect(tx.addItems('MyStore1', items1, keys1)).rejects.toThrow(DOMException);
+
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+        // トランザクションがabortされているため、データは追加されていない
+        await expect(pidb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(pidb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
     });
 });
 
