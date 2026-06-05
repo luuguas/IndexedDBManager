@@ -77,4 +77,45 @@ export class IDBMTransaction {
             }
         });
     }
+
+    addItems<TItem>(
+        storeName: string,
+        items: TItem[],
+        keys?: (IDBValidKey | undefined)[],
+    ): Promise<IDBValidKey[]> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+            if (keys instanceof Array && items.length !== keys.length) {
+                reject(new TypeError('The length of items and keys must be the same.'));
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
+                    return new Promise((res, rej) => {
+                        const addReq = store.add(item, keys?.[idx]);
+                        addReq.onerror = () => { rej(addReq.error); };
+                        addReq.onsuccess = () => { res(addReq.result); };
+                    });
+                });
+                Promise.all(promises)
+                    .then((response: IDBValidKey[]) => { resolve(response); })
+                    .catch((error: Error) => {
+                        if (this.isActive()) { this.abort(error); }
+                        reject(error);
+                    });
+            }
+            catch (error) {
+                if (this.isActive()) {
+                    if (error instanceof Error) { this.abort(error); }
+                    else { this.abort(); }
+                }
+                reject(error);
+            }
+        });
+    }
 }
