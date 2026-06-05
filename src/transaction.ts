@@ -89,7 +89,9 @@ export class IDBMTransaction {
                 return;
             }
             if (keys instanceof Array && items.length !== keys.length) {
-                reject(new TypeError('The length of items and keys must be the same.'));
+                const error = new TypeError('The length of items and keys must be the same.');
+                if (this.isActive()) { this.abort(error); }
+                reject(error);
                 return;
             }
 
