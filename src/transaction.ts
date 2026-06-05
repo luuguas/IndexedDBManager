@@ -40,11 +40,13 @@ export class IDBMTransaction {
 
     abort(error?: Error | null): void {
         if (!this.isActive()) { throw IDBMTransaction.txNotActiveError(); }
+        this.active = false;
         this.error = error || null;
         this.tx.abort();
     }
     commit(): void {
         if (!this.isActive()) { throw IDBMTransaction.txNotActiveError(); }
+        this.active = false;
         this.tx.commit();
     }
 
