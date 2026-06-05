@@ -1,4 +1,5 @@
 import { NULL_IDB_DATABASE } from './null';
+import { IDBMTransaction } from './transaction';
 
 export interface IDBMIndexInfo {
     indexName: string;
@@ -205,6 +206,35 @@ export class IDBManager {
             this.db.close();
             this.db = NULL_IDB_DATABASE;
         }
+    }
+
+    transaction<TResult>(
+        storeNames: string | string[],
+        callback: (inner: IDBMTransaction) => Promise<TResult>,
+        mode?: 'readonly' | 'readwrite',
+    ): Promise<TResult> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            const inner = new IDBMTransaction(this.db, storeNames, mode);
+            inner.getSettlement().catch((error) => { reject(error); });
+            callback(inner)
+                .then(
+                    (response: TResult) => {
+                        if (inner.isActive()) { inner.commit(); }
+                        resolve(response);
+                    },
+                    (error) => {
+                        if (inner.isActive()) {
+                            if (error instanceof Error) { inner.abort(error); }
+                            else { inner.abort(); }
+                        }
+                    },
+                );
+        });
     }
 
     addItem<TItem>(
