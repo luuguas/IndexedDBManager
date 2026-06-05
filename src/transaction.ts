@@ -63,17 +63,17 @@ export class IDBMTransaction {
                 const store = this.tx.objectStore(storeName);
                 const addReq = store.add(item, key);
                 addReq.onerror = () => {
-                    reject(addReq.error);
                     if (this.isActive()) { this.abort(addReq.error); }
+                    reject(addReq.error);
                 };
                 addReq.onsuccess = () => { resolve(addReq.result); };
             }
             catch (error) {
-                reject(error);
                 if (this.isActive()) {
                     if (error instanceof Error) { this.abort(error); }
                     else { this.abort(); }
                 }
+                reject(error);
             }
         });
     }
