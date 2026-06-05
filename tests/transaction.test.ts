@@ -29,20 +29,18 @@ describe('トランザクションの生成テスト', () => {
         expect(tx.isActive()).toBe(true);
 
         tx.commit();
-        expect(tx.isActive()).toBe(true);
+        expect(tx.isActive()).toBe(false);
         await expect(tx.getSettlement()).resolves.toBeUndefined();
-        expect(tx.isActive()).toBe(false); // トランザクション終了後に変化
     });
     test('トランザクションのabort', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
         expect(tx.isActive()).toBe(true);
 
         tx.abort();
-        expect(tx.isActive()).toBe(true);
+        expect(tx.isActive()).toBe(false);
         const exp = expect(tx.getSettlement());
         await exp.rejects.toThrow(DOMException);
         await exp.rejects.toThrow('The transaction failed for some reason.');
-        expect(tx.isActive()).toBe(false); // トランザクション終了後に変化
     });
     test('例外を引数に渡してabort', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
