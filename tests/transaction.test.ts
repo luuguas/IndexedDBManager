@@ -129,6 +129,11 @@ describe('addItemのテスト', () => {
         await expect(pidb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
     });
 
+    test('トランザクションのモードがreadonlyのときは追加できない', async () => {
+        const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
+        await expect(tx.addItem('MyStore1', 'Banana', 'B')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+    });
     test('キー指定を間違えると追加できない', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
         await expect(tx.addItem('MyStore1', 'Banana', 'B')).resolves.toBe('B');
@@ -176,11 +181,17 @@ describe('addItemsのテスト', () => {
         await expect(pidb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
     });
 
+    test('トランザクションのモードがreadonlyのときは追加できない', async () => {
+        const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
+        await expect(tx.addItems('MyStore1', ['Cherry'], ['C'])).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+    });
     test('itemsとkeysの長さが違うと追加できない', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
         const items = ['Cherry', 'Donuts'];
         const keys = ['C', 'D', 'E'];
         await expect(tx.addItems('MyStore1', items, keys)).rejects.toThrow(TypeError);
+        await expect(tx.getSettlement()).rejects.toThrow(TypeError);
     });
     test('キー指定を間違えると追加できない', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
