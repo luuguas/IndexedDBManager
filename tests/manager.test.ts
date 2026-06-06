@@ -919,3 +919,81 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         pidb.closeDatabase();
     });
 });
+
+describe('トランザクションのテスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [
+        { name: 'MyStore1' },
+        { name: 'MyStore2', keyPath: 'key' },
+        { name: 'MyStore3', autoIncrement: true },
+    ];
+    const pidb = new PublicIDBManager(dbName, 1, storeInfos);
+
+    beforeEach(async () => {
+        await pidb.openDatabase();
+    });
+    afterEach(() => {
+        pidb.closeDatabase();
+    });
+
+    test('トランザクションを作成する', async () => {
+        const tx = pidb.transaction('MyStore1', async () => {});
+        await expect(tx).resolves.toBeUndefined();
+    });
+    test('トランザクション内で複数の操作を行う', async () => {
+        const tx = pidb.transaction('MyStore1', async (inner) => {
+            const result = await inner.addItem('MyStore1', 'Apple', 'A');
+            await inner.addItem('MyStore1', 'Banana', 'B');
+            return result;
+        }, 'readwrite');
+        await expect(tx).resolves.toBe('A');
+
+        // トランザクション内で追加したデータが取得できることをテスト
+        await expect(pidb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
+        await expect(pidb.getItem('MyStore1', 'B')).resolves.toBe('Banana');
+    });
+
+    test('コールバック関数内で例外を投げる', async () => {
+        // eslint-disable-next-line @typescript-eslint/require-await
+        const tx1 = pidb.transaction('MyStore1', async (inner) => {
+            // eslint-disable-next-line @typescript-eslint/no-throw-literal
+            throw 'Oops';
+        });
+        // Errorオブジェクト以外を投げるとDOMExceptionになる
+        await expect(tx1).rejects.toThrow(DOMException);
+        await expect(tx1).rejects.toThrow('The transaction failed for some reason.');
+
+        // eslint-disable-next-line @typescript-eslint/require-await
+        const tx2 = pidb.transaction('MyStore1', async () => {
+            throw new Error('Oops');
+        });
+        await expect(tx2).rejects.toThrow('Oops');
+    });
+    test('データベースが閉じているときにトランザクションを作成すると失敗する', async () => {
+        pidb.closeDatabase();
+        const tx = pidb.transaction('MyStore1', async () => {});
+        await expect(tx).rejects.toThrow(ReferenceError);
+    });
+    test('トランザクションのモードを間違えると失敗する', async () => {
+        const tx = pidb.transaction('MyStore1', (inner) => {
+            return inner.addItem('MyStore1', 'Cherry', 'C');
+        }, 'readonly');
+        await expect(tx).rejects.toThrow(DOMException);
+        await expect(tx).rejects.toThrow('The mutating operation was attempted in a "readonly" transaction.');
+    });
+    test('トランザクション内の操作でエラーが発生するとロールバックする', async () => {
+        const tx = pidb.transaction('MyStore1', async (inner) => {
+            await inner.addItem('MyStore1', 'Cherry', 'C');
+            await inner.addItem('MyStore1', 'Blueberry', 'B');
+        }, 'readwrite');
+        await expect(tx).rejects.toThrow(DOMException);
+
+        // トランザクション実行前の状態に戻っていることをテスト
+        await expect(pidb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(pidb.getItem('MyStore1', 'B')).resolves.toBe('Banana');
+    });
+});
