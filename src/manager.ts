@@ -220,18 +220,20 @@ export class IDBManager {
             }
 
             const inner = new IDBMTransaction(this.db, storeNames, mode);
-            inner.getSettlement().catch((error) => { reject(error); });
             callback(inner)
                 .then(
                     (response: TResult) => {
                         if (inner.isActive()) { inner.commit(); }
-                        resolve(response);
+                        inner.getSettlement()
+                            .then(() => { resolve(response); })
+                            .catch((err) => { reject(err); });
                     },
                     (error) => {
                         if (inner.isActive()) {
                             if (error instanceof Error) { inner.abort(error); }
                             else { inner.abort(); }
                         }
+                        inner.getSettlement().catch((err) => { reject(err); });
                     },
                 );
         });
