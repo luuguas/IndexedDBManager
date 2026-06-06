@@ -248,12 +248,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-
-            const addReq = store.add(item, key);
-            addReq.onerror = () => { reject(addReq.error); };
-            addReq.onsuccess = () => { resolve(addReq.result); };
+            this.transaction(storeName, (inner) => {
+                return inner.addItem(storeName, item, key);
+            }, 'readwrite')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -267,34 +266,12 @@ export class IDBManager {
                 reject(IDBManager.dbNotOpenError());
                 return;
             }
-            if (keys instanceof Array && items.length !== keys.length) {
-                reject(new TypeError('The length of items and keys must be the same.'));
-                return;
-            }
 
-            const tx = this.db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-
-            let settled = false;
-            tx.onerror = () => { settled = true; };
-            tx.oncomplete = () => { settled = true; };
-
-            const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
-                return new Promise((res, rej) => {
-                    const addReq = store.add(item, keys?.[idx]);
-                    addReq.onerror = () => { rej(addReq.error); };
-                    addReq.onsuccess = () => { res(addReq.result); };
-                });
-            });
-
-            Promise.all(promises)
-                .then((response: IDBValidKey[]) => { resolve(response); })
-                .catch((error: DOMException) => {
-                    if (!settled) {
-                        tx.abort();
-                    }
-                    reject(error);
-                });
+            this.transaction(storeName, (inner) => {
+                return inner.addItems(storeName, items, keys);
+            }, 'readwrite')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
