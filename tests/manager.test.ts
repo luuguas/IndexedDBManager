@@ -282,6 +282,9 @@ describe('単体データの追加・更新・削除テスト', () => {
         // keyPath: あり, autoIncrement: true
         await expect(idb.setItem('MyStore4', 'Lemon')).rejects.toThrow(DOMException);
     });
+    test('不正なキーを渡すと削除できない', async () => {
+        await expect(idb.removeItem('MyStore1', null as unknown as IDBValidKey)).rejects.toThrow(DOMException);
+    });
 });
 
 describe('複数データの追加・更新・削除テスト', () => {
