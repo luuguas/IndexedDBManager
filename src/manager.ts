@@ -288,12 +288,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-
-            const putReq = store.put(item, key);
-            putReq.onerror = () => { reject(putReq.error); };
-            putReq.onsuccess = () => { resolve(putReq.result); };
+            this.transaction(storeName, (inner) => {
+                return inner.setItem(storeName, item, key);
+            }, 'readwrite')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -307,34 +306,12 @@ export class IDBManager {
                 reject(IDBManager.dbNotOpenError());
                 return;
             }
-            if (keys instanceof Array && items.length !== keys.length) {
-                reject(new TypeError('The length of items and keys must be the same.'));
-                return;
-            }
 
-            const tx = this.db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-
-            let settled = false;
-            tx.onerror = () => { settled = true; };
-            tx.oncomplete = () => { settled = true; };
-
-            const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
-                return new Promise((res, rej) => {
-                    const putReq = store.put(item, keys?.[idx]);
-                    putReq.onerror = () => { rej(putReq.error); };
-                    putReq.onsuccess = () => { res(putReq.result); };
-                });
-            });
-
-            Promise.all(promises)
-                .then((response: IDBValidKey[]) => { resolve(response); })
-                .catch((error: DOMException) => {
-                    if (!settled) {
-                        tx.abort();
-                    }
-                    reject(error);
-                });
+            this.transaction(storeName, (inner) => {
+                return inner.setItems(storeName, items, keys);
+            }, 'readwrite')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -345,12 +322,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-
-            const deleteReq = store.delete(key);
-            deleteReq.onerror = () => { reject(deleteReq.error); };
-            deleteReq.onsuccess = () => { resolve(); };
+            this.transaction(storeName, (inner) => {
+                return inner.removeItem(storeName, key);
+            }, 'readwrite')
+                .then(() => { resolve(); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -361,23 +337,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-
-            const promises: Promise<void>[] = keys.map((key) => {
-                return new Promise((res, rej) => {
-                    const deleteReq = store.delete(key);
-                    deleteReq.onerror = () => { rej(deleteReq.error); };
-                    deleteReq.onsuccess = () => { res(); };
-                });
-            });
-
-            Promise.all(promises)
+            this.transaction(storeName, (inner) => {
+                return inner.removeItems(storeName, keys);
+            }, 'readwrite')
                 .then(() => { resolve(); })
-                .catch((error: DOMException) => {
-                    tx.abort();
-                    reject(error);
-                });
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -388,12 +352,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readwrite');
-            const store = tx.objectStore(storeName);
-
-            const clearReq = store.clear();
-            clearReq.onerror = () => { reject(clearReq.error); };
-            clearReq.onsuccess = () => { resolve(); };
+            this.transaction(storeName, (inner) => {
+                return inner.clearItems(storeName);
+            }, 'readwrite')
+                .then(() => { resolve(); })
+                .catch((error) => { reject(error); });
         });
     }
 
