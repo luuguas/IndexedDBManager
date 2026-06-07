@@ -186,6 +186,34 @@ describe('CRUDs共通の例外処理', () => {
         expect(() => { idb.getKeyIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getReversedKeyIterator(''); }).toThrow(ReferenceError);
     });
+    test('存在しないオブジェクトストアを指定するとエラー', async () => {
+        const dbName = createDBName();
+        const idb = new IDBManager(dbName, 1, [{ name: 'MyStore1' }]);
+        await expect(idb.openDatabase()).resolves.toBeUndefined();
+
+        await expect(idb.addItem('MyStoreX', {})).rejects.toThrow(DOMException);
+        await expect(idb.addItems('MyStoreX', [])).rejects.toThrow(DOMException);
+        await expect(idb.setItem('MyStoreX', {})).rejects.toThrow(DOMException);
+        await expect(idb.setItems('MyStoreX', [])).rejects.toThrow(DOMException);
+        await expect(idb.removeItem('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.removeItems('MyStoreX', [])).rejects.toThrow(DOMException);
+        await expect(idb.clearItems('MyStoreX')).rejects.toThrow(DOMException);
+
+        await expect(idb.getItem('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getFirstItem('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.getLastItem('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.getFirstKey('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.getLastKey('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.hasItem('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getItems('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.getKeys('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.countItems('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.hasAnyItems('MyStoreX')).rejects.toThrow(DOMException);
+        expect(() => { idb.getIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => { idb.getReversedIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => { idb.getKeyIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => { idb.getReversedKeyIterator('MyStoreX'); }).toThrow(DOMException);
+    });
 });
 
 describe('単体データの追加・更新・削除テスト', () => {
@@ -980,6 +1008,10 @@ describe('トランザクションのテスト', () => {
         pidb.closeDatabase();
         const tx = pidb.transaction('MyStore1', async () => {});
         await expect(tx).rejects.toThrow(ReferenceError);
+    });
+    test('存在しないオブジェクトストアを指定すると失敗する', async () => {
+        const tx = pidb.transaction('MyStoreX', async () => {});
+        await expect(tx).rejects.toThrow(DOMException);
     });
     test('トランザクションのモードを間違えると失敗する', async () => {
         const tx = pidb.transaction('MyStore1', (inner) => {
