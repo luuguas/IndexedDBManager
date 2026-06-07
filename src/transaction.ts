@@ -71,10 +71,7 @@ export class IDBMTransaction {
                 addReq.onsuccess = () => { resolve(addReq.result); };
             }
             catch (error) {
-                if (this.isActive()) {
-                    if (error instanceof Error) { this.abort(error); }
-                    else { this.abort(); }
-                }
+                if (this.isActive()) { this.abort(error as Error); }
                 reject(error);
             }
         });
@@ -114,10 +111,7 @@ export class IDBMTransaction {
                     });
             }
             catch (error) {
-                if (this.isActive()) {
-                    if (error instanceof Error) { this.abort(error); }
-                    else { this.abort(); }
-                }
+                if (this.isActive()) { this.abort(error as Error); }
                 reject(error);
             }
         });
@@ -144,10 +138,7 @@ export class IDBMTransaction {
                 putReq.onsuccess = () => { resolve(putReq.result); };
             }
             catch (error) {
-                if (this.isActive()) {
-                    if (error instanceof Error) { this.abort(error); }
-                    else { this.abort(); }
-                }
+                if (this.isActive()) { this.abort(error as Error); }
                 reject(error);
             }
         });
@@ -188,10 +179,7 @@ export class IDBMTransaction {
                     });
             }
             catch (error) {
-                if (this.isActive()) {
-                    if (error instanceof Error) { this.abort(error); }
-                    else { this.abort(); }
-                }
+                if (this.isActive()) { this.abort(error as Error); }
                 reject(error);
             }
         });
@@ -214,10 +202,7 @@ export class IDBMTransaction {
                 deleteReq.onsuccess = () => { resolve(); };
             }
             catch (error) {
-                if (this.isActive()) {
-                    if (error instanceof Error) { this.abort(error); }
-                    else { this.abort(); }
-                }
+                if (this.isActive()) { this.abort(error as Error); }
                 reject(error);
             }
         });
@@ -248,10 +233,7 @@ export class IDBMTransaction {
                     });
             }
             catch (error) {
-                if (this.isActive()) {
-                    if (error instanceof Error) { this.abort(error); }
-                    else { this.abort(); }
-                }
+                if (this.isActive()) { this.abort(error as Error); }
                 reject(error);
             }
         });
@@ -274,10 +256,7 @@ export class IDBMTransaction {
                 clearReq.onsuccess = () => { resolve(); };
             }
             catch (error) {
-                if (this.isActive()) {
-                    if (error instanceof Error) { this.abort(error); }
-                    else { this.abort(); }
-                }
+                if (this.isActive()) { this.abort(error as Error); }
                 reject(error);
             }
         });
