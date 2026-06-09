@@ -1,5 +1,5 @@
 import { NULL_IDB_DATABASE } from './null';
-import { IDBMTransaction } from './transaction';
+import { IDBMTransaction, IDBMKeyRange } from './transaction';
 
 export interface IDBMIndexInfo {
     indexName: string;
@@ -19,13 +19,6 @@ interface IDBMStoreUpgradeInfo {
     keyPath?: string | string[] | null;
     autoIncrement?: boolean;
     indexInfos?: IDBMIndexInfo[];
-}
-
-export interface IDBMKeyRange {
-    lower?: IDBValidKey;
-    upper?: IDBValidKey;
-    lowerOpen?: boolean;
-    upperOpen?: boolean;
 }
 
 export class IDBManager {
@@ -367,12 +360,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const getReq = store.get(key);
-            getReq.onerror = () => { reject(getReq.error); };
-            getReq.onsuccess = () => { resolve(getReq.result as TItem | undefined); };
+            this.transaction(storeName, (inner) => {
+                return inner.getItem<TItem>(storeName, key);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -383,18 +375,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-            const cursorReq = store.openCursor(rawKeyRange, 'next');
-            cursorReq.onerror = () => { reject(cursorReq.error); };
-            cursorReq.onsuccess = () => {
-                const cursor = cursorReq.result;
-
-                if (cursor) { resolve(cursor.value as TItem); }
-                else { resolve(undefined); }
-            };
+            this.transaction(storeName, (inner) => {
+                return inner.getFirstItem<TItem>(storeName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -405,18 +390,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-            const cursorReq = store.openCursor(rawKeyRange, 'prev');
-            cursorReq.onerror = () => { reject(cursorReq.error); };
-            cursorReq.onsuccess = () => {
-                const cursor = cursorReq.result;
-
-                if (cursor) { resolve(cursor.value as TItem); }
-                else { resolve(undefined); }
-            };
+            this.transaction(storeName, (inner) => {
+                return inner.getLastItem<TItem>(storeName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -427,18 +405,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-            const cursorReq = store.openKeyCursor(rawKeyRange, 'next');
-            cursorReq.onerror = () => { reject(cursorReq.error); };
-            cursorReq.onsuccess = () => {
-                const cursor = cursorReq.result;
-
-                if (cursor) { resolve(cursor.key); }
-                else { resolve(undefined); }
-            };
+            this.transaction(storeName, (inner) => {
+                return inner.getFirstKey(storeName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -449,18 +420,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-            const cursorReq = store.openKeyCursor(rawKeyRange, 'prev');
-            cursorReq.onerror = () => { reject(cursorReq.error); };
-            cursorReq.onsuccess = () => {
-                const cursor = cursorReq.result;
-
-                if (cursor) { resolve(cursor.key); }
-                else { resolve(undefined); }
-            };
+            this.transaction(storeName, (inner) => {
+                return inner.getLastKey(storeName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
@@ -471,12 +435,11 @@ export class IDBManager {
                 return;
             }
 
-            const tx = this.db.transaction(storeName, 'readonly');
-            const store = tx.objectStore(storeName);
-
-            const getReq = store.getKey(key);
-            getReq.onerror = () => { reject(getReq.error); };
-            getReq.onsuccess = () => { resolve(typeof getReq.result !== 'undefined'); };
+            this.transaction(storeName, (inner) => {
+                return inner.hasItem(storeName, key);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
         });
     }
 
