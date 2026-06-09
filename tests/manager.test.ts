@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto';
-import { IDBManager, IDBMStoreInfo, IDBMKeyRange } from '../src/manager';
+import { IDBManager, IDBMStoreInfo } from '../src/manager';
+import { IDBMKeyRange } from '../src/transaction';
 import { PublicIDBManager } from './env/public';
 
 /* eslint-disable no-restricted-syntax */
