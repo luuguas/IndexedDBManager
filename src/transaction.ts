@@ -113,7 +113,7 @@ export class IDBMTransaction {
                 reject(IDBMTransaction.txNotActiveError());
                 return;
             }
-            if (keys instanceof Array && items.length !== keys.length) {
+            if (Array.isArray(keys) && items.length !== keys.length) {
                 const error = new TypeError('The length of items and keys must be the same.');
                 if (this.isActive()) { this.abort(error); }
                 reject(error);
@@ -129,6 +129,7 @@ export class IDBMTransaction {
                         addReq.onsuccess = () => { res(addReq.result); };
                     });
                 });
+
                 Promise.all(promises)
                     .then((response: IDBValidKey[]) => { resolve(response); })
                     .catch((error: Error) => {
@@ -180,7 +181,7 @@ export class IDBMTransaction {
                 reject(IDBMTransaction.txNotActiveError());
                 return;
             }
-            if (keys instanceof Array && items.length !== keys.length) {
+            if (Array.isArray(keys) && items.length !== keys.length) {
                 const error = new TypeError('The length of items and keys must be the same.');
                 if (this.isActive()) { this.abort(error); }
                 reject(error);
