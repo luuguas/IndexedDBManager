@@ -104,6 +104,10 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getFirstKey('')).rejects.toThrow(DOMException);
         await expect(tx.getLastKey('')).rejects.toThrow(DOMException);
         await expect(tx.hasItem('', '')).rejects.toThrow(DOMException);
+        await expect(tx.getItems('')).rejects.toThrow(DOMException);
+        await expect(tx.getKeys('')).rejects.toThrow(DOMException);
+        await expect(tx.countItems('')).rejects.toThrow(DOMException);
+        await expect(tx.hasAnyItems('')).rejects.toThrow(DOMException);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         let tx: IDBMTransaction;
@@ -165,6 +169,22 @@ describe('CRUD共通の例外処理', () => {
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
         await expect(tx.hasItem('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getItems('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getKeys('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.countItems('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.hasAnyItems('MyStoreX')).rejects.toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
     });
     test('トランザクションのモードがreadonlyのときに更新系の関数を呼び出すとエラー', async () => {
