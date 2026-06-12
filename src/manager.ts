@@ -524,46 +524,9 @@ export class IDBManager {
             throw IDBManager.dbNotOpenError();
         }
 
-        const tx = this.db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-
-        const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-        const cursorReq = store.openCursor(rawKeyRange, 'next');
-
-        let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
-            { value: undefined, done: false },
-        );
-        return {
-            next(): Promise<IteratorResult<TItem>> {
-                const p = prev.then(
-                    (prevResponse) => {
-                        return new Promise<IteratorResult<TItem>>((resolve, reject) => {
-                            if (prevResponse.done) {
-                                resolve({ value: undefined, done: true });
-                                return;
-                            }
-
-                            cursorReq.onerror = () => { reject(cursorReq.error); };
-                            cursorReq.onsuccess = () => {
-                                const cursor = cursorReq.result;
-
-                                if (cursor) {
-                                    resolve({ value: cursor.value as TItem, done: false });
-                                    cursor.continue();
-                                }
-                                else {
-                                    resolve({ value: undefined, done: true });
-                                }
-                            };
-                        });
-                    },
-                    (prevError) => { return Promise.reject(prevError); },
-                );
-                prev = p;
-                return p;
-            },
-            [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
-        };
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getIterator<TItem>(storeName, keyRange);
     }
 
     getReversedIterator<TItem>(
@@ -574,46 +537,9 @@ export class IDBManager {
             throw IDBManager.dbNotOpenError();
         }
 
-        const tx = this.db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-
-        const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-        const cursorReq = store.openCursor(rawKeyRange, 'prev');
-
-        let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
-            { value: undefined, done: false },
-        );
-        return {
-            next(): Promise<IteratorResult<TItem>> {
-                const p = prev.then(
-                    (prevResponse) => {
-                        return new Promise<IteratorResult<TItem>>((resolve, reject) => {
-                            if (prevResponse.done) {
-                                resolve({ value: undefined, done: true });
-                                return;
-                            }
-
-                            cursorReq.onerror = () => { reject(cursorReq.error); };
-                            cursorReq.onsuccess = () => {
-                                const cursor = cursorReq.result;
-
-                                if (cursor) {
-                                    resolve({ value: cursor.value as TItem, done: false });
-                                    cursor.continue();
-                                }
-                                else {
-                                    resolve({ value: undefined, done: true });
-                                }
-                            };
-                        });
-                    },
-                    (prevError) => { return Promise.reject(prevError); },
-                );
-                prev = p;
-                return p;
-            },
-            [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
-        };
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getReversedIterator<TItem>(storeName, keyRange);
     }
 
     getKeyIterator(
@@ -624,46 +550,9 @@ export class IDBManager {
             throw IDBManager.dbNotOpenError();
         }
 
-        const tx = this.db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-
-        const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-        const cursorReq = store.openKeyCursor(rawKeyRange, 'next');
-
-        let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
-            { value: undefined, done: false },
-        );
-        return {
-            next(): Promise<IteratorResult<IDBValidKey>> {
-                const p = prev.then(
-                    (prevResponse) => {
-                        return new Promise<IteratorResult<IDBValidKey>>((resolve, reject) => {
-                            if (prevResponse.done) {
-                                resolve({ value: undefined, done: true });
-                                return;
-                            }
-
-                            cursorReq.onerror = () => { reject(cursorReq.error); };
-                            cursorReq.onsuccess = () => {
-                                const cursor = cursorReq.result;
-
-                                if (cursor) {
-                                    resolve({ value: cursor.key, done: false });
-                                    cursor.continue();
-                                }
-                                else {
-                                    resolve({ value: undefined, done: true });
-                                }
-                            };
-                        });
-                    },
-                    (prevError) => { return Promise.reject(prevError); },
-                );
-                prev = p;
-                return p;
-            },
-            [Symbol.asyncIterator](): AsyncIterableIterator<IDBValidKey> { return this; },
-        };
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getKeyIterator(storeName, keyRange);
     }
 
     getReversedKeyIterator(
@@ -674,45 +563,8 @@ export class IDBManager {
             throw IDBManager.dbNotOpenError();
         }
 
-        const tx = this.db.transaction(storeName, 'readonly');
-        const store = tx.objectStore(storeName);
-
-        const rawKeyRange = IDBManager.generateRawKeyRange(keyRange);
-        const cursorReq = store.openKeyCursor(rawKeyRange, 'prev');
-
-        let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
-            { value: undefined, done: false },
-        );
-        return {
-            next(): Promise<IteratorResult<IDBValidKey>> {
-                const p = prev.then(
-                    (prevResponse) => {
-                        return new Promise<IteratorResult<IDBValidKey>>((resolve, reject) => {
-                            if (prevResponse.done) {
-                                resolve({ value: undefined, done: true });
-                                return;
-                            }
-
-                            cursorReq.onerror = () => { reject(cursorReq.error); };
-                            cursorReq.onsuccess = () => {
-                                const cursor = cursorReq.result;
-
-                                if (cursor) {
-                                    resolve({ value: cursor.key, done: false });
-                                    cursor.continue();
-                                }
-                                else {
-                                    resolve({ value: undefined, done: true });
-                                }
-                            };
-                        });
-                    },
-                    (prevError) => { return Promise.reject(prevError); },
-                );
-                prev = p;
-                return p;
-            },
-            [Symbol.asyncIterator](): AsyncIterableIterator<IDBValidKey> { return this; },
-        };
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getReversedKeyIterator(storeName, keyRange);
     }
 }
