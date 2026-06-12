@@ -40,17 +40,17 @@ describe('トランザクションの生成テスト', () => {
 
         tx.abort();
         expect(tx.isActive()).toBe(false);
-        const exp = expect(tx.getSettlement());
-        await exp.rejects.toThrow(DOMException);
-        await exp.rejects.toThrow('The transaction failed for some reason.');
+        const p = tx.getSettlement();
+        await expect(p).rejects.toThrow(DOMException);
+        await expect(p).rejects.toThrow('The transaction failed for some reason.');
     });
     test('例外を引数に渡してabort', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
 
         tx.abort(new TypeError('Oops'));
-        const exp = expect(tx.getSettlement());
-        await exp.rejects.toThrow(TypeError);
-        await exp.rejects.toThrow('Oops');
+        const p = tx.getSettlement();
+        await expect(p).rejects.toThrow(TypeError);
+        await expect(p).rejects.toThrow('Oops');
     });
 
     test('非アクティブ時にabortまたはcommitするとエラー', async () => {
@@ -121,9 +121,9 @@ describe('CRUD共通の例外処理', () => {
         // 追加・更新・削除関数
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
-        const exp = expect(tx.addItem('MyStoreX', {}));
-        await exp.rejects.toThrow(DOMException);
-        await exp.rejects.toThrow('The operation failed because the requested database object could not be found. For example, an object store did not exist but was being opened.');
+        const p = tx.addItem('MyStoreX', {});
+        await expect(p).rejects.toThrow(DOMException);
+        await expect(p).rejects.toThrow('The operation failed because the requested database object could not be found. For example, an object store did not exist but was being opened.');
         // settlementもrejectされることをexpectで確認する これをしないとテストが落ちる
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
@@ -213,9 +213,9 @@ describe('CRUD共通の例外処理', () => {
         let tx: IDBMTransaction;
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        const exp = expect(tx.addItem('MyStore1', {}));
-        await exp.rejects.toThrow(DOMException);
-        await exp.rejects.toThrow('The mutating operation was attempted in a "readonly" transaction.');
+        const p = tx.addItem('MyStore1', {});
+        await expect(p).rejects.toThrow(DOMException);
+        await expect(p).rejects.toThrow('The mutating operation was attempted in a "readonly" transaction.');
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');

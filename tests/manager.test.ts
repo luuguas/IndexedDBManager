@@ -80,9 +80,9 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const idb2 = new IDBManager(dbName, 2, []);
 
         await expect(idb1.openDatabase()).resolves.toBeUndefined();
-        const exp = expect(idb2.openDatabase());
-        await exp.rejects.toThrow(ReferenceError);
-        await exp.rejects.toThrow('The database cannot be upgraded because it is currently open on another instance.');
+        const p = idb2.openDatabase();
+        await expect(p).rejects.toThrow(ReferenceError);
+        await expect(p).rejects.toThrow('The database cannot be upgraded because it is currently open on another instance.');
 
         // DBを閉じるとアップグレードできる
         idb1.closeDatabase();
@@ -139,9 +139,9 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         oldIDB.closeDatabase();
 
         const wrongIDB = new IDBManager(dbName, 1, newStoreInfos);
-        const exp = expect(wrongIDB.openDatabase());
-        await exp.rejects.toThrow(TypeError);
-        await exp.rejects.toThrow('The storeInfos does not match the object stores in the database. The database version needs upgrading.');
+        const p = wrongIDB.openDatabase();
+        await expect(p).rejects.toThrow(TypeError);
+        await expect(p).rejects.toThrow('The storeInfos does not match the object stores in the database. The database version needs upgrading.');
 
         // アップグレード(バージョンアップ)するとDBを開ける
         const newIDB = new IDBManager(dbName, 2, newStoreInfos);
