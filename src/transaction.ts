@@ -575,4 +575,260 @@ export class IDBMTransaction {
             }
         });
     }
+
+    getIterator<TItem>(
+        storeName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<TItem> {
+        if (!this.isActive()) {
+            throw IDBMTransaction.txNotActiveError();
+        }
+
+        try {
+            const store = this.tx.objectStore(storeName);
+            const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
+            const cursorReq = store.openCursor(rawKeyRange, 'next');
+
+            const isActive = () => { return this.isActive(); };
+            const abort = (error?: Error | null) => { this.abort(error); };
+
+            let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
+                { value: undefined, done: false },
+            );
+            return {
+                next(): Promise<IteratorResult<TItem>> {
+                    const p = prev.then(
+                        (prevResponse) => {
+                            return new Promise<IteratorResult<TItem>>((resolve, reject) => {
+                                if (!isActive()) {
+                                    reject(IDBMTransaction.txNotActiveError());
+                                    return;
+                                }
+                                if (prevResponse.done) {
+                                    resolve({ value: undefined, done: true });
+                                    return;
+                                }
+
+                                cursorReq.onerror = () => {
+                                    if (isActive()) { abort(cursorReq.error); }
+                                    reject(cursorReq.error);
+                                };
+                                cursorReq.onsuccess = () => {
+                                    const cursor = cursorReq.result;
+
+                                    if (cursor) {
+                                        resolve({ value: cursor.value as TItem, done: false });
+                                        if (isActive()) { cursor.continue(); }
+                                    }
+                                    else {
+                                        resolve({ value: undefined, done: true });
+                                    }
+                                };
+                            });
+                        },
+                        (prevError) => { return Promise.reject(prevError); },
+                    );
+                    prev = p;
+                    return p;
+                },
+                [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
+            };
+        }
+        catch (error) {
+            if (this.isActive()) { this.abort(error as Error); }
+            throw error;
+        }
+    }
+
+    getReversedIterator<TItem>(
+        storeName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<TItem> {
+        if (!this.isActive()) {
+            throw IDBMTransaction.txNotActiveError();
+        }
+
+        try {
+            const store = this.tx.objectStore(storeName);
+            const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
+            const cursorReq = store.openCursor(rawKeyRange, 'prev');
+
+            const isActive = () => { return this.isActive(); };
+            const abort = (error?: Error | null) => { this.abort(error); };
+
+            let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
+                { value: undefined, done: false },
+            );
+            return {
+                next(): Promise<IteratorResult<TItem>> {
+                    const p = prev.then(
+                        (prevResponse) => {
+                            return new Promise<IteratorResult<TItem>>((resolve, reject) => {
+                                if (!isActive()) {
+                                    reject(IDBMTransaction.txNotActiveError());
+                                    return;
+                                }
+                                if (prevResponse.done) {
+                                    resolve({ value: undefined, done: true });
+                                    return;
+                                }
+
+                                cursorReq.onerror = () => {
+                                    if (isActive()) { abort(cursorReq.error); }
+                                    reject(cursorReq.error);
+                                };
+                                cursorReq.onsuccess = () => {
+                                    const cursor = cursorReq.result;
+
+                                    if (cursor) {
+                                        resolve({ value: cursor.value as TItem, done: false });
+                                        if (isActive()) { cursor.continue(); }
+                                    }
+                                    else {
+                                        resolve({ value: undefined, done: true });
+                                    }
+                                };
+                            });
+                        },
+                        (prevError) => { return Promise.reject(prevError); },
+                    );
+                    prev = p;
+                    return p;
+                },
+                [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
+            };
+        }
+        catch (error) {
+            if (this.isActive()) { this.abort(error as Error); }
+            throw error;
+        }
+    }
+
+    getKeyIterator(
+        storeName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<IDBValidKey> {
+        if (!this.isActive()) {
+            throw IDBMTransaction.txNotActiveError();
+        }
+
+        try {
+            const store = this.tx.objectStore(storeName);
+            const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
+            const cursorReq = store.openKeyCursor(rawKeyRange, 'next');
+
+            const isActive = () => { return this.isActive(); };
+            const abort = (error?: Error | null) => { this.abort(error); };
+
+            let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
+                { value: undefined, done: false },
+            );
+            return {
+                next(): Promise<IteratorResult<IDBValidKey>> {
+                    const p = prev.then(
+                        (prevResponse) => {
+                            return new Promise<IteratorResult<IDBValidKey>>((resolve, reject) => {
+                                if (!isActive()) {
+                                    reject(IDBMTransaction.txNotActiveError());
+                                    return;
+                                }
+                                if (prevResponse.done) {
+                                    resolve({ value: undefined, done: true });
+                                    return;
+                                }
+
+                                cursorReq.onerror = () => {
+                                    if (isActive()) { abort(cursorReq.error); }
+                                    reject(cursorReq.error);
+                                };
+                                cursorReq.onsuccess = () => {
+                                    const cursor = cursorReq.result;
+
+                                    if (cursor) {
+                                        resolve({ value: cursor.key, done: false });
+                                        if (isActive()) { cursor.continue(); }
+                                    }
+                                    else {
+                                        resolve({ value: undefined, done: true });
+                                    }
+                                };
+                            });
+                        },
+                        (prevError) => { return Promise.reject(prevError); },
+                    );
+                    prev = p;
+                    return p;
+                },
+                [Symbol.asyncIterator](): AsyncIterableIterator<IDBValidKey> { return this; },
+            };
+        }
+        catch (error) {
+            if (this.isActive()) { this.abort(error as Error); }
+            throw error;
+        }
+    }
+
+    getReversedKeyIterator(
+        storeName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<IDBValidKey> {
+        if (!this.isActive()) {
+            throw IDBMTransaction.txNotActiveError();
+        }
+
+        try {
+            const store = this.tx.objectStore(storeName);
+            const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
+            const cursorReq = store.openKeyCursor(rawKeyRange, 'prev');
+
+            const isActive = () => { return this.isActive(); };
+            const abort = (error?: Error | null) => { this.abort(error); };
+
+            let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
+                { value: undefined, done: false },
+            );
+            return {
+                next(): Promise<IteratorResult<IDBValidKey>> {
+                    const p = prev.then(
+                        (prevResponse) => {
+                            return new Promise<IteratorResult<IDBValidKey>>((resolve, reject) => {
+                                if (!isActive()) {
+                                    reject(IDBMTransaction.txNotActiveError());
+                                    return;
+                                }
+                                if (prevResponse.done) {
+                                    resolve({ value: undefined, done: true });
+                                    return;
+                                }
+
+                                cursorReq.onerror = () => {
+                                    if (isActive()) { abort(cursorReq.error); }
+                                    reject(cursorReq.error);
+                                };
+                                cursorReq.onsuccess = () => {
+                                    const cursor = cursorReq.result;
+
+                                    if (cursor) {
+                                        resolve({ value: cursor.key, done: false });
+                                        if (isActive()) { cursor.continue(); }
+                                    }
+                                    else {
+                                        resolve({ value: undefined, done: true });
+                                    }
+                                };
+                            });
+                        },
+                        (prevError) => { return Promise.reject(prevError); },
+                    );
+                    prev = p;
+                    return p;
+                },
+                [Symbol.asyncIterator](): AsyncIterableIterator<IDBValidKey> { return this; },
+            };
+        }
+        catch (error) {
+            if (this.isActive()) { this.abort(error as Error); }
+            throw error;
+        }
+    }
 }
