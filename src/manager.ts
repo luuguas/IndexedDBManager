@@ -567,4 +567,118 @@ export class IDBManager {
         tx.getSettlement().catch(() => { /* do nothing */ });
         return tx.getReversedKeyIterator(storeName, keyRange);
     }
+
+    getItemByIndex<TItem>(
+        storeName: string,
+        indexName: string,
+        key: IDBValidKey,
+    ): Promise<TItem | undefined> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getItemByIndex<TItem>(storeName, indexName, key);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    getFirstItemByIndex<TItem>(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<TItem | undefined> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getFirstItemByIndex<TItem>(storeName, indexName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    getLastItemByIndex<TItem>(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<TItem | undefined> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getLastItemByIndex<TItem>(storeName, indexName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    getFirstKeyByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<IDBValidKey | undefined> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getFirstKeyByIndex(storeName, indexName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    getLastKeyByIndex(
+        storeName: string,
+        indexname: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<IDBValidKey | undefined> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getLastKeyByIndex(storeName, indexname, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    hasItemByIndex(
+        storeName: string,
+        indexName: string,
+        key: IDBValidKey,
+    ): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.hasItemByIndex(storeName, indexName, key);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
 }
