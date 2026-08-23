@@ -114,6 +114,13 @@ describe('CRUD共通の例外処理', () => {
         expect(() => { tx.getReversedIterator(''); }).toThrow(DOMException);
         expect(() => { tx.getKeyIterator(''); }).toThrow(DOMException);
         expect(() => { tx.getReversedKeyIterator(''); }).toThrow(DOMException);
+
+        await expect(tx.getItemByIndex('', '', '')).rejects.toThrow(DOMException);
+        await expect(tx.getFirstItemByIndex('', '')).rejects.toThrow(DOMException);
+        await expect(tx.getLastItemByIndex('', '')).rejects.toThrow(DOMException);
+        await expect(tx.getFirstKeyByIndex('', '')).rejects.toThrow(DOMException);
+        await expect(tx.getLastKeyByIndex('', '')).rejects.toThrow(DOMException);
+        await expect(tx.hasItemByIndex('', '', '')).rejects.toThrow(DOMException);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         let tx: IDBMTransaction;
@@ -207,6 +214,32 @@ describe('CRUD共通の例外処理', () => {
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
         expect(() => { tx.getReversedKeyIterator('MyStoreX'); }).toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        // インデックスによる取得関数
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getItemByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getFirstItemByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getLastItemByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getFirstKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getLastKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.hasItemByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
     });
     test('トランザクションのモードがreadonlyのときに更新系の関数を呼び出すとエラー', async () => {

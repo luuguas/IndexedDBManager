@@ -186,6 +186,13 @@ describe('CRUDs共通の例外処理', () => {
         expect(() => { idb.getReversedIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getKeyIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.getReversedKeyIterator(''); }).toThrow(ReferenceError);
+
+        await expect(idb.getItemByIndex('', '', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getFirstItemByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getLastItemByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getFirstKeyByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getLastKeyByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.hasItemByIndex('', '', '')).rejects.toThrow(ReferenceError);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         const dbName = createDBName();
@@ -214,6 +221,13 @@ describe('CRUDs共通の例外処理', () => {
         expect(() => { idb.getReversedIterator('MyStoreX'); }).toThrow(DOMException);
         expect(() => { idb.getKeyIterator('MyStoreX'); }).toThrow(DOMException);
         expect(() => { idb.getReversedKeyIterator('MyStoreX'); }).toThrow(DOMException);
+
+        await expect(idb.getItemByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
+        await expect(idb.getFirstItemByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getLastItemByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getFirstKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getLastKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.hasItemByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
     });
 });
 
@@ -867,7 +881,7 @@ describe('DBの開閉テスト(インデックスあり)', () => {
             keyPath: 'item',
             indexInfos: [
                 { indexName: 'idIdx', keyPath: 'id', unique: true },
-                { indexName: 'weightIdx', keyPath: 'weight', multiEntry: true },
+                { indexName: 'weightIdx', keyPath: 'weight' },
                 { indexName: 'valueIdx', keyPath: 'value' },
             ],
         },
@@ -886,7 +900,7 @@ describe('DBの開閉テスト(インデックスあり)', () => {
             keyPath: 'item',
             indexInfos: [
                 { indexName: 'idIdx', keyPath: 'id' },
-                { indexName: 'weightIdx', keyPath: 'weight', multiEntry: true },
+                { indexName: 'weightIdx', keyPath: 'weight' },
                 { indexName: 'colorIdx', keyPath: 'color' },
             ],
             resetOnUpgrade: 'index',
@@ -949,6 +963,152 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         await expect(pidb.hasItem('MyStore2', 'Apple')).resolves.toBe(true);
 
         pidb.closeDatabase();
+    });
+});
+
+describe('単体データのインデックスによる取得テスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    type Item = {
+        item: string,
+        id: number,
+        weight: number,
+        value: number,
+        color: string,
+    };
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [
+        {
+            name: 'MyStore1',
+            keyPath: 'item',
+            indexInfos: [
+                { indexName: 'idIdx', keyPath: 'id', unique: true },
+                { indexName: 'weightIdx', keyPath: 'weight', multiEntry: true },
+                { indexName: 'valueIdx', keyPath: 'value' },
+            ],
+        },
+    ];
+    const items: Item[] = [
+        {
+            item: 'Apple', id: 1, weight: 20, value: 100, color: 'red',
+        },
+        {
+            item: 'Banana', id: 2, weight: 15, value: 80, color: 'yellow',
+        },
+        {
+            item: 'Chocolate', id: 3, weight: 5, value: 120, color: 'brown',
+        },
+        {
+            item: 'Donut', id: 4, weight: 10, value: 90, color: 'pink',
+        },
+        {
+            item: 'Egg', id: 5, weight: 10, value: 70, color: 'white',
+        },
+    ];
+
+    const idb = new IDBManager(dbName, 1, storeInfos);
+
+    beforeAll(async () => {
+        await idb.openDatabase();
+        await idb.addItems<Item>('MyStore1', items);
+        idb.closeDatabase();
+    });
+
+    beforeEach(async () => {
+        await idb.openDatabase();
+    });
+    afterEach(() => {
+        idb.closeDatabase();
+    });
+
+    test('getItemByIndex', async () => {
+        await expect(
+            idb.getItemByIndex<Item>('MyStore1', 'idIdx', 3),
+        ).resolves.toEqual(items[2]);
+        await expect(
+            idb.getItemByIndex<Item>('MyStore1', 'weightIdx', 10),
+        ).resolves.toEqual(items[3]);
+        await expect(
+            idb.getItemByIndex<Item>('MyStore1', 'valueIdx', 100),
+        ).resolves.toEqual(items[0]);
+
+        await expect(
+            idb.getItemByIndex<Item>('MyStore1', 'idIdx', 0),
+        ).resolves.toBeUndefined();
+    });
+    test('getFirstItemByIndex', async () => {
+        await expect(
+            idb.getFirstItemByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
+        ).resolves.toEqual(items[1]);
+        await expect(
+            idb.getFirstItemByIndex<Item>('MyStore1', 'weightIdx', { upper: 10 }),
+        ).resolves.toEqual(items[2]);
+        await expect(
+            idb.getFirstItemByIndex<Item>('MyStore1', 'valueIdx', { lower: 80, upper: 150, lowerOpen: true }),
+        ).resolves.toEqual(items[3]);
+
+        await expect(
+            idb.getFirstItemByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
+        ).resolves.toBeUndefined();
+    });
+    test('getLastItemByIndex', async () => {
+        await expect(
+            idb.getLastItemByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
+        ).resolves.toEqual(items[4]);
+        await expect(
+            idb.getLastItemByIndex<Item>('MyStore1', 'weightIdx', { upper: 15 }),
+        ).resolves.toEqual(items[1]);
+        await expect(
+            idb.getLastItemByIndex<Item>('MyStore1', 'valueIdx', { lower: 60, upper: 100, upperOpen: true }),
+        ).resolves.toEqual(items[3]);
+
+        await expect(
+            idb.getLastItemByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
+        ).resolves.toBeUndefined();
+    });
+    test('getFirstKeyByIndex', async () => {
+        await expect(
+            idb.getFirstKeyByIndex('MyStore1', 'idIdx', { lower: 2 }),
+        ).resolves.toEqual(2);
+        await expect(
+            idb.getFirstKeyByIndex('MyStore1', 'weightIdx', { upper: 10 }),
+        ).resolves.toEqual(5);
+        await expect(
+            idb.getFirstKeyByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 150, lowerOpen: true }),
+        ).resolves.toEqual(90);
+
+        await expect(
+            idb.getFirstKeyByIndex('MyStore1', 'idIdx', { lower: 6 }),
+        ).resolves.toBeUndefined();
+    });
+    test('getLastKeyByIndex', async () => {
+        await expect(
+            idb.getLastKeyByIndex('MyStore1', 'idIdx', { lower: 2 }),
+        ).resolves.toEqual(5);
+        await expect(
+            idb.getLastKeyByIndex('MyStore1', 'weightIdx', { upper: 15 }),
+        ).resolves.toEqual(15);
+        await expect(
+            idb.getLastKeyByIndex('MyStore1', 'valueIdx', { lower: 60, upper: 100, upperOpen: true }),
+        ).resolves.toEqual(90);
+
+        await expect(
+            idb.getLastKeyByIndex('MyStore1', 'idIdx', { lower: 6 }),
+        ).resolves.toBeUndefined();
+    });
+    test('hasItemByIndex', async () => {
+        await expect(
+            idb.hasItemByIndex('MyStore1', 'idIdx', 3),
+        ).resolves.toBe(true);
+        await expect(
+            idb.hasItemByIndex('MyStore1', 'weightIdx', 25),
+        ).resolves.toBe(false);
+        await expect(
+            idb.hasItemByIndex('MyStore1', 'valueIdx', 100),
+        ).resolves.toBe(true);
     });
 });
 
