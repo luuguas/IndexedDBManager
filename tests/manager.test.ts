@@ -974,7 +974,6 @@ describe('単体データのインデックスによる取得テスト', () => {
     type Item = {
         item: string,
         id: number,
-        weight: number,
         value: number,
         color: string,
     };
@@ -986,26 +985,26 @@ describe('単体データのインデックスによる取得テスト', () => {
             keyPath: 'item',
             indexInfos: [
                 { indexName: 'idIdx', keyPath: 'id', unique: true },
-                { indexName: 'weightIdx', keyPath: 'weight', multiEntry: true },
                 { indexName: 'valueIdx', keyPath: 'value' },
+                { indexName: 'colorIdx', keyPath: 'color' },
             ],
         },
     ];
     const items: Item[] = [
         {
-            item: 'Apple', id: 1, weight: 20, value: 100, color: 'red',
+            item: 'Apple', id: 1, value: 100, color: 'red',
         },
         {
-            item: 'Banana', id: 2, weight: 15, value: 80, color: 'yellow',
+            item: 'Banana', id: 2, value: 80, color: 'yellow',
         },
         {
-            item: 'Chocolate', id: 3, weight: 5, value: 120, color: 'brown',
+            item: 'Chocolate', id: 3, value: 120, color: 'brown',
         },
         {
-            item: 'Donut', id: 4, weight: 10, value: 90, color: 'pink',
+            item: 'Donut', id: 4, value: 90, color: 'pink',
         },
         {
-            item: 'Egg', id: 5, weight: 10, value: 70, color: 'white',
+            item: 'Egg', id: 5, value: 70, color: 'white',
         },
     ];
 
@@ -1029,10 +1028,10 @@ describe('単体データのインデックスによる取得テスト', () => {
             idb.getItemByIndex<Item>('MyStore1', 'idIdx', 3),
         ).resolves.toEqual(items[2]);
         await expect(
-            idb.getItemByIndex<Item>('MyStore1', 'weightIdx', 10),
+            idb.getItemByIndex<Item>('MyStore1', 'valueIdx', 90),
         ).resolves.toEqual(items[3]);
         await expect(
-            idb.getItemByIndex<Item>('MyStore1', 'valueIdx', 100),
+            idb.getItemByIndex<Item>('MyStore1', 'colorIdx', 'red'),
         ).resolves.toEqual(items[0]);
 
         await expect(
@@ -1044,11 +1043,11 @@ describe('単体データのインデックスによる取得テスト', () => {
             idb.getFirstItemByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
         ).resolves.toEqual(items[1]);
         await expect(
-            idb.getFirstItemByIndex<Item>('MyStore1', 'weightIdx', { upper: 10 }),
-        ).resolves.toEqual(items[2]);
+            idb.getFirstItemByIndex<Item>('MyStore1', 'valueIdx', { upper: 100 }),
+        ).resolves.toEqual(items[4]);
         await expect(
-            idb.getFirstItemByIndex<Item>('MyStore1', 'valueIdx', { lower: 80, upper: 150, lowerOpen: true }),
-        ).resolves.toEqual(items[3]);
+            idb.getFirstItemByIndex<Item>('MyStore1', 'colorIdx', { lower: 'pink', upper: 'white', lowerOpen: true }),
+        ).resolves.toEqual(items[0]);
 
         await expect(
             idb.getFirstItemByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
@@ -1059,10 +1058,10 @@ describe('単体データのインデックスによる取得テスト', () => {
             idb.getLastItemByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
         ).resolves.toEqual(items[4]);
         await expect(
-            idb.getLastItemByIndex<Item>('MyStore1', 'weightIdx', { upper: 15 }),
-        ).resolves.toEqual(items[1]);
+            idb.getLastItemByIndex<Item>('MyStore1', 'valueIdx', { upper: 100 }),
+        ).resolves.toEqual(items[0]);
         await expect(
-            idb.getLastItemByIndex<Item>('MyStore1', 'valueIdx', { lower: 60, upper: 100, upperOpen: true }),
+            idb.getLastItemByIndex<Item>('MyStore1', 'colorIdx', { lower: 'black', upper: 'red', upperOpen: true }),
         ).resolves.toEqual(items[3]);
 
         await expect(
@@ -1074,11 +1073,11 @@ describe('単体データのインデックスによる取得テスト', () => {
             idb.getFirstKeyByIndex('MyStore1', 'idIdx', { lower: 2 }),
         ).resolves.toEqual(2);
         await expect(
-            idb.getFirstKeyByIndex('MyStore1', 'weightIdx', { upper: 10 }),
-        ).resolves.toEqual(5);
+            idb.getFirstKeyByIndex('MyStore1', 'valueIdx', { upper: 100 }),
+        ).resolves.toEqual(70);
         await expect(
-            idb.getFirstKeyByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 150, lowerOpen: true }),
-        ).resolves.toEqual(90);
+            idb.getFirstKeyByIndex('MyStore1', 'colorIdx', { lower: 'pink', upper: 'white', lowerOpen: true }),
+        ).resolves.toEqual('red');
 
         await expect(
             idb.getFirstKeyByIndex('MyStore1', 'idIdx', { lower: 6 }),
@@ -1089,11 +1088,11 @@ describe('単体データのインデックスによる取得テスト', () => {
             idb.getLastKeyByIndex('MyStore1', 'idIdx', { lower: 2 }),
         ).resolves.toEqual(5);
         await expect(
-            idb.getLastKeyByIndex('MyStore1', 'weightIdx', { upper: 15 }),
-        ).resolves.toEqual(15);
+            idb.getLastKeyByIndex('MyStore1', 'valueIdx', { upper: 100 }),
+        ).resolves.toEqual(100);
         await expect(
-            idb.getLastKeyByIndex('MyStore1', 'valueIdx', { lower: 60, upper: 100, upperOpen: true }),
-        ).resolves.toEqual(90);
+            idb.getLastKeyByIndex('MyStore1', 'colorIdx', { lower: 'black', upper: 'red', upperOpen: true }),
+        ).resolves.toEqual('pink');
 
         await expect(
             idb.getLastKeyByIndex('MyStore1', 'idIdx', { lower: 6 }),
@@ -1104,10 +1103,10 @@ describe('単体データのインデックスによる取得テスト', () => {
             idb.hasItemByIndex('MyStore1', 'idIdx', 3),
         ).resolves.toBe(true);
         await expect(
-            idb.hasItemByIndex('MyStore1', 'weightIdx', 25),
+            idb.hasItemByIndex('MyStore1', 'valueIdx', 110),
         ).resolves.toBe(false);
         await expect(
-            idb.hasItemByIndex('MyStore1', 'valueIdx', 100),
+            idb.hasItemByIndex('MyStore1', 'colorIdx', 'yellow'),
         ).resolves.toBe(true);
     });
 });
