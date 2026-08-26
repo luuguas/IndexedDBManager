@@ -1023,4 +1023,145 @@ export class IDBMTransaction {
             }
         });
     }
+
+    getItemsByIndex<TItem>(
+        storeName: string, indexName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
+    getItemsByIndex<TItem>(
+        storeName: string, indexName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
+    getItemsByIndex<TItem>(
+        storeName: string,
+        indexName: string,
+        keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
+    ): Promise<(TItem | undefined)[]> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const idx = store.index(indexName);
+
+                if (Array.isArray(keysOrKeyRange)) {
+                    // keys: IDBValidKey[]
+                    const promises: Promise<TItem | undefined>[] = keysOrKeyRange.map((key) => {
+                        return new Promise((res, rej) => {
+                            const getReq = idx.get(key);
+                            getReq.onerror = () => { rej(getReq.error); };
+                            getReq.onsuccess = () => { res(getReq.result as TItem | undefined); };
+                        });
+                    });
+
+                    Promise.all(promises)
+                        .then((response: (TItem | undefined)[]) => { resolve(response); })
+                        .catch((error: DOMException) => {
+                            if (this.isActive()) { this.abort(error); }
+                            reject(error);
+                        });
+                }
+                else {
+                    // keyRange?: IDBMKeyRange
+                    const rawKeyRange = IDBMTransaction.generateRawKeyRange(keysOrKeyRange);
+                    const getAllReq = idx.getAll(rawKeyRange);
+                    getAllReq.onerror = () => {
+                        if (this.isActive()) { this.abort(getAllReq.error); }
+                        reject(getAllReq.error);
+                    };
+                    getAllReq.onsuccess = () => { resolve(getAllReq.result as TItem[]); };
+                }
+            }
+            catch (error) {
+                if (this.isActive()) { this.abort(error as Error); }
+                reject(error);
+            }
+        });
+    }
+
+    getKeysByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<IDBValidKey[]> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const idx = store.index(indexName);
+                const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
+                const getAllReq = idx.getAllKeys(rawKeyRange);
+                getAllReq.onerror = () => {
+                    if (this.isActive()) { this.abort(getAllReq.error); }
+                    reject(getAllReq.error);
+                };
+                getAllReq.onsuccess = () => { resolve(getAllReq.result); };
+            }
+            catch (error) {
+                if (this.isActive()) { this.abort(error as Error); }
+                reject(error);
+            }
+        });
+    }
+
+    countItemsByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<number> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const idx = store.index(indexName);
+                const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
+                const countReq = idx.count(rawKeyRange || undefined);
+                countReq.onerror = () => {
+                    if (this.isActive()) { this.abort(countReq.error); }
+                    reject(countReq.error);
+                };
+                countReq.onsuccess = () => { resolve(countReq.result); };
+            }
+            catch (error) {
+                if (this.isActive()) { this.abort(error as Error); }
+                reject(error);
+            }
+        });
+    }
+
+    hasAnyItemsByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const idx = store.index(indexName);
+                const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
+                const cursorReq = idx.openKeyCursor(rawKeyRange);
+                cursorReq.onerror = () => {
+                    if (this.isActive()) { this.abort(cursorReq.error); }
+                    reject(cursorReq.error);
+                };
+                cursorReq.onsuccess = () => { resolve(cursorReq.result !== null); };
+            }
+            catch (error) {
+                if (this.isActive()) { this.abort(error as Error); }
+                reject(error);
+            }
+        });
+    }
 }

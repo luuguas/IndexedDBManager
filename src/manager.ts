@@ -681,4 +681,89 @@ export class IDBManager {
                 .catch((error) => { reject(error); });
         });
     }
+
+    getItemsByIndex<TItem>(
+        storeName: string, indexName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
+    getItemsByIndex<TItem>(
+        storeName: string, indexName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
+    getItemsByIndex<TItem>(
+        storeName: string,
+        indexName: string,
+        keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
+    ): Promise<(TItem | undefined)[]> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                if (Array.isArray(keysOrKeyRange)) {
+                    // keys: IDBValidKey[]
+                    return inner.getItemsByIndex<TItem>(storeName, indexName, keysOrKeyRange);
+                }
+                // keyRange?: IDBMKeyRange
+                return inner.getItemsByIndex<TItem>(storeName, indexName, keysOrKeyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    getKeysByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<IDBValidKey[]> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getKeysByIndex(storeName, indexName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    countItemsByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<number> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.countItemsByIndex(storeName, indexName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    hasAnyItemsByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.hasAnyItemsByIndex(storeName, indexName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
 }
