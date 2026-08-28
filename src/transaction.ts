@@ -388,7 +388,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.key); }
+                    if (cursor) { resolve(cursor.primaryKey); }
                     else { resolve(undefined); }
                 };
             }
@@ -417,7 +417,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.key); }
+                    if (cursor) { resolve(cursor.primaryKey); }
                     else { resolve(undefined); }
                 };
             }
@@ -745,7 +745,7 @@ export class IDBMTransaction {
                                     const cursor = cursorReq.result;
 
                                     if (cursor) {
-                                        resolve({ value: cursor.key, done: false });
+                                        resolve({ value: cursor.primaryKey, done: false });
                                         if (isActive()) { cursor.continue(); }
                                     }
                                     else {
@@ -809,7 +809,7 @@ export class IDBMTransaction {
                                     const cursor = cursorReq.result;
 
                                     if (cursor) {
-                                        resolve({ value: cursor.key, done: false });
+                                        resolve({ value: cursor.primaryKey, done: false });
                                         if (isActive()) { cursor.continue(); }
                                     }
                                     else {
@@ -951,7 +951,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.key); }
+                    if (cursor) { resolve(cursor.primaryKey); }
                     else { resolve(undefined); }
                 };
             }
@@ -985,7 +985,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.key); }
+                    if (cursor) { resolve(cursor.primaryKey); }
                     else { resolve(undefined); }
                 };
             }

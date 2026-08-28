@@ -1071,13 +1071,13 @@ describe('単体データのインデックスによる取得テスト', () => {
     test('getFirstKeyByIndex', async () => {
         await expect(
             idb.getFirstKeyByIndex('MyStore1', 'idIdx', { lower: 2 }),
-        ).resolves.toEqual(2);
+        ).resolves.toEqual('Banana');
         await expect(
             idb.getFirstKeyByIndex('MyStore1', 'valueIdx', { upper: 100 }),
-        ).resolves.toEqual(70);
+        ).resolves.toEqual('Egg');
         await expect(
             idb.getFirstKeyByIndex('MyStore1', 'colorIdx', { lower: 'pink', upper: 'white', lowerOpen: true }),
-        ).resolves.toEqual('red');
+        ).resolves.toEqual('Apple');
 
         await expect(
             idb.getFirstKeyByIndex('MyStore1', 'idIdx', { lower: 6 }),
@@ -1086,13 +1086,13 @@ describe('単体データのインデックスによる取得テスト', () => {
     test('getLastKeyByIndex', async () => {
         await expect(
             idb.getLastKeyByIndex('MyStore1', 'idIdx', { lower: 2 }),
-        ).resolves.toEqual(5);
+        ).resolves.toEqual('Egg');
         await expect(
             idb.getLastKeyByIndex('MyStore1', 'valueIdx', { upper: 100 }),
-        ).resolves.toEqual(100);
+        ).resolves.toEqual('Apple');
         await expect(
             idb.getLastKeyByIndex('MyStore1', 'colorIdx', { lower: 'black', upper: 'red', upperOpen: true }),
-        ).resolves.toEqual('pink');
+        ).resolves.toEqual('Donut');
 
         await expect(
             idb.getLastKeyByIndex('MyStore1', 'idIdx', { lower: 6 }),
