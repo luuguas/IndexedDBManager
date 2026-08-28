@@ -193,6 +193,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getFirstKeyByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastKeyByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.hasItemByIndex('', '', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getItemsByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getKeysByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.countItemsByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.hasAnyItemsByIndex('', '')).rejects.toThrow(ReferenceError);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         const dbName = createDBName();
@@ -228,6 +232,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getFirstKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.getLastKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.hasItemByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
+        await expect(idb.getItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getKeysByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.countItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.hasAnyItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
     });
 });
 
@@ -1108,6 +1116,129 @@ describe('単体データのインデックスによる取得テスト', () => {
         await expect(
             idb.hasItemByIndex('MyStore1', 'colorIdx', 'yellow'),
         ).resolves.toBe(true);
+    });
+});
+
+describe('複数データのインデックスによる取得テスト(multiEntryオプションのテストを含む)', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    type Item = {
+        item: string,
+        id: number,
+        value: number,
+        tags: string[],
+    };
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [
+        {
+            name: 'MyStore1',
+            keyPath: 'item',
+            indexInfos: [
+                { indexName: 'idIdx', keyPath: 'id', unique: true },
+                { indexName: 'valueIdx', keyPath: 'value' },
+                { indexName: 'tagsIdx', keyPath: 'tags', multiEntry: true },
+            ],
+        },
+    ];
+    const items: Item[] = [
+        {
+            item: 'Apple', id: 1, value: 100, tags: ['fruit'],
+        },
+        {
+            item: 'Banana', id: 2, value: 80, tags: ['fruit', 'on sale', 'new'],
+        },
+        {
+            item: 'Chocolate', id: 3, value: 120, tags: ['snack'],
+        },
+        {
+            item: 'Donut', id: 4, value: 90, tags: ['snack', 'on sale'],
+        },
+        {
+            item: 'Egg', id: 5, value: 70, tags: ['food', 'new'],
+        },
+    ];
+
+    const idb = new IDBManager(dbName, 1, storeInfos);
+
+    beforeAll(async () => {
+        await idb.openDatabase();
+        await idb.addItems<Item>('MyStore1', items);
+        idb.closeDatabase();
+    });
+
+    beforeEach(async () => {
+        await idb.openDatabase();
+    });
+    afterEach(() => {
+        idb.closeDatabase();
+    });
+
+    test('getItemsByIndex', async () => {
+        // keys: IDBValidKey[]
+        await expect(
+            idb.getItemsByIndex<Item>('MyStore1', 'idIdx', [2, 4, 6]),
+        ).resolves.toEqual([items[1], items[3], undefined]);
+
+        // keyRange?: IDBMKeyRange
+        await expect(
+            idb.getItemsByIndex<Item>('MyStore1', 'idIdx', { lower: 3 }),
+        ).resolves.toEqual([items[2], items[3], items[4]]);
+        await expect(
+            idb.getItemsByIndex<Item>('MyStore1', 'valueIdx', { upper: 90 }),
+        ).resolves.toEqual([items[4], items[1], items[3]]);
+
+        // multiEntryオプションをオンにすると、配列の要素をキーとして検索できる
+        await expect(
+            idb.getItemsByIndex<Item>('MyStore1', 'tagsIdx', { lower: 'on sale', upper: 'on sale' }),
+        ).resolves.toEqual([items[1], items[3]]);
+        await expect(
+            // tags に food, fruit, new のいずれかを含むデータを取得する
+            // 条件を満たす要素が複数ある場合は重複して返される
+            idb.getItemsByIndex<Item>('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
+        ).resolves.toEqual([items[4], items[0], items[1], items[1], items[4]]);
+    });
+    test('getKeysByIndex', async () => {
+        await expect(
+            idb.getKeysByIndex('MyStore1', 'idIdx', { lower: 3 }),
+        ).resolves.toEqual(['Chocolate', 'Donut', 'Egg']);
+        await expect(
+            idb.getKeysByIndex('MyStore1', 'valueIdx', { upper: 90 }),
+        ).resolves.toEqual(['Egg', 'Banana', 'Donut']);
+        await expect(
+            idb.getKeysByIndex('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
+        ).resolves.toEqual(['Egg', 'Apple', 'Banana', 'Banana', 'Egg']);
+    });
+    test('countItemsByIndex', async () => {
+        await expect(
+            idb.countItemsByIndex('MyStore1', 'idIdx', { lower: 3 }),
+        ).resolves.toEqual(3);
+        await expect(
+            idb.countItemsByIndex('MyStore1', 'valueIdx', { upper: 100 }),
+        ).resolves.toEqual(4);
+        await expect(
+            idb.countItemsByIndex('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
+        ).resolves.toEqual(5);
+    });
+    test('hasAnyItemsByIndex', async () => {
+        await expect(
+            idb.hasAnyItemsByIndex('MyStore1', 'idIdx', { lower: 3 }),
+        ).resolves.toBe(true);
+        await expect(
+            idb.hasAnyItemsByIndex('MyStore1', 'valueIdx', { upper: 60 }),
+        ).resolves.toBe(false);
+        await expect(
+            idb.hasAnyItemsByIndex('MyStore1', 'tagsIdx', { lower: 'popular', upper: 'popular' }),
+        ).resolves.toBe(false);
+    });
+
+    test('getItemsByIndexで不正なキーを渡すと取得できない', async () => {
+        const keys1 = [3, null];
+        await expect(
+            idb.getItemsByIndex<Item>('MyStore1', 'idIdx', keys1 as IDBValidKey[]),
+        ).rejects.toThrow(DOMException);
     });
 });
 
