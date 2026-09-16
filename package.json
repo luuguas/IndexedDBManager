@@ -1,7 +1,7 @@
 {
   "name": "@luuguas/idbmanager",
   "version": "2.0.0",
-  "description": "TypeScript class managing IndexedDB",
+  "description": "A simple Promise wrapper for IndexedDB",
   "scripts": {
     "build": "yarn tsc",
     "lint": "yarn eslint .",
