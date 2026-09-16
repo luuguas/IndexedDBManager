@@ -766,4 +766,60 @@ export class IDBManager {
                 .catch((error) => { reject(error); });
         });
     }
+
+    getIteratorByIndex<TItem>(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<TItem> {
+        if (this.isClose()) {
+            throw IDBManager.dbNotOpenError();
+        }
+
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getIteratorByIndex<TItem>(storeName, indexName, keyRange);
+    }
+
+    getReversedIteratorByIndex<TItem>(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<TItem> {
+        if (this.isClose()) {
+            throw IDBManager.dbNotOpenError();
+        }
+
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getReversedIteratorByIndex<TItem>(storeName, indexName, keyRange);
+    }
+
+    getKeyIteratorByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<IDBValidKey> {
+        if (this.isClose()) {
+            throw IDBManager.dbNotOpenError();
+        }
+
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getKeyIteratorByIndex(storeName, indexName, keyRange);
+    }
+
+    getReversedKeyIteratorByIndex(
+        storeName: string,
+        indexName: string,
+        keyRange?: IDBMKeyRange,
+    ): AsyncIterableIterator<IDBValidKey> {
+        if (this.isClose()) {
+            throw IDBManager.dbNotOpenError();
+        }
+
+        const tx = new IDBMTransaction(this.db, storeName, 'readonly');
+        tx.getSettlement().catch(() => { /* do nothing */ });
+        return tx.getReversedKeyIteratorByIndex(storeName, indexName, keyRange);
+    }
 }
