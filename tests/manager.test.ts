@@ -197,6 +197,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getKeysByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.countItemsByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.hasAnyItemsByIndex('', '')).rejects.toThrow(ReferenceError);
+        expect(() => { idb.getIteratorByIndex('', ''); }).toThrow(ReferenceError);
+        expect(() => { idb.getReversedIteratorByIndex('', ''); }).toThrow(ReferenceError);
+        expect(() => { idb.getKeyIteratorByIndex('', ''); }).toThrow(ReferenceError);
+        expect(() => { idb.getReversedKeyIteratorByIndex('', ''); }).toThrow(ReferenceError);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         const dbName = createDBName();
@@ -236,6 +240,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getKeysByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.countItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.hasAnyItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        expect(() => { idb.getIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => { idb.getReversedIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => { idb.getKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => { idb.getReversedKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
     });
 });
 
@@ -1160,6 +1168,9 @@ describe('複数データのインデックスによる取得テスト(multiEntr
             item: 'Egg', id: 5, value: 70, tags: ['food', 'new'],
         },
     ];
+    const itemsSortedByValue = [
+        items[4], items[1], items[3], items[0], items[2],
+    ];
 
     const idb = new IDBManager(dbName, 1, storeInfos);
 
@@ -1212,6 +1223,9 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         ).resolves.toEqual(['Egg', 'Apple', 'Banana', 'Banana', 'Egg']);
     });
     test('countItemsByIndex', async () => {
+        await expect(idb.countItemsByIndex('MyStore1', 'idIdx')).resolves.toEqual(5); // 全範囲
+        await expect(idb.countItemsByIndex('MyStore1', 'tagsIdx')).resolves.toEqual(9); // 全範囲
+
         await expect(
             idb.countItemsByIndex('MyStore1', 'idIdx', { lower: 3 }),
         ).resolves.toEqual(3);
@@ -1239,6 +1253,123 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         await expect(
             idb.getItemsByIndex<Item>('MyStore1', 'idIdx', keys1 as IDBValidKey[]),
         ).rejects.toThrow(DOMException);
+    });
+
+    test('getIteratorByIndex(範囲指定なし)', async () => {
+        // for await ... of による取得
+        const iter1 = idb.getIteratorByIndex<string>('MyStore1', 'idIdx');
+        const result1: string[] = [];
+        for await (const item of iter1) {
+            result1.push(item);
+        }
+        expect(result1).toEqual(items);
+
+        // 列挙後に追加で next() を呼び出しても正常に返す
+        await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
+
+        // イテレータの next() を await なしで呼び出して取得
+        const iter2 = idb.getIteratorByIndex<string>('MyStore1', 'valueIdx');
+        const promises = [];
+        for (let i = 0; i < itemsSortedByValue.length; i += 1) {
+            // eslint-disable-next-line @typescript-eslint/no-loop-func
+            promises.push(iter2.next().then((response) => {
+                expect(response).toEqual({ value: itemsSortedByValue[i], done: false });
+            }));
+        }
+        promises.push(iter2.next().then((response) => {
+            expect(response).toEqual({ value: undefined, done: true });
+        }));
+        await expect(Promise.all(promises)).resolves.toBeDefined();
+    });
+    test('getIteratorByIndex(範囲指定あり)', async () => {
+        const iter1 = idb.getIteratorByIndex<string>('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+        const result1: string[] = [];
+        for await (const item of iter1) {
+            result1.push(item);
+        }
+        expect(result1).toEqual([items[1], items[3], items[0]]);
+
+        const iter2 = idb.getIteratorByIndex<string>('MyStore1', 'idIdx', { lower: 6 });
+        const result2: string[] = [];
+        for await (const item of iter2) {
+            result2.push(item);
+        }
+        expect(result2).toEqual([]);
+    });
+    test('getReversedIteratorByIndex', async () => {
+        const iter1 = idb.getReversedIteratorByIndex<string>('MyStore1', 'idIdx');
+        const result1: string[] = [];
+        for await (const item of iter1) {
+            result1.push(item);
+        }
+        expect(result1).toEqual(Array.from(items).reverse());
+
+        // 列挙後に追加で next() を呼び出しても正常に返す
+        await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
+
+        const iter2 = idb.getReversedIteratorByIndex<string>('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+        const result2: string[] = [];
+        for await (const item of iter2) {
+            result2.push(item);
+        }
+        expect(result2).toEqual([items[0], items[3], items[1]]);
+
+        const iter3 = idb.getReversedIteratorByIndex<string>('MyStore1', 'idIdx', { lower: 6 });
+        const result3: string[] = [];
+        for await (const item of iter3) {
+            result3.push(item);
+        }
+        expect(result3).toEqual([]);
+    });
+    test('getKeyIteratorByIndex', async () => {
+        const iter1 = idb.getKeyIteratorByIndex('MyStore1', 'idIdx');
+        const result1: IDBValidKey[] = [];
+        for await (const key of iter1) {
+            result1.push(key);
+        }
+        expect(result1).toEqual(['Apple', 'Banana', 'Chocolate', 'Donut', 'Egg']);
+
+        // 列挙後に追加で next() を呼び出しても正常に返す
+        await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
+
+        const iter2 = idb.getKeyIteratorByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+        const result2: IDBValidKey[] = [];
+        for await (const key of iter2) {
+            result2.push(key);
+        }
+        expect(result2).toEqual(['Banana', 'Donut', 'Apple']);
+
+        const iter3 = idb.getKeyIteratorByIndex('MyStore1', 'idIdx', { lower: 6 });
+        const result3: IDBValidKey[] = [];
+        for await (const key of iter3) {
+            result3.push(key);
+        }
+        expect(result3).toEqual([]);
+    });
+    test('getReversedKeyIteratorByIndex', async () => {
+        const iter1 = idb.getReversedKeyIteratorByIndex('MyStore1', 'idIdx');
+        const result1: IDBValidKey[] = [];
+        for await (const key of iter1) {
+            result1.push(key);
+        }
+        expect(result1).toEqual(['Egg', 'Donut', 'Chocolate', 'Banana', 'Apple']);
+
+        // 列挙後に追加で next() を呼び出しても正常に返す
+        await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
+
+        const iter2 = idb.getReversedKeyIteratorByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+        const result2: IDBValidKey[] = [];
+        for await (const key of iter2) {
+            result2.push(key);
+        }
+        expect(result2).toEqual(['Apple', 'Donut', 'Banana']);
+
+        const iter3 = idb.getReversedKeyIteratorByIndex('MyStore1', 'idIdx', { lower: 6 });
+        const result3: IDBValidKey[] = [];
+        for await (const key of iter3) {
+            result3.push(key);
+        }
+        expect(result3).toEqual([]);
     });
 });
 

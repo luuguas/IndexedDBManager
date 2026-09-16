@@ -8,7 +8,7 @@ import { PublicIDBManager } from './env/public';
 const dbName = 'MyDB001';
 const storeInfos: IDBMStoreInfo[] = [
     { name: 'MyStore1' },
-    { name: 'MyStore2', keyPath: 'key' },
+    { name: 'MyStore2', keyPath: 'item', indexInfos: [{ indexName: 'valueIdx', keyPath: 'value' }] },
     { name: 'MyStore3', autoIncrement: true },
 ];
 
@@ -125,6 +125,10 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getKeysByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.countItemsByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.hasAnyItemsByIndex('', '')).rejects.toThrow(DOMException);
+        expect(() => { tx.getIteratorByIndex('', ''); }).toThrow(DOMException);
+        expect(() => { tx.getReversedIteratorByIndex('', ''); }).toThrow(DOMException);
+        expect(() => { tx.getKeyIteratorByIndex('', ''); }).toThrow(DOMException);
+        expect(() => { tx.getReversedKeyIteratorByIndex('', ''); }).toThrow(DOMException);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         let tx: IDBMTransaction;
@@ -260,6 +264,22 @@ describe('CRUD共通の例外処理', () => {
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
         await expect(tx.hasAnyItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        expect(() => { tx.getIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        expect(() => { tx.getReversedIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        expect(() => { tx.getKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        expect(() => { tx.getReversedKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
     });
     test('トランザクションのモードがreadonlyのときに更新系の関数を呼び出すとエラー', async () => {
@@ -575,6 +595,168 @@ describe('イテレータのテスト', () => {
         // getReversedKeyIterator
         const tx4 = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
         const iter4 = tx4.getReversedKeyIterator('MyStore1');
+        const result4: IDBValidKey[] = [];
+        await expect(async () => {
+            for await (const key of iter4) {
+                result4.push(key);
+                tx4.abort(new Error('Oops'));
+            }
+        }).rejects.toThrow(DOMException);
+
+        await expect(tx4.getSettlement()).rejects.toThrow('Oops');
+    });
+});
+
+describe('インデックスによるイテレータのテスト', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    type Item = {
+        item: string,
+        id: number,
+        value: number,
+        tags: string[],
+    };
+
+    const pidb = new PublicIDBManager(dbName, 1, storeInfos);
+
+    const items: Item[] = [
+        {
+            item: 'Apple', id: 1, value: 100, tags: ['fruit'],
+        },
+        {
+            item: 'Banana', id: 2, value: 80, tags: ['fruit', 'on sale', 'new'],
+        },
+        {
+            item: 'Chocolate', id: 3, value: 120, tags: ['snack'],
+        },
+        {
+            item: 'Donut', id: 4, value: 90, tags: ['snack', 'on sale'],
+        },
+        {
+            item: 'Egg', id: 5, value: 70, tags: ['food', 'new'],
+        },
+    ];
+
+    beforeAll(async () => {
+        await pidb.openDatabase();
+        await pidb.setItems('MyStore2', items);
+        pidb.closeDatabase();
+    });
+
+    beforeEach(async () => {
+        await pidb.openDatabase();
+    });
+    afterEach(() => {
+        pidb.closeDatabase();
+    });
+
+    test('走査中にトランザクションをcommitするとエラー', async () => {
+        // getIteratorByIndex
+        const tx1 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter1 = tx1.getIteratorByIndex<string>('MyStore2', 'valueIdx');
+        const result1: string[] = [];
+        const p1 = (async () => {
+            for await (const item of iter1) {
+                result1.push(item);
+                tx1.commit();
+            }
+        })();
+        await expect(p1).rejects.toThrow(DOMException);
+        await expect(p1).rejects.toThrow('The transaction is not active.');
+
+        // 更に next() を呼び出すと (prevError) => { ... } 節でrejectされる
+        await expect(iter1.next()).rejects.toThrow(DOMException);
+        await expect(iter1.next()).rejects.toThrow('The transaction is not active.');
+
+        await expect(tx1.getSettlement()).resolves.toBeUndefined();
+
+        // getReversedIteratorByIndex
+        const tx2 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter2 = tx2.getReversedIteratorByIndex<string>('MyStore2', 'valueIdx');
+        const result2: string[] = [];
+        await expect(async () => {
+            for await (const item of iter2) {
+                result2.push(item);
+                tx2.commit();
+            }
+        }).rejects.toThrow(DOMException);
+        await expect(iter2.next()).rejects.toThrow(DOMException);
+
+        await expect(tx2.getSettlement()).resolves.toBeUndefined();
+
+        // getKeyIteratorByIndex
+        const tx3 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter3 = tx3.getKeyIteratorByIndex('MyStore2', 'valueIdx');
+        const result3: IDBValidKey[] = [];
+        await expect(async () => {
+            for await (const item of iter3) {
+                result3.push(item);
+                tx3.commit();
+            }
+        }).rejects.toThrow(DOMException);
+        await expect(iter3.next()).rejects.toThrow(DOMException);
+
+        await expect(tx3.getSettlement()).resolves.toBeUndefined();
+
+        // getReversedKeyIteratorByIndex
+        const tx4 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter4 = tx4.getReversedKeyIteratorByIndex('MyStore2', 'valueIdx');
+        const result4: IDBValidKey[] = [];
+        await expect(async () => {
+            for await (const item of iter4) {
+                result4.push(item);
+                tx4.commit();
+            }
+        }).rejects.toThrow(DOMException);
+        await expect(iter4.next()).rejects.toThrow(DOMException);
+
+        await expect(tx4.getSettlement()).resolves.toBeUndefined();
+    });
+    test('走査中にトランザクションをabortするとエラー', async () => {
+        // getIteratorByIndex
+        const tx1 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter1 = tx1.getIteratorByIndex<string>('MyStore2', 'valueIdx');
+        const result1: string[] = [];
+        await expect(async () => {
+            for await (const item of iter1) {
+                result1.push(item);
+                tx1.abort(new Error('Oops'));
+            }
+        }).rejects.toThrow(DOMException);
+
+        await expect(tx1.getSettlement()).rejects.toThrow('Oops');
+
+        // getReversedIteratorByIndex
+        const tx2 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter2 = tx2.getReversedIteratorByIndex<string>('MyStore2', 'valueIdx');
+        const result2: string[] = [];
+        await expect(async () => {
+            for await (const item of iter2) {
+                result2.push(item);
+                tx2.abort(new Error('Oops'));
+            }
+        }).rejects.toThrow(DOMException);
+
+        await expect(tx2.getSettlement()).rejects.toThrow('Oops');
+
+        // getKeyIteratorByIndex
+        const tx3 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter3 = tx3.getKeyIteratorByIndex('MyStore2', 'valueIdx');
+        const result3: IDBValidKey[] = [];
+        await expect(async () => {
+            for await (const key of iter3) {
+                result3.push(key);
+                tx3.abort(new Error('Oops'));
+            }
+        }).rejects.toThrow(DOMException);
+
+        await expect(tx3.getSettlement()).rejects.toThrow('Oops');
+
+        // getReversedKeyIteratorByIndex
+        const tx4 = new IDBMTransaction(pidb.p_db, 'MyStore2', 'readonly');
+        const iter4 = tx4.getReversedKeyIteratorByIndex('MyStore2', 'valueIdx');
         const result4: IDBValidKey[] = [];
         await expect(async () => {
             for await (const key of iter4) {
