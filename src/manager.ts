@@ -398,6 +398,21 @@ export class IDBManager {
         });
     }
 
+    getKey(storeName: string, key: IDBValidKey): Promise<IDBValidKey | undefined> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getKey(storeName, key);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
     getFirstKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
@@ -619,6 +634,25 @@ export class IDBManager {
 
             this.transaction(storeName, (inner) => {
                 return inner.getLastByIndex<TValue>(storeName, indexName, keyRange);
+            }, 'readonly')
+                .then((response) => { resolve(response); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
+    getKeyByIndex(
+        storeName: string,
+        indexName: string,
+        key: IDBValidKey,
+    ): Promise<IDBValidKey | undefined> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                return inner.getKeyByIndex(storeName, indexName, key);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
