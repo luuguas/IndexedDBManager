@@ -370,6 +370,29 @@ export class IDBMTransaction {
         });
     }
 
+    getKey(storeName: string, key: IDBValidKey): Promise<IDBValidKey | undefined> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const getReq = store.getKey(key);
+                getReq.onerror = () => {
+                    if (this.isActive()) { this.abort(getReq.error); }
+                    reject(getReq.error);
+                };
+                getReq.onsuccess = () => { resolve(getReq.result); };
+            }
+            catch (error) {
+                if (this.isActive()) { this.abort(error as Error); }
+                reject(error);
+            }
+        });
+    }
+
     getFirstKey(storeName: string, keyRange?: IDBMKeyRange): Promise<IDBValidKey | undefined> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
@@ -920,6 +943,34 @@ export class IDBMTransaction {
                     if (cursor) { resolve(cursor.value as TValue); }
                     else { resolve(undefined); }
                 };
+            }
+            catch (error) {
+                if (this.isActive()) { this.abort(error as Error); }
+                reject(error);
+            }
+        });
+    }
+
+    getKeyByIndex(
+        storeName: string,
+        indexName: string,
+        key: IDBValidKey,
+    ): Promise<IDBValidKey | undefined> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const idx = store.index(indexName);
+                const getReq = idx.getKey(key);
+                getReq.onerror = () => {
+                    if (this.isActive()) { this.abort(getReq.error); }
+                    reject(getReq.error);
+                };
+                getReq.onsuccess = () => { resolve(getReq.result); };
             }
             catch (error) {
                 if (this.isActive()) { this.abort(error as Error); }
