@@ -175,6 +175,7 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.get('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirst('')).rejects.toThrow(ReferenceError);
         await expect(idb.getLast('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getKey('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstKey('')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastKey('')).rejects.toThrow(ReferenceError);
         await expect(idb.has('', '')).rejects.toThrow(ReferenceError);
@@ -190,6 +191,7 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getByIndex('', '', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getKeyByIndex('', '', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstKeyByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastKeyByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.hasByIndex('', '', '')).rejects.toThrow(ReferenceError);
@@ -218,6 +220,7 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.get('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.getFirst('MyStoreX')).rejects.toThrow(DOMException);
         await expect(idb.getLast('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.getKey('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.getFirstKey('MyStoreX')).rejects.toThrow(DOMException);
         await expect(idb.getLastKey('MyStoreX')).rejects.toThrow(DOMException);
         await expect(idb.has('MyStoreX', '')).rejects.toThrow(DOMException);
@@ -233,6 +236,7 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
         await expect(idb.getFirstByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.getLastByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getKeyByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
         await expect(idb.getFirstKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.getLastKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.hasByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
@@ -611,7 +615,6 @@ describe('単体データの取得テスト', () => {
         await expect(idb.get('MyStore', 'G')).resolves.toBe('Grape');
         await expect(idb.get('MyStore', 'M')).resolves.toBeUndefined();
     });
-
     test('getFirst', async () => {
         // lower指定なし
         await expect(idb.getFirst('MyStore')).resolves.toBe('Banana');
@@ -628,22 +631,6 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getFirst('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
         await expect(idb.getFirst('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
-    test('getFirstKey', async () => {
-        // lower指定なし
-        await expect(idb.getFirstKey('MyStore')).resolves.toBe('B');
-        await expect(idb.getFirstKey('MyStore', {})).resolves.toBe('B');
-        await expect(idb.getFirstKey('MyStore', { upper: 'M' })).resolves.toBe('B');
-        await expect(idb.getFirstKey('MyStore', { upper: 'A' })).resolves.toBeUndefined();
-        await expect(idb.getFirstKey('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
-
-        // lower指定あり
-        await expect(idb.getFirstKey('MyStore', { lower: 'A' })).resolves.toBe('B');
-        await expect(idb.getFirstKey('MyStore', { lower: 'B' })).resolves.toBe('B');
-        await expect(idb.getFirstKey('MyStore', { lower: 'B', lowerOpen: true })).resolves.toBe('D');
-        await expect(idb.getFirstKey('MyStore', { lower: 'V' })).resolves.toBe('V');
-        await expect(idb.getFirstKey('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
-        await expect(idb.getFirstKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
-    });
     test('getLast', async () => {
         // upper指定なし
         await expect(idb.getLast('MyStore')).resolves.toBe('Vegetable');
@@ -659,6 +646,27 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getLast('MyStore', { upper: 'B' })).resolves.toBe('Banana');
         await expect(idb.getLast('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
         await expect(idb.getLast('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
+    });
+    test('getKey', async () => {
+        await expect(idb.getKey('MyStore', 'B')).resolves.toBe('B');
+        await expect(idb.getKey('MyStore', 'G')).resolves.toBe('G');
+        await expect(idb.getKey('MyStore', 'M')).resolves.toBeUndefined();
+    });
+    test('getFirstKey', async () => {
+        // lower指定なし
+        await expect(idb.getFirstKey('MyStore')).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', {})).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { upper: 'M' })).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { upper: 'A' })).resolves.toBeUndefined();
+        await expect(idb.getFirstKey('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
+
+        // lower指定あり
+        await expect(idb.getFirstKey('MyStore', { lower: 'A' })).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { lower: 'B' })).resolves.toBe('B');
+        await expect(idb.getFirstKey('MyStore', { lower: 'B', lowerOpen: true })).resolves.toBe('D');
+        await expect(idb.getFirstKey('MyStore', { lower: 'V' })).resolves.toBe('V');
+        await expect(idb.getFirstKey('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getFirstKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
     test('getLastKey', async () => {
         // upper指定なし
@@ -1082,6 +1090,21 @@ describe('単体データのインデックスによる取得テスト', () => {
 
         await expect(
             idb.getLastByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
+        ).resolves.toBeUndefined();
+    });
+    test('getKeyByIndex', async () => {
+        await expect(
+            idb.getKeyByIndex('MyStore1', 'idIdx', 3),
+        ).resolves.toEqual('Chocolate');
+        await expect(
+            idb.getKeyByIndex('MyStore1', 'valueIdx', 90),
+        ).resolves.toEqual('Donut');
+        await expect(
+            idb.getKeyByIndex('MyStore1', 'colorIdx', 'red'),
+        ).resolves.toEqual('Apple');
+
+        await expect(
+            idb.getKeyByIndex('MyStore1', 'idIdx', 0),
         ).resolves.toBeUndefined();
     });
     test('getFirstKeyByIndex', async () => {

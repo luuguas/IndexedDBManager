@@ -103,6 +103,7 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.get('', '')).rejects.toThrow(DOMException);
         await expect(tx.getFirst('')).rejects.toThrow(DOMException);
         await expect(tx.getLast('')).rejects.toThrow(DOMException);
+        await expect(tx.getKey('', '')).rejects.toThrow(DOMException);
         await expect(tx.getFirstKey('')).rejects.toThrow(DOMException);
         await expect(tx.getLastKey('')).rejects.toThrow(DOMException);
         await expect(tx.has('', '')).rejects.toThrow(DOMException);
@@ -118,6 +119,7 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getByIndex('', '', '')).rejects.toThrow(DOMException);
         await expect(tx.getFirstByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.getLastByIndex('', '')).rejects.toThrow(DOMException);
+        await expect(tx.getKeyByIndex('', '', '')).rejects.toThrow(DOMException);
         await expect(tx.getFirstKeyByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.getLastKeyByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.hasByIndex('', '', '')).rejects.toThrow(DOMException);
@@ -181,6 +183,10 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getKey('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
         await expect(tx.getFirstKey('MyStoreX')).rejects.toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
@@ -236,6 +242,10 @@ describe('CRUD共通の例外処理', () => {
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
         await expect(tx.getLastByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.getKeyByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
