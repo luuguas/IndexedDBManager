@@ -164,86 +164,86 @@ describe('CRUDs共通の例外処理', () => {
     test('DBを開いていない状態で呼び出すとエラー', async () => {
         const idb = new IDBManager('', 1, []);
 
-        await expect(idb.addItem('', {})).rejects.toThrow(ReferenceError);
-        await expect(idb.addItems('', [])).rejects.toThrow(ReferenceError);
-        await expect(idb.setItem('', {})).rejects.toThrow(ReferenceError);
-        await expect(idb.setItems('', [])).rejects.toThrow(ReferenceError);
-        await expect(idb.removeItem('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.removeItems('', [])).rejects.toThrow(ReferenceError);
-        await expect(idb.clearItems('')).rejects.toThrow(ReferenceError);
+        await expect(idb.add('', {})).rejects.toThrow(ReferenceError);
+        await expect(idb.addMany('', [])).rejects.toThrow(ReferenceError);
+        await expect(idb.put('', {})).rejects.toThrow(ReferenceError);
+        await expect(idb.putMany('', [])).rejects.toThrow(ReferenceError);
+        await expect(idb.delete('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.deleteMany('', [])).rejects.toThrow(ReferenceError);
+        await expect(idb.clear('')).rejects.toThrow(ReferenceError);
 
-        await expect(idb.getItem('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.getFirstItem('')).rejects.toThrow(ReferenceError);
-        await expect(idb.getLastItem('')).rejects.toThrow(ReferenceError);
+        await expect(idb.get('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getFirst('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getLast('')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstKey('')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastKey('')).rejects.toThrow(ReferenceError);
-        await expect(idb.hasItem('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.getItems('')).rejects.toThrow(ReferenceError);
-        await expect(idb.getKeys('')).rejects.toThrow(ReferenceError);
-        await expect(idb.countItems('')).rejects.toThrow(ReferenceError);
-        await expect(idb.hasAnyItems('')).rejects.toThrow(ReferenceError);
-        expect(() => { idb.getIterator(''); }).toThrow(ReferenceError);
-        expect(() => { idb.getReversedIterator(''); }).toThrow(ReferenceError);
-        expect(() => { idb.getKeyIterator(''); }).toThrow(ReferenceError);
-        expect(() => { idb.getReversedKeyIterator(''); }).toThrow(ReferenceError);
+        await expect(idb.has('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getMany('')).rejects.toThrow(ReferenceError);
+        await expect(idb.getManyKeys('')).rejects.toThrow(ReferenceError);
+        await expect(idb.count('')).rejects.toThrow(ReferenceError);
+        await expect(idb.hasAny('')).rejects.toThrow(ReferenceError);
+        expect(() => { idb.iterator(''); }).toThrow(ReferenceError);
+        expect(() => { idb.reverseIterator(''); }).toThrow(ReferenceError);
+        expect(() => { idb.keyIterator(''); }).toThrow(ReferenceError);
+        expect(() => { idb.reverseKeyIterator(''); }).toThrow(ReferenceError);
 
-        await expect(idb.getItemByIndex('', '', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.getFirstItemByIndex('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.getLastItemByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getByIndex('', '', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getFirstByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getLastByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstKeyByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastKeyByIndex('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.hasItemByIndex('', '', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.getItemsByIndex('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.getKeysByIndex('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.countItemsByIndex('', '')).rejects.toThrow(ReferenceError);
-        await expect(idb.hasAnyItemsByIndex('', '')).rejects.toThrow(ReferenceError);
-        expect(() => { idb.getIteratorByIndex('', ''); }).toThrow(ReferenceError);
-        expect(() => { idb.getReversedIteratorByIndex('', ''); }).toThrow(ReferenceError);
-        expect(() => { idb.getKeyIteratorByIndex('', ''); }).toThrow(ReferenceError);
-        expect(() => { idb.getReversedKeyIteratorByIndex('', ''); }).toThrow(ReferenceError);
+        await expect(idb.hasByIndex('', '', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getManyByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.getManyKeysByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.countByIndex('', '')).rejects.toThrow(ReferenceError);
+        await expect(idb.hasAnyByIndex('', '')).rejects.toThrow(ReferenceError);
+        expect(() => { idb.iteratorByIndex('', ''); }).toThrow(ReferenceError);
+        expect(() => { idb.reverseIteratorByIndex('', ''); }).toThrow(ReferenceError);
+        expect(() => { idb.keyIteratorByIndex('', ''); }).toThrow(ReferenceError);
+        expect(() => { idb.reverseKeyIteratorByIndex('', ''); }).toThrow(ReferenceError);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 1, [{ name: 'MyStore1' }]);
         await expect(idb.openDatabase()).resolves.toBeUndefined();
 
-        await expect(idb.addItem('MyStoreX', {})).rejects.toThrow(DOMException);
-        await expect(idb.addItems('MyStoreX', [])).rejects.toThrow(DOMException);
-        await expect(idb.setItem('MyStoreX', {})).rejects.toThrow(DOMException);
-        await expect(idb.setItems('MyStoreX', [])).rejects.toThrow(DOMException);
-        await expect(idb.removeItem('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.removeItems('MyStoreX', [])).rejects.toThrow(DOMException);
-        await expect(idb.clearItems('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.add('MyStoreX', {})).rejects.toThrow(DOMException);
+        await expect(idb.addMany('MyStoreX', [])).rejects.toThrow(DOMException);
+        await expect(idb.put('MyStoreX', {})).rejects.toThrow(DOMException);
+        await expect(idb.putMany('MyStoreX', [])).rejects.toThrow(DOMException);
+        await expect(idb.delete('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.deleteMany('MyStoreX', [])).rejects.toThrow(DOMException);
+        await expect(idb.clear('MyStoreX')).rejects.toThrow(DOMException);
 
-        await expect(idb.getItem('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.getFirstItem('MyStoreX')).rejects.toThrow(DOMException);
-        await expect(idb.getLastItem('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.get('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getFirst('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.getLast('MyStoreX')).rejects.toThrow(DOMException);
         await expect(idb.getFirstKey('MyStoreX')).rejects.toThrow(DOMException);
         await expect(idb.getLastKey('MyStoreX')).rejects.toThrow(DOMException);
-        await expect(idb.hasItem('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.getItems('MyStoreX')).rejects.toThrow(DOMException);
-        await expect(idb.getKeys('MyStoreX')).rejects.toThrow(DOMException);
-        await expect(idb.countItems('MyStoreX')).rejects.toThrow(DOMException);
-        await expect(idb.hasAnyItems('MyStoreX')).rejects.toThrow(DOMException);
-        expect(() => { idb.getIterator('MyStoreX'); }).toThrow(DOMException);
-        expect(() => { idb.getReversedIterator('MyStoreX'); }).toThrow(DOMException);
-        expect(() => { idb.getKeyIterator('MyStoreX'); }).toThrow(DOMException);
-        expect(() => { idb.getReversedKeyIterator('MyStoreX'); }).toThrow(DOMException);
+        await expect(idb.has('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getMany('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.getManyKeys('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.count('MyStoreX')).rejects.toThrow(DOMException);
+        await expect(idb.hasAny('MyStoreX')).rejects.toThrow(DOMException);
+        expect(() => { idb.iterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => { idb.reverseIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => { idb.keyIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => { idb.reverseKeyIterator('MyStoreX'); }).toThrow(DOMException);
 
-        await expect(idb.getItemByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
-        await expect(idb.getFirstItemByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.getLastItemByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
+        await expect(idb.getFirstByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getLastByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.getFirstKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.getLastKeyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.hasItemByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
-        await expect(idb.getItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.getKeysByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.countItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
-        await expect(idb.hasAnyItemsByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
-        expect(() => { idb.getIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
-        expect(() => { idb.getReversedIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
-        expect(() => { idb.getKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
-        expect(() => { idb.getReversedKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        await expect(idb.hasByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
+        await expect(idb.getManyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.getManyKeysByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.countByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        await expect(idb.hasAnyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
+        expect(() => { idb.iteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => { idb.reverseIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => { idb.keyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => { idb.reverseKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
     });
 });
 
@@ -268,81 +268,81 @@ describe('単体データの追加・更新・削除テスト', () => {
         idb.closeDatabase();
     });
 
-    test('1個のデータを追加する(addItem, setItem)', async () => {
+    test('1個のデータを追加する(add, put)', async () => {
         // keyPath: なし, autoIncrement: false
-        // itemは任意の値
-        await expect(idb.addItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
+        // valueは任意の値
+        await expect(idb.add('MyStore1', 'Apple', 'A')).resolves.toBe('A');
+        await expect(idb.get('MyStore1', 'A')).resolves.toBe('Apple');
 
         // keyPath: あり, autoIncrement: false
-        // itemはオブジェクトのみ
-        await expect(idb.addItem('MyStore2', { key: 'B', value: 'Banana' })).resolves.toBe('B');
-        await expect(idb.getItem('MyStore2', 'B')).resolves.toEqual({ key: 'B', value: 'Banana' });
+        // valueはオブジェクトのみ
+        await expect(idb.add('MyStore2', { key: 'B', value: 'Banana' })).resolves.toBe('B');
+        await expect(idb.get('MyStore2', 'B')).resolves.toEqual({ key: 'B', value: 'Banana' });
 
         // keyPath: なし, autoIncrement: true
-        // itemは任意の値
-        await expect(idb.setItem('MyStore3', 'Cherry', undefined)).resolves.toBe(1); // 外部キー指定なし、連番が割り当てられる
-        await expect(idb.setItem('MyStore3', { name: 'Donut' }, 'D')).resolves.toBe('D'); // 外部キー指定あり
-        await expect(idb.setItem('MyStore3', ['Egg', 'Eggplant'])).resolves.toBe(2); // 連番は外部キー指定ありのとき増えない
-        await expect(idb.getItem('MyStore3', 1)).resolves.toBe('Cherry');
-        await expect(idb.getItem('MyStore3', 'D')).resolves.toEqual({ name: 'Donut' });
-        await expect(idb.getItem('MyStore3', 2)).resolves.toEqual(['Egg', 'Eggplant']);
+        // valueは任意の値
+        await expect(idb.put('MyStore3', 'Cherry', undefined)).resolves.toBe(1); // 外部キー指定なし、連番が割り当てられる
+        await expect(idb.put('MyStore3', { name: 'Donut' }, 'D')).resolves.toBe('D'); // 外部キー指定あり
+        await expect(idb.put('MyStore3', ['Egg', 'Eggplant'])).resolves.toBe(2); // 連番は外部キー指定ありのとき増えない
+        await expect(idb.get('MyStore3', 1)).resolves.toBe('Cherry');
+        await expect(idb.get('MyStore3', 'D')).resolves.toEqual({ name: 'Donut' });
+        await expect(idb.get('MyStore3', 2)).resolves.toEqual(['Egg', 'Eggplant']);
 
         // keyPath: あり, autoIncrement: true
-        // itemはオブジェクトのみ
-        await expect(idb.setItem('MyStore4', { key: 'F', value: 'Fish' })).resolves.toBe('F'); // 内部キー指定あり
-        await expect(idb.setItem('MyStore4', { value: 'Grape' })).resolves.toBe(1); // 内部キー指定なし、連番が割り当てられる
-        await expect(idb.getItem('MyStore4', 'F')).resolves.toEqual({ key: 'F', value: 'Fish' });
-        await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Grape' }); // 内部キー指定なし、itemにkeyプロパティが増える
+        // valueはオブジェクトのみ
+        await expect(idb.put('MyStore4', { key: 'F', value: 'Fish' })).resolves.toBe('F'); // 内部キー指定あり
+        await expect(idb.put('MyStore4', { value: 'Grape' })).resolves.toBe(1); // 内部キー指定なし、連番が割り当てられる
+        await expect(idb.get('MyStore4', 'F')).resolves.toEqual({ key: 'F', value: 'Fish' });
+        await expect(idb.get('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Grape' }); // 内部キー指定なし、valueにkeyプロパティが増える
     });
     test('1個のデータを更新する', async () => {
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple'); // 更新前
-        await expect(idb.setItem('MyStore1', 'Alice', 'A')).resolves.toBe('A');
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Alice'); // 更新後
+        await expect(idb.get('MyStore1', 'A')).resolves.toBe('Apple'); // 更新前
+        await expect(idb.put('MyStore1', 'Alice', 'A')).resolves.toBe('A');
+        await expect(idb.get('MyStore1', 'A')).resolves.toBe('Alice'); // 更新後
     });
     test('1個のデータを削除する', async () => {
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined(); // 削除前
-        await expect(idb.removeItem('MyStore1', 'A')).resolves.toBeUndefined();
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeUndefined(); // 削除後
-        await expect(idb.removeItem('MyStore1', 'A')).resolves.toBeUndefined(); // ストアに存在しないデータを指定しても成功(何もしない)
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined(); // 削除前
+        await expect(idb.delete('MyStore1', 'A')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeUndefined(); // 削除後
+        await expect(idb.delete('MyStore1', 'A')).resolves.toBeUndefined(); // ストアに存在しないデータを指定しても成功(何もしない)
     });
 
-    test('addItemに既存のキーを指定すると追加できない', async () => {
+    test('addに既存のキーを指定すると追加できない', async () => {
         // keyPath: なし, autoIncrement: false
-        await expect(idb.setItem('MyStore1', 'Apple', 'A')).resolves.toBe('A');
-        await expect(idb.addItem('MyStore1', 'Avocado', 'A')).rejects.toThrow(DOMException);
+        await expect(idb.put('MyStore1', 'Apple', 'A')).resolves.toBe('A');
+        await expect(idb.add('MyStore1', 'Avocado', 'A')).rejects.toThrow(DOMException);
 
         // keyPath: あり, autoIncrement: false
-        await expect(idb.addItem('MyStore2', { key: 'B', value: 'Blueberry' })).rejects.toThrow(DOMException);
+        await expect(idb.add('MyStore2', { key: 'B', value: 'Blueberry' })).rejects.toThrow(DOMException);
 
         // keyPath: なし, autoIncrement: true
-        await expect(idb.addItem('MyStore3', 'Chocolate', 1)).rejects.toThrow(DOMException);
+        await expect(idb.add('MyStore3', 'Chocolate', 1)).rejects.toThrow(DOMException);
 
         // keyPath: あり, autoIncrement: true
-        await expect(idb.addItem('MyStore4', { key: 'F', value: 'French fries' })).rejects.toThrow(DOMException);
+        await expect(idb.add('MyStore4', { key: 'F', value: 'French fries' })).rejects.toThrow(DOMException);
     });
     test('キー指定を間違えると追加できない', async () => {
         // keyPath: なし, autoIncrement: false
-        await expect(idb.setItem('MyStore1', 'Hamburger')).rejects.toThrow(DOMException); // 外部キー指定なし
+        await expect(idb.put('MyStore1', 'Hamburger')).rejects.toThrow(DOMException); // 外部キー指定なし
 
         // keyPath: あり, autoIncrement: false
-        await expect(idb.setItem('MyStore2', { key: 'I', value: 'Icecream' }, 'I')).rejects.toThrow(DOMException); // 外部キー指定あり
-        await expect(idb.setItem('MyStore2', { value: 'Icecream' })).rejects.toThrow(DOMException); // 内部キー指定なし
-        await expect(idb.setItem('MyStore2', { value: 'Icecream' }, 'I')).rejects.toThrow(DOMException); // 内部キー指定なし・外部キー指定あり
+        await expect(idb.put('MyStore2', { key: 'I', value: 'Icecream' }, 'I')).rejects.toThrow(DOMException); // 外部キー指定あり
+        await expect(idb.put('MyStore2', { value: 'Icecream' })).rejects.toThrow(DOMException); // 内部キー指定なし
+        await expect(idb.put('MyStore2', { value: 'Icecream' }, 'I')).rejects.toThrow(DOMException); // 内部キー指定なし・外部キー指定あり
 
         // keyPath: あり, autoIncrement: true
-        await expect(idb.setItem('MyStore4', { key: 'J', value: 'Juice' }, 'J')).rejects.toThrow(DOMException); // 外部キー指定あり
-        await expect(idb.setItem('MyStore4', { value: 'Juice' }, 'J')).rejects.toThrow(DOMException); // 内部キー指定なし・外部キー指定あり
+        await expect(idb.put('MyStore4', { key: 'J', value: 'Juice' }, 'J')).rejects.toThrow(DOMException); // 外部キー指定あり
+        await expect(idb.put('MyStore4', { value: 'Juice' }, 'J')).rejects.toThrow(DOMException); // 内部キー指定なし・外部キー指定あり
     });
-    test('itemの種類を間違えると追加できない', async () => {
+    test('valueの種類を間違えると追加できない', async () => {
         // keyPath: あり, autoIncrement: false
-        await expect(idb.setItem('MyStore2', 'Kiwi')).rejects.toThrow(DOMException);
+        await expect(idb.put('MyStore2', 'Kiwi')).rejects.toThrow(DOMException);
 
         // keyPath: あり, autoIncrement: true
-        await expect(idb.setItem('MyStore4', 'Lemon')).rejects.toThrow(DOMException);
+        await expect(idb.put('MyStore4', 'Lemon')).rejects.toThrow(DOMException);
     });
     test('不正なキーを渡すと削除できない', async () => {
-        await expect(idb.removeItem('MyStore1', null as unknown as IDBValidKey)).rejects.toThrow(DOMException);
+        await expect(idb.delete('MyStore1', null as unknown as IDBValidKey)).rejects.toThrow(DOMException);
     });
 });
 
@@ -367,120 +367,120 @@ describe('複数データの追加・更新・削除テスト', () => {
         idb.closeDatabase();
     });
 
-    test('複数のデータを追加する(addItems, setItems)', async () => {
+    test('複数のデータを追加する(addMany, putMany)', async () => {
         // keyPath: なし, autoIncrement: false
-        // itemは任意の値
-        const items1 = ['Apple', { name: 'Banana' }];
+        // valueは任意の値
+        const values1 = ['Apple', { name: 'Banana' }];
         const keys1 = ['A', 'B'];
-        await expect(idb.addItems('MyStore1', items1, keys1)).resolves.toEqual(keys1);
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
-        await expect(idb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
+        await expect(idb.addMany('MyStore1', values1, keys1)).resolves.toEqual(keys1);
+        await expect(idb.get('MyStore1', 'A')).resolves.toBe('Apple');
+        await expect(idb.get('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
 
         // keyPath: あり, autoIncrement: false
-        // itemはオブジェクトのみ
-        const items2 = [{ key: 'C', value: 'Cherry' }, { key: 'D', value: 'Donut' }];
-        await expect(idb.addItems('MyStore2', items2)).resolves.toEqual(['C', 'D']);
-        await expect(idb.getItem('MyStore2', 'C')).resolves.toEqual({ key: 'C', value: 'Cherry' });
-        await expect(idb.getItem('MyStore2', 'D')).resolves.toEqual({ key: 'D', value: 'Donut' });
+        // valueはオブジェクトのみ
+        const values2 = [{ key: 'C', value: 'Cherry' }, { key: 'D', value: 'Donut' }];
+        await expect(idb.addMany('MyStore2', values2)).resolves.toEqual(['C', 'D']);
+        await expect(idb.get('MyStore2', 'C')).resolves.toEqual({ key: 'C', value: 'Cherry' });
+        await expect(idb.get('MyStore2', 'D')).resolves.toEqual({ key: 'D', value: 'Donut' });
 
         // keyPath: なし, autoIncrement: true
-        // itemは任意の値
-        const items3 = ['Egg', { name: 'Fish' }, ['Grape', 'Grapefruit']];
+        // valueは任意の値
+        const values3 = ['Egg', { name: 'Fish' }, ['Grape', 'Grapefruit']];
         const keys3 = [undefined, 'F', undefined];
-        await expect(idb.setItems('MyStore3', items3, keys3)).resolves.toEqual([1, 'F', 2]);
-        await expect(idb.getItem('MyStore3', 1)).resolves.toBe('Egg');
-        await expect(idb.getItem('MyStore3', 'F')).resolves.toEqual({ name: 'Fish' });
-        await expect(idb.getItem('MyStore3', 2)).resolves.toEqual(['Grape', 'Grapefruit']);
+        await expect(idb.putMany('MyStore3', values3, keys3)).resolves.toEqual([1, 'F', 2]);
+        await expect(idb.get('MyStore3', 1)).resolves.toBe('Egg');
+        await expect(idb.get('MyStore3', 'F')).resolves.toEqual({ name: 'Fish' });
+        await expect(idb.get('MyStore3', 2)).resolves.toEqual(['Grape', 'Grapefruit']);
 
         // keyPath: あり, autoIncrement: true
-        // itemはオブジェクトのみ
-        const items4 = [{ key: 'H', value: 'Hamburger' }, { value: 'Icecream' }];
-        await expect(idb.setItems('MyStore4', items4)).resolves.toEqual(['H', 1]);
-        await expect(idb.getItem('MyStore4', 'H')).resolves.toEqual({ key: 'H', value: 'Hamburger' });
-        await expect(idb.getItem('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Icecream' });
+        // valueはオブジェクトのみ
+        const values4 = [{ key: 'H', value: 'Hamburger' }, { value: 'Icecream' }];
+        await expect(idb.putMany('MyStore4', values4)).resolves.toEqual(['H', 1]);
+        await expect(idb.get('MyStore4', 'H')).resolves.toEqual({ key: 'H', value: 'Hamburger' });
+        await expect(idb.get('MyStore4', 1)).resolves.toEqual({ key: 1, value: 'Icecream' });
     });
     test('複数のデータを更新する', async () => {
-        const items = [{ name: 'Alice' }, 'Bob', ['Chris', 'Charlie']]; // 最後は追加データ
+        const values = [{ name: 'Alice' }, 'Bob', ['Chris', 'Charlie']]; // 最後は追加データ
         const keys = ['A', 'B', 'C'];
 
         // 更新前
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
-        await expect(idb.getItem('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
-        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'A')).resolves.toBe('Apple');
+        await expect(idb.get('MyStore1', 'B')).resolves.toEqual({ name: 'Banana' });
+        await expect(idb.get('MyStore1', 'C')).resolves.toBeUndefined();
 
-        await expect(idb.setItems('MyStore1', items, keys)).resolves.toEqual(keys);
+        await expect(idb.putMany('MyStore1', values, keys)).resolves.toEqual(keys);
 
         // 更新後
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toEqual({ name: 'Alice' });
-        await expect(idb.getItem('MyStore1', 'B')).resolves.toBe('Bob');
-        await expect(idb.getItem('MyStore1', 'C')).resolves.toEqual(['Chris', 'Charlie']);
+        await expect(idb.get('MyStore1', 'A')).resolves.toEqual({ name: 'Alice' });
+        await expect(idb.get('MyStore1', 'B')).resolves.toBe('Bob');
+        await expect(idb.get('MyStore1', 'C')).resolves.toEqual(['Chris', 'Charlie']);
     });
     test('複数のデータを削除する', async () => {
         const keys = ['B', 'C'];
 
         // 削除前
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined();
-        await expect(idb.getItem('MyStore1', 'B')).resolves.toBeDefined();
-        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'B')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'C')).resolves.toBeDefined();
 
-        await expect(idb.removeItems('MyStore1', keys)).resolves.toBeUndefined();
+        await expect(idb.deleteMany('MyStore1', keys)).resolves.toBeUndefined();
 
         // 削除後
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined();
-        await expect(idb.getItem('MyStore1', 'B')).resolves.toBeUndefined();
-        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'B')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'C')).resolves.toBeUndefined();
     });
     test('全てのデータを削除する', async () => {
         // 削除前
-        await expect(idb.getItem('MyStore2', 'C')).resolves.toBeDefined();
-        await expect(idb.getItem('MyStore2', 'D')).resolves.toBeDefined();
+        await expect(idb.get('MyStore2', 'C')).resolves.toBeDefined();
+        await expect(idb.get('MyStore2', 'D')).resolves.toBeDefined();
 
-        await expect(idb.clearItems('MyStore2')).resolves.toBeUndefined();
+        await expect(idb.clear('MyStore2')).resolves.toBeUndefined();
 
         // 削除後
-        await expect(idb.getItem('MyStore2', 'C')).resolves.toBeUndefined();
-        await expect(idb.getItem('MyStore2', 'D')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore2', 'C')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore2', 'D')).resolves.toBeUndefined();
     });
 
-    test('addItemsに既存のキーを指定すると追加できない', async () => {
-        const items1 = ['Apple', { name: 'Banana' }];
+    test('addManyに既存のキーを指定すると追加できない', async () => {
+        const values1 = ['Apple', { name: 'Banana' }];
         const keys1 = ['A', 'B'];
-        await expect(idb.setItems('MyStore1', items1, keys1)).resolves.toEqual(keys1);
+        await expect(idb.putMany('MyStore1', values1, keys1)).resolves.toEqual(keys1);
 
-        const items2 = ['Chocolate', { name: 'Blueberry' }];
+        const values2 = ['Chocolate', { name: 'Blueberry' }];
         const keys2 = ['C', 'B'];
-        await expect(idb.addItems('MyStore1', items2, keys2)).rejects.toThrow(DOMException);
-        await expect(idb.getItem('MyStore1', 'C')).resolves.toBeUndefined(); // ロールバック
+        await expect(idb.addMany('MyStore1', values2, keys2)).rejects.toThrow(DOMException);
+        await expect(idb.get('MyStore1', 'C')).resolves.toBeUndefined(); // ロールバック
     });
     test('キー指定を間違えると追加できない', async () => {
         // keyPath: なし, autoIncrement: false
-        const items1 = ['Juice', 'Kiwi'];
+        const values1 = ['Juice', 'Kiwi'];
         const keys1 = ['J', undefined]; // keys[1]: 外部キー指定なし
-        await expect(idb.addItems('MyStore1', items1, keys1)).rejects.toThrow(DOMException);
-        await expect(idb.setItems('MyStore1', items1, keys1)).rejects.toThrow(DOMException);
-        await expect(idb.getItem('MyStore1', 'J')).resolves.toBeUndefined(); // ロールバック
+        await expect(idb.addMany('MyStore1', values1, keys1)).rejects.toThrow(DOMException);
+        await expect(idb.putMany('MyStore1', values1, keys1)).rejects.toThrow(DOMException);
+        await expect(idb.get('MyStore1', 'J')).resolves.toBeUndefined(); // ロールバック
 
         // keyPath: あり, autoIncrement: false
-        const items2 = [{ key: 'L', value: 'Lemon' }, { value: 'Melon' }];
+        const values2 = [{ key: 'L', value: 'Lemon' }, { value: 'Melon' }];
         const keys2 = ['L', undefined]; // keys2[0]: 外部キー指定あり / keys2[1]: 内部キー指定なし
-        await expect(idb.setItems('MyStore2', items2, keys2)).rejects.toThrow(DOMException);
+        await expect(idb.putMany('MyStore2', values2, keys2)).rejects.toThrow(DOMException);
 
         // keyPath: あり, autoIncrement: true
-        const items4 = [{ key: 'N', value: 'Noodle' }, { key: 'O', value: 'Orange' }];
+        const values4 = [{ key: 'N', value: 'Noodle' }, { key: 'O', value: 'Orange' }];
         const keys4 = [undefined, 'O']; // keys[1]: 外部キー指定あり
-        await expect(idb.setItems('MyStore4', items4, keys4)).rejects.toThrow(DOMException);
-        await expect(idb.getItem('MyStore1', 'N')).resolves.toBeUndefined(); // ロールバック
+        await expect(idb.putMany('MyStore4', values4, keys4)).rejects.toThrow(DOMException);
+        await expect(idb.get('MyStore1', 'N')).resolves.toBeUndefined(); // ロールバック
     });
-    test('itemsとkeysの長さが違うと追加できない', async () => {
-        const items = ['Pear', 'Quince'];
+    test('valuesとkeysの長さが違うと追加できない', async () => {
+        const values = ['Pear', 'Quince'];
         const keys = ['P', 'Q', 'R'];
-        await expect(idb.addItems('MyStore1', items, keys)).rejects.toThrow(TypeError);
-        await expect(idb.setItems('MyStore1', items, keys)).rejects.toThrow(TypeError);
+        await expect(idb.addMany('MyStore1', values, keys)).rejects.toThrow(TypeError);
+        await expect(idb.putMany('MyStore1', values, keys)).rejects.toThrow(TypeError);
     });
     test('不正なキーを渡すと削除できない', async () => {
         const keys = ['A', null];
-        await expect(idb.removeItems('MyStore1', keys as IDBValidKey[])).rejects.toThrow(DOMException);
-        await expect(idb.getItem('MyStore1', 'A')).resolves.toBeDefined(); // ロールバック
+        await expect(idb.deleteMany('MyStore1', keys as IDBValidKey[])).rejects.toThrow(DOMException);
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined(); // ロールバック
     });
 });
 
@@ -590,12 +590,12 @@ describe('単体データの取得テスト', () => {
     const storeInfos: IDBMStoreInfo[] = [{ name: 'MyStore' }];
     const idb = new IDBManager(dbName, 1, storeInfos);
 
-    const items = ['Banana', 'Donut', 'Egg', 'Grape', 'Juice', 'Lemon', 'Noodle', 'Orange', 'Strawberry', 'Vegetable'];
+    const values = ['Banana', 'Donut', 'Egg', 'Grape', 'Juice', 'Lemon', 'Noodle', 'Orange', 'Strawberry', 'Vegetable'];
     const keys = ['B', 'D', 'E', 'G', 'J', 'L', 'N', 'O', 'S', 'V'];
 
     beforeAll(async () => {
         await idb.openDatabase();
-        await idb.setItems('MyStore', items, keys);
+        await idb.putMany('MyStore', values, keys);
         idb.closeDatabase();
     });
 
@@ -606,27 +606,27 @@ describe('単体データの取得テスト', () => {
         idb.closeDatabase();
     });
 
-    test('getItem', async () => {
-        await expect(idb.getItem('MyStore', 'B')).resolves.toBe('Banana');
-        await expect(idb.getItem('MyStore', 'G')).resolves.toBe('Grape');
-        await expect(idb.getItem('MyStore', 'M')).resolves.toBeUndefined();
+    test('get', async () => {
+        await expect(idb.get('MyStore', 'B')).resolves.toBe('Banana');
+        await expect(idb.get('MyStore', 'G')).resolves.toBe('Grape');
+        await expect(idb.get('MyStore', 'M')).resolves.toBeUndefined();
     });
 
-    test('getFirstItem', async () => {
+    test('getFirst', async () => {
         // lower指定なし
-        await expect(idb.getFirstItem('MyStore')).resolves.toBe('Banana');
-        await expect(idb.getFirstItem('MyStore', {})).resolves.toBe('Banana');
-        await expect(idb.getFirstItem('MyStore', { upper: 'M' })).resolves.toBe('Banana');
-        await expect(idb.getFirstItem('MyStore', { upper: 'A' })).resolves.toBeUndefined();
-        await expect(idb.getFirstItem('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getFirst('MyStore')).resolves.toBe('Banana');
+        await expect(idb.getFirst('MyStore', {})).resolves.toBe('Banana');
+        await expect(idb.getFirst('MyStore', { upper: 'M' })).resolves.toBe('Banana');
+        await expect(idb.getFirst('MyStore', { upper: 'A' })).resolves.toBeUndefined();
+        await expect(idb.getFirst('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
 
         // lower指定あり
-        await expect(idb.getFirstItem('MyStore', { lower: 'A' })).resolves.toBe('Banana');
-        await expect(idb.getFirstItem('MyStore', { lower: 'B' })).resolves.toBe('Banana');
-        await expect(idb.getFirstItem('MyStore', { lower: 'B', lowerOpen: true })).resolves.toBe('Donut');
-        await expect(idb.getFirstItem('MyStore', { lower: 'V' })).resolves.toBe('Vegetable');
-        await expect(idb.getFirstItem('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
-        await expect(idb.getFirstItem('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
+        await expect(idb.getFirst('MyStore', { lower: 'A' })).resolves.toBe('Banana');
+        await expect(idb.getFirst('MyStore', { lower: 'B' })).resolves.toBe('Banana');
+        await expect(idb.getFirst('MyStore', { lower: 'B', lowerOpen: true })).resolves.toBe('Donut');
+        await expect(idb.getFirst('MyStore', { lower: 'V' })).resolves.toBe('Vegetable');
+        await expect(idb.getFirst('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getFirst('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
     test('getFirstKey', async () => {
         // lower指定なし
@@ -644,21 +644,21 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getFirstKey('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
         await expect(idb.getFirstKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
-    test('getLastItem', async () => {
+    test('getLast', async () => {
         // upper指定なし
-        await expect(idb.getLastItem('MyStore')).resolves.toBe('Vegetable');
-        await expect(idb.getLastItem('MyStore', {})).resolves.toBe('Vegetable');
-        await expect(idb.getLastItem('MyStore', { lower: 'H' })).resolves.toBe('Vegetable');
-        await expect(idb.getLastItem('MyStore', { lower: 'W' })).resolves.toBeUndefined();
-        await expect(idb.getLastItem('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getLast('MyStore')).resolves.toBe('Vegetable');
+        await expect(idb.getLast('MyStore', {})).resolves.toBe('Vegetable');
+        await expect(idb.getLast('MyStore', { lower: 'H' })).resolves.toBe('Vegetable');
+        await expect(idb.getLast('MyStore', { lower: 'W' })).resolves.toBeUndefined();
+        await expect(idb.getLast('MyStore', { lower: 'V', lowerOpen: true })).resolves.toBeUndefined();
 
         // upper指定あり
-        await expect(idb.getLastItem('MyStore', { upper: 'Z' })).resolves.toBe('Vegetable');
-        await expect(idb.getLastItem('MyStore', { upper: 'V' })).resolves.toBe('Vegetable');
-        await expect(idb.getLastItem('MyStore', { upper: 'V', upperOpen: true })).resolves.toBe('Strawberry');
-        await expect(idb.getLastItem('MyStore', { upper: 'B' })).resolves.toBe('Banana');
-        await expect(idb.getLastItem('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
-        await expect(idb.getLastItem('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
+        await expect(idb.getLast('MyStore', { upper: 'Z' })).resolves.toBe('Vegetable');
+        await expect(idb.getLast('MyStore', { upper: 'V' })).resolves.toBe('Vegetable');
+        await expect(idb.getLast('MyStore', { upper: 'V', upperOpen: true })).resolves.toBe('Strawberry');
+        await expect(idb.getLast('MyStore', { upper: 'B' })).resolves.toBe('Banana');
+        await expect(idb.getLast('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
+        await expect(idb.getLast('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
     test('getLastKey', async () => {
         // upper指定なし
@@ -676,10 +676,10 @@ describe('単体データの取得テスト', () => {
         await expect(idb.getLastKey('MyStore', { upper: 'B', upperOpen: true })).resolves.toBeUndefined();
         await expect(idb.getLastKey('MyStore', { lower: 'P', upper: 'R' })).resolves.toBeUndefined();
     });
-    test('hasItem', async () => {
-        await expect(idb.hasItem('MyStore', 'B')).resolves.toBe(true);
-        await expect(idb.hasItem('MyStore', 'G')).resolves.toBe(true);
-        await expect(idb.hasItem('MyStore', 'M')).resolves.toBe(false);
+    test('has', async () => {
+        await expect(idb.has('MyStore', 'B')).resolves.toBe(true);
+        await expect(idb.has('MyStore', 'G')).resolves.toBe(true);
+        await expect(idb.has('MyStore', 'M')).resolves.toBe(false);
     });
 });
 
@@ -692,12 +692,12 @@ describe('複数データの取得テスト', () => {
     const storeInfos: IDBMStoreInfo[] = [{ name: 'MyStore' }];
     const idb = new IDBManager(dbName, 1, storeInfos);
 
-    const items = ['Banana', 'Donut', 'Egg', 'Grape', 'Juice', 'Lemon', 'Noodle', 'Orange', 'Strawberry', 'Vegetable'];
+    const values = ['Banana', 'Donut', 'Egg', 'Grape', 'Juice', 'Lemon', 'Noodle', 'Orange', 'Strawberry', 'Vegetable'];
     const keys = ['B', 'D', 'E', 'G', 'J', 'L', 'N', 'O', 'S', 'V'];
 
     beforeAll(async () => {
         await idb.openDatabase();
-        await idb.setItems('MyStore', items, keys);
+        await idb.putMany('MyStore', values, keys);
         idb.closeDatabase();
     });
 
@@ -708,64 +708,64 @@ describe('複数データの取得テスト', () => {
         idb.closeDatabase();
     });
 
-    test('getItems', async () => {
+    test('getMany', async () => {
         // keys: IDBValidKey[]
         const keys1 = ['L', 'E', 'M', 'O', 'N'];
-        await expect(idb.getItems('MyStore', keys1)).resolves.toEqual(['Lemon', 'Egg', undefined, 'Orange', 'Noodle']);
+        await expect(idb.getMany('MyStore', keys1)).resolves.toEqual(['Lemon', 'Egg', undefined, 'Orange', 'Noodle']);
 
         // keyRange?: IDBMKeyRange
-        await expect(idb.getItems('MyStore')).resolves.toEqual(items); // 全範囲
+        await expect(idb.getMany('MyStore')).resolves.toEqual(values); // 全範囲
         const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
-        await expect(idb.getItems('MyStore', keyRange1)).resolves.toEqual(['Grape', 'Juice', 'Lemon', 'Noodle', 'Orange']);
+        await expect(idb.getMany('MyStore', keyRange1)).resolves.toEqual(['Grape', 'Juice', 'Lemon', 'Noodle', 'Orange']);
         const keyRange2 = { lower: 'P', upper: 'R' };
-        await expect(idb.getItems('MyStore', keyRange2)).resolves.toEqual([]);
+        await expect(idb.getMany('MyStore', keyRange2)).resolves.toEqual([]);
     });
-    test('getKeys', async () => {
-        await expect(idb.getKeys('MyStore')).resolves.toEqual(keys); // 全範囲
+    test('getManyKeys', async () => {
+        await expect(idb.getManyKeys('MyStore')).resolves.toEqual(keys); // 全範囲
         const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
-        await expect(idb.getKeys('MyStore', keyRange1)).resolves.toEqual(['G', 'J', 'L', 'N', 'O']);
+        await expect(idb.getManyKeys('MyStore', keyRange1)).resolves.toEqual(['G', 'J', 'L', 'N', 'O']);
         const keyRange2 = { lower: 'P', upper: 'R' };
-        await expect(idb.getKeys('MyStore', keyRange2)).resolves.toEqual([]);
+        await expect(idb.getManyKeys('MyStore', keyRange2)).resolves.toEqual([]);
     });
-    test('countItems', async () => {
-        await expect(idb.countItems('MyStore')).resolves.toEqual(10); // 全範囲
+    test('count', async () => {
+        await expect(idb.count('MyStore')).resolves.toEqual(10); // 全範囲
         const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
-        await expect(idb.countItems('MyStore', keyRange1)).resolves.toEqual(5);
+        await expect(idb.count('MyStore', keyRange1)).resolves.toEqual(5);
         const keyRange2 = { lower: 'P', upper: 'R' };
-        await expect(idb.countItems('MyStore', keyRange2)).resolves.toEqual(0);
+        await expect(idb.count('MyStore', keyRange2)).resolves.toEqual(0);
     });
-    test('hasAnyItems', async () => {
-        await expect(idb.hasAnyItems('MyStore')).resolves.toBe(true); // 全範囲
+    test('hasAny', async () => {
+        await expect(idb.hasAny('MyStore')).resolves.toBe(true); // 全範囲
         const keyRange1 = { lower: 'E', upper: 'O', lowerOpen: true };
-        await expect(idb.hasAnyItems('MyStore', keyRange1)).resolves.toBe(true);
+        await expect(idb.hasAny('MyStore', keyRange1)).resolves.toBe(true);
         const keyRange2 = { lower: 'P', upper: 'R' };
-        await expect(idb.hasAnyItems('MyStore', keyRange2)).resolves.toBe(false);
+        await expect(idb.hasAny('MyStore', keyRange2)).resolves.toBe(false);
     });
 
-    test('getItemsで不正なキーを渡すと取得できない', async () => {
+    test('getManyで不正なキーを渡すと取得できない', async () => {
         const keys1 = ['A', null];
-        await expect(idb.getItems('MyStore', keys1 as IDBValidKey[])).rejects.toThrow(DOMException);
+        await expect(idb.getMany('MyStore', keys1 as IDBValidKey[])).rejects.toThrow(DOMException);
     });
 
-    test('getIterator(範囲指定なし)', async () => {
+    test('iterator(範囲指定なし)', async () => {
         // for await ... of による取得
-        const iter1 = idb.getIterator<string>('MyStore');
+        const iter1 = idb.iterator<string>('MyStore');
         const result1: string[] = [];
-        for await (const item of iter1) {
-            result1.push(item);
+        for await (const value of iter1) {
+            result1.push(value);
         }
-        expect(result1).toEqual(items);
+        expect(result1).toEqual(values);
 
         // 列挙後に追加で next() を呼び出しても正常に返す
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
         // イテレータの next() を await なしで呼び出して取得
-        const iter2 = idb.getIterator<string>('MyStore');
+        const iter2 = idb.iterator<string>('MyStore');
         const promises = [];
-        for (let i = 0; i < items.length; i += 1) {
+        for (let i = 0; i < values.length; i += 1) {
             // eslint-disable-next-line @typescript-eslint/no-loop-func
             promises.push(iter2.next().then((response) => {
-                expect(response).toEqual({ value: items[i], done: false });
+                expect(response).toEqual({ value: values[i], done: false });
             }));
         }
         promises.push(iter2.next().then((response) => {
@@ -773,48 +773,48 @@ describe('複数データの取得テスト', () => {
         }));
         await expect(Promise.all(promises)).resolves.toBeDefined();
     });
-    test('getIterator(範囲指定あり)', async () => {
-        const iter1 = idb.getIterator<string>('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
+    test('iterator(範囲指定あり)', async () => {
+        const iter1 = idb.iterator<string>('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
         const result1: string[] = [];
-        for await (const item of iter1) {
-            result1.push(item);
+        for await (const value of iter1) {
+            result1.push(value);
         }
         expect(result1).toEqual(['Grape', 'Juice', 'Lemon', 'Noodle', 'Orange']);
 
-        const iter2 = idb.getIterator<string>('MyStore', { lower: 'P', upper: 'R' });
+        const iter2 = idb.iterator<string>('MyStore', { lower: 'P', upper: 'R' });
         const result2: string[] = [];
-        for await (const item of iter2) {
-            result2.push(item);
+        for await (const value of iter2) {
+            result2.push(value);
         }
         expect(result2).toEqual([]);
     });
-    test('getReversedIterator', async () => {
-        const iter1 = idb.getReversedIterator<string>('MyStore');
+    test('reverseIterator', async () => {
+        const iter1 = idb.reverseIterator<string>('MyStore');
         const result1: string[] = [];
-        for await (const item of iter1) {
-            result1.push(item);
+        for await (const value of iter1) {
+            result1.push(value);
         }
-        expect(result1).toEqual(Array.from(items).reverse());
+        expect(result1).toEqual(Array.from(values).reverse());
 
         // 列挙後に追加で next() を呼び出しても正常に返す
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
-        const iter2 = idb.getReversedIterator<string>('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
+        const iter2 = idb.reverseIterator<string>('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
         const result2: string[] = [];
-        for await (const item of iter2) {
-            result2.push(item);
+        for await (const value of iter2) {
+            result2.push(value);
         }
         expect(result2).toEqual(['Orange', 'Noodle', 'Lemon', 'Juice', 'Grape']);
 
-        const iter3 = idb.getReversedIterator<string>('MyStore', { lower: 'P', upper: 'R' });
+        const iter3 = idb.reverseIterator<string>('MyStore', { lower: 'P', upper: 'R' });
         const result3: string[] = [];
-        for await (const item of iter3) {
-            result3.push(item);
+        for await (const value of iter3) {
+            result3.push(value);
         }
         expect(result3).toEqual([]);
     });
-    test('getKeyIterator', async () => {
-        const iter1 = idb.getKeyIterator('MyStore');
+    test('keyIterator', async () => {
+        const iter1 = idb.keyIterator('MyStore');
         const result1: IDBValidKey[] = [];
         for await (const key of iter1) {
             result1.push(key);
@@ -824,22 +824,22 @@ describe('複数データの取得テスト', () => {
         // 列挙後に追加で next() を呼び出しても正常に返す
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
-        const iter2 = idb.getKeyIterator('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
+        const iter2 = idb.keyIterator('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
         const result2: IDBValidKey[] = [];
         for await (const key of iter2) {
             result2.push(key);
         }
         expect(result2).toEqual(['G', 'J', 'L', 'N', 'O']);
 
-        const iter3 = idb.getKeyIterator('MyStore', { lower: 'P', upper: 'R' });
+        const iter3 = idb.keyIterator('MyStore', { lower: 'P', upper: 'R' });
         const result3: IDBValidKey[] = [];
         for await (const key of iter3) {
             result3.push(key);
         }
         expect(result3).toEqual([]);
     });
-    test('getReversedKeyIterator', async () => {
-        const iter1 = idb.getReversedKeyIterator('MyStore');
+    test('reverseKeyIterator', async () => {
+        const iter1 = idb.reverseKeyIterator('MyStore');
         const result1: IDBValidKey[] = [];
         for await (const key of iter1) {
             result1.push(key);
@@ -849,14 +849,14 @@ describe('複数データの取得テスト', () => {
         // 列挙後に追加で next() を呼び出しても正常に返す
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
-        const iter2 = idb.getReversedKeyIterator('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
+        const iter2 = idb.reverseKeyIterator('MyStore', { lower: 'E', upper: 'O', lowerOpen: true });
         const result2: IDBValidKey[] = [];
         for await (const key of iter2) {
             result2.push(key);
         }
         expect(result2).toEqual(['O', 'N', 'L', 'J', 'G']);
 
-        const iter3 = idb.getReversedKeyIterator('MyStore', { lower: 'P', upper: 'R' });
+        const iter3 = idb.reverseKeyIterator('MyStore', { lower: 'P', upper: 'R' });
         const result3: IDBValidKey[] = [];
         for await (const key of iter3) {
             result3.push(key);
@@ -929,7 +929,7 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         const pidb = new PublicIDBManager(dbName, 1, oldStoreInfos);
         await expect(pidb.openDatabase()).resolves.toBeUndefined();
 
-        await expect(pidb.setItem<Person>('MyStore1', {
+        await expect(pidb.put<Person>('MyStore1', {
             name: 'Alice', age: 20, address: 'US',
         })).resolves.toBe('Alice');
 
@@ -946,7 +946,7 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         const idb = new IDBManager(dbName, 1, oldStoreInfos);
         await expect(idb.openDatabase()).resolves.toBeUndefined();
 
-        await expect(idb.setItems<Item>('MyStore2', [
+        await expect(idb.putMany<Item>('MyStore2', [
             {
                 item: 'Apple', id: 1, weight: 20, value: 100, color: 'red',
             },
@@ -956,7 +956,7 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         ])).resolves.toEqual(['Apple', 'Banana']);
 
         // 重複するidを指定すると失敗
-        await expect(idb.setItem<Item>('MyStore2', {
+        await expect(idb.put<Item>('MyStore2', {
             item: 'Cherry', id: 2, weight: 5, value: 50, color: 'red',
         })).rejects.toThrow(DOMException);
 
@@ -974,9 +974,9 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         expect(indexNames2).toEqual(['colorIdx', 'idIdx', 'weightIdx']);
 
         // resetOnUpgrade: 'all' のとき、データもリセット
-        await expect(pidb.hasItem('MyStore1', 'Alice')).resolves.toBe(false);
+        await expect(pidb.has('MyStore1', 'Alice')).resolves.toBe(false);
         // resetOnUpgrade: 'index' のとき、データは残る
-        await expect(pidb.hasItem('MyStore2', 'Apple')).resolves.toBe(true);
+        await expect(pidb.has('MyStore2', 'Apple')).resolves.toBe(true);
 
         pidb.closeDatabase();
     });
@@ -1028,7 +1028,7 @@ describe('単体データのインデックスによる取得テスト', () => {
 
     beforeAll(async () => {
         await idb.openDatabase();
-        await idb.addItems<Item>('MyStore1', items);
+        await idb.addMany<Item>('MyStore1', items);
         idb.closeDatabase();
     });
 
@@ -1039,49 +1039,49 @@ describe('単体データのインデックスによる取得テスト', () => {
         idb.closeDatabase();
     });
 
-    test('getItemByIndex', async () => {
+    test('getByIndex', async () => {
         await expect(
-            idb.getItemByIndex<Item>('MyStore1', 'idIdx', 3),
+            idb.getByIndex<Item>('MyStore1', 'idIdx', 3),
         ).resolves.toEqual(items[2]);
         await expect(
-            idb.getItemByIndex<Item>('MyStore1', 'valueIdx', 90),
+            idb.getByIndex<Item>('MyStore1', 'valueIdx', 90),
         ).resolves.toEqual(items[3]);
         await expect(
-            idb.getItemByIndex<Item>('MyStore1', 'colorIdx', 'red'),
+            idb.getByIndex<Item>('MyStore1', 'colorIdx', 'red'),
         ).resolves.toEqual(items[0]);
 
         await expect(
-            idb.getItemByIndex<Item>('MyStore1', 'idIdx', 0),
+            idb.getByIndex<Item>('MyStore1', 'idIdx', 0),
         ).resolves.toBeUndefined();
     });
-    test('getFirstItemByIndex', async () => {
+    test('getFirstByIndex', async () => {
         await expect(
-            idb.getFirstItemByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
+            idb.getFirstByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
         ).resolves.toEqual(items[1]);
         await expect(
-            idb.getFirstItemByIndex<Item>('MyStore1', 'valueIdx', { upper: 100 }),
+            idb.getFirstByIndex<Item>('MyStore1', 'valueIdx', { upper: 100 }),
         ).resolves.toEqual(items[4]);
         await expect(
-            idb.getFirstItemByIndex<Item>('MyStore1', 'colorIdx', { lower: 'pink', upper: 'white', lowerOpen: true }),
+            idb.getFirstByIndex<Item>('MyStore1', 'colorIdx', { lower: 'pink', upper: 'white', lowerOpen: true }),
         ).resolves.toEqual(items[0]);
 
         await expect(
-            idb.getFirstItemByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
+            idb.getFirstByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
         ).resolves.toBeUndefined();
     });
-    test('getLastItemByIndex', async () => {
+    test('getLastByIndex', async () => {
         await expect(
-            idb.getLastItemByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
+            idb.getLastByIndex<Item>('MyStore1', 'idIdx', { lower: 2 }),
         ).resolves.toEqual(items[4]);
         await expect(
-            idb.getLastItemByIndex<Item>('MyStore1', 'valueIdx', { upper: 100 }),
+            idb.getLastByIndex<Item>('MyStore1', 'valueIdx', { upper: 100 }),
         ).resolves.toEqual(items[0]);
         await expect(
-            idb.getLastItemByIndex<Item>('MyStore1', 'colorIdx', { lower: 'black', upper: 'red', upperOpen: true }),
+            idb.getLastByIndex<Item>('MyStore1', 'colorIdx', { lower: 'black', upper: 'red', upperOpen: true }),
         ).resolves.toEqual(items[3]);
 
         await expect(
-            idb.getLastItemByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
+            idb.getLastByIndex<Item>('MyStore1', 'idIdx', { lower: 6 }),
         ).resolves.toBeUndefined();
     });
     test('getFirstKeyByIndex', async () => {
@@ -1114,15 +1114,15 @@ describe('単体データのインデックスによる取得テスト', () => {
             idb.getLastKeyByIndex('MyStore1', 'idIdx', { lower: 6 }),
         ).resolves.toBeUndefined();
     });
-    test('hasItemByIndex', async () => {
+    test('hasByIndex', async () => {
         await expect(
-            idb.hasItemByIndex('MyStore1', 'idIdx', 3),
+            idb.hasByIndex('MyStore1', 'idIdx', 3),
         ).resolves.toBe(true);
         await expect(
-            idb.hasItemByIndex('MyStore1', 'valueIdx', 110),
+            idb.hasByIndex('MyStore1', 'valueIdx', 110),
         ).resolves.toBe(false);
         await expect(
-            idb.hasItemByIndex('MyStore1', 'colorIdx', 'yellow'),
+            idb.hasByIndex('MyStore1', 'colorIdx', 'yellow'),
         ).resolves.toBe(true);
     });
 });
@@ -1176,7 +1176,7 @@ describe('複数データのインデックスによる取得テスト(multiEntr
 
     beforeAll(async () => {
         await idb.openDatabase();
-        await idb.addItems<Item>('MyStore1', items);
+        await idb.addMany<Item>('MyStore1', items);
         idb.closeDatabase();
     });
 
@@ -1187,80 +1187,80 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         idb.closeDatabase();
     });
 
-    test('getItemsByIndex', async () => {
+    test('getManyByIndex', async () => {
         // keys: IDBValidKey[]
         await expect(
-            idb.getItemsByIndex<Item>('MyStore1', 'idIdx', [2, 4, 6]),
+            idb.getManyByIndex<Item>('MyStore1', 'idIdx', [2, 4, 6]),
         ).resolves.toEqual([items[1], items[3], undefined]);
 
         // keyRange?: IDBMKeyRange
         await expect(
-            idb.getItemsByIndex<Item>('MyStore1', 'idIdx', { lower: 3 }),
+            idb.getManyByIndex<Item>('MyStore1', 'idIdx', { lower: 3 }),
         ).resolves.toEqual([items[2], items[3], items[4]]);
         await expect(
-            idb.getItemsByIndex<Item>('MyStore1', 'valueIdx', { upper: 90 }),
+            idb.getManyByIndex<Item>('MyStore1', 'valueIdx', { upper: 90 }),
         ).resolves.toEqual([items[4], items[1], items[3]]);
 
         // multiEntryオプションをオンにすると、配列の要素をキーとして検索できる
         await expect(
-            idb.getItemsByIndex<Item>('MyStore1', 'tagsIdx', { lower: 'on sale', upper: 'on sale' }),
+            idb.getManyByIndex<Item>('MyStore1', 'tagsIdx', { lower: 'on sale', upper: 'on sale' }),
         ).resolves.toEqual([items[1], items[3]]);
         await expect(
             // tags に food, fruit, new のいずれかを含むデータを取得する
             // 条件を満たす要素が複数ある場合は重複して返される
-            idb.getItemsByIndex<Item>('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
+            idb.getManyByIndex<Item>('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
         ).resolves.toEqual([items[4], items[0], items[1], items[1], items[4]]);
     });
-    test('getKeysByIndex', async () => {
+    test('getManyKeysByIndex', async () => {
         await expect(
-            idb.getKeysByIndex('MyStore1', 'idIdx', { lower: 3 }),
+            idb.getManyKeysByIndex('MyStore1', 'idIdx', { lower: 3 }),
         ).resolves.toEqual(['Chocolate', 'Donut', 'Egg']);
         await expect(
-            idb.getKeysByIndex('MyStore1', 'valueIdx', { upper: 90 }),
+            idb.getManyKeysByIndex('MyStore1', 'valueIdx', { upper: 90 }),
         ).resolves.toEqual(['Egg', 'Banana', 'Donut']);
         await expect(
-            idb.getKeysByIndex('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
+            idb.getManyKeysByIndex('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
         ).resolves.toEqual(['Egg', 'Apple', 'Banana', 'Banana', 'Egg']);
     });
-    test('countItemsByIndex', async () => {
-        await expect(idb.countItemsByIndex('MyStore1', 'idIdx')).resolves.toEqual(5); // 全範囲
-        await expect(idb.countItemsByIndex('MyStore1', 'tagsIdx')).resolves.toEqual(9); // 全範囲
+    test('countByIndex', async () => {
+        await expect(idb.countByIndex('MyStore1', 'idIdx')).resolves.toEqual(5); // 全範囲
+        await expect(idb.countByIndex('MyStore1', 'tagsIdx')).resolves.toEqual(9); // 全範囲
 
         await expect(
-            idb.countItemsByIndex('MyStore1', 'idIdx', { lower: 3 }),
+            idb.countByIndex('MyStore1', 'idIdx', { lower: 3 }),
         ).resolves.toEqual(3);
         await expect(
-            idb.countItemsByIndex('MyStore1', 'valueIdx', { upper: 100 }),
+            idb.countByIndex('MyStore1', 'valueIdx', { upper: 100 }),
         ).resolves.toEqual(4);
         await expect(
-            idb.countItemsByIndex('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
+            idb.countByIndex('MyStore1', 'tagsIdx', { lower: 'food', upper: 'new' }),
         ).resolves.toEqual(5);
     });
-    test('hasAnyItemsByIndex', async () => {
+    test('hasAnyByIndex', async () => {
         await expect(
-            idb.hasAnyItemsByIndex('MyStore1', 'idIdx', { lower: 3 }),
+            idb.hasAnyByIndex('MyStore1', 'idIdx', { lower: 3 }),
         ).resolves.toBe(true);
         await expect(
-            idb.hasAnyItemsByIndex('MyStore1', 'valueIdx', { upper: 60 }),
+            idb.hasAnyByIndex('MyStore1', 'valueIdx', { upper: 60 }),
         ).resolves.toBe(false);
         await expect(
-            idb.hasAnyItemsByIndex('MyStore1', 'tagsIdx', { lower: 'popular', upper: 'popular' }),
+            idb.hasAnyByIndex('MyStore1', 'tagsIdx', { lower: 'popular', upper: 'popular' }),
         ).resolves.toBe(false);
     });
 
-    test('getItemsByIndexで不正なキーを渡すと取得できない', async () => {
+    test('getManyByIndexで不正なキーを渡すと取得できない', async () => {
         const keys1 = [3, null];
         await expect(
-            idb.getItemsByIndex<Item>('MyStore1', 'idIdx', keys1 as IDBValidKey[]),
+            idb.getManyByIndex<Item>('MyStore1', 'idIdx', keys1 as IDBValidKey[]),
         ).rejects.toThrow(DOMException);
     });
 
-    test('getIteratorByIndex(範囲指定なし)', async () => {
+    test('iteratorByIndex(範囲指定なし)', async () => {
         // for await ... of による取得
-        const iter1 = idb.getIteratorByIndex<string>('MyStore1', 'idIdx');
+        const iter1 = idb.iteratorByIndex<string>('MyStore1', 'idIdx');
         const result1: string[] = [];
-        for await (const item of iter1) {
-            result1.push(item);
+        for await (const value of iter1) {
+            result1.push(value);
         }
         expect(result1).toEqual(items);
 
@@ -1268,7 +1268,7 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
         // イテレータの next() を await なしで呼び出して取得
-        const iter2 = idb.getIteratorByIndex<string>('MyStore1', 'valueIdx');
+        const iter2 = idb.iteratorByIndex<string>('MyStore1', 'valueIdx');
         const promises = [];
         for (let i = 0; i < itemsSortedByValue.length; i += 1) {
             // eslint-disable-next-line @typescript-eslint/no-loop-func
@@ -1281,48 +1281,48 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         }));
         await expect(Promise.all(promises)).resolves.toBeDefined();
     });
-    test('getIteratorByIndex(範囲指定あり)', async () => {
-        const iter1 = idb.getIteratorByIndex<string>('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+    test('iteratorByIndex(範囲指定あり)', async () => {
+        const iter1 = idb.iteratorByIndex<string>('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
         const result1: string[] = [];
-        for await (const item of iter1) {
-            result1.push(item);
+        for await (const value of iter1) {
+            result1.push(value);
         }
         expect(result1).toEqual([items[1], items[3], items[0]]);
 
-        const iter2 = idb.getIteratorByIndex<string>('MyStore1', 'idIdx', { lower: 6 });
+        const iter2 = idb.iteratorByIndex<string>('MyStore1', 'idIdx', { lower: 6 });
         const result2: string[] = [];
-        for await (const item of iter2) {
-            result2.push(item);
+        for await (const value of iter2) {
+            result2.push(value);
         }
         expect(result2).toEqual([]);
     });
-    test('getReversedIteratorByIndex', async () => {
-        const iter1 = idb.getReversedIteratorByIndex<string>('MyStore1', 'idIdx');
+    test('reverseIteratorByIndex', async () => {
+        const iter1 = idb.reverseIteratorByIndex<string>('MyStore1', 'idIdx');
         const result1: string[] = [];
-        for await (const item of iter1) {
-            result1.push(item);
+        for await (const value of iter1) {
+            result1.push(value);
         }
         expect(result1).toEqual(Array.from(items).reverse());
 
         // 列挙後に追加で next() を呼び出しても正常に返す
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
-        const iter2 = idb.getReversedIteratorByIndex<string>('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+        const iter2 = idb.reverseIteratorByIndex<string>('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
         const result2: string[] = [];
-        for await (const item of iter2) {
-            result2.push(item);
+        for await (const value of iter2) {
+            result2.push(value);
         }
         expect(result2).toEqual([items[0], items[3], items[1]]);
 
-        const iter3 = idb.getReversedIteratorByIndex<string>('MyStore1', 'idIdx', { lower: 6 });
+        const iter3 = idb.reverseIteratorByIndex<string>('MyStore1', 'idIdx', { lower: 6 });
         const result3: string[] = [];
-        for await (const item of iter3) {
-            result3.push(item);
+        for await (const value of iter3) {
+            result3.push(value);
         }
         expect(result3).toEqual([]);
     });
-    test('getKeyIteratorByIndex', async () => {
-        const iter1 = idb.getKeyIteratorByIndex('MyStore1', 'idIdx');
+    test('keyIteratorByIndex', async () => {
+        const iter1 = idb.keyIteratorByIndex('MyStore1', 'idIdx');
         const result1: IDBValidKey[] = [];
         for await (const key of iter1) {
             result1.push(key);
@@ -1332,22 +1332,22 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         // 列挙後に追加で next() を呼び出しても正常に返す
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
-        const iter2 = idb.getKeyIteratorByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+        const iter2 = idb.keyIteratorByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
         const result2: IDBValidKey[] = [];
         for await (const key of iter2) {
             result2.push(key);
         }
         expect(result2).toEqual(['Banana', 'Donut', 'Apple']);
 
-        const iter3 = idb.getKeyIteratorByIndex('MyStore1', 'idIdx', { lower: 6 });
+        const iter3 = idb.keyIteratorByIndex('MyStore1', 'idIdx', { lower: 6 });
         const result3: IDBValidKey[] = [];
         for await (const key of iter3) {
             result3.push(key);
         }
         expect(result3).toEqual([]);
     });
-    test('getReversedKeyIteratorByIndex', async () => {
-        const iter1 = idb.getReversedKeyIteratorByIndex('MyStore1', 'idIdx');
+    test('reverseKeyIteratorByIndex', async () => {
+        const iter1 = idb.reverseKeyIteratorByIndex('MyStore1', 'idIdx');
         const result1: IDBValidKey[] = [];
         for await (const key of iter1) {
             result1.push(key);
@@ -1357,14 +1357,14 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         // 列挙後に追加で next() を呼び出しても正常に返す
         await expect(iter1.next()).resolves.toEqual({ value: undefined, done: true });
 
-        const iter2 = idb.getReversedKeyIteratorByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
+        const iter2 = idb.reverseKeyIteratorByIndex('MyStore1', 'valueIdx', { lower: 80, upper: 110 });
         const result2: IDBValidKey[] = [];
         for await (const key of iter2) {
             result2.push(key);
         }
         expect(result2).toEqual(['Apple', 'Donut', 'Banana']);
 
-        const iter3 = idb.getReversedKeyIteratorByIndex('MyStore1', 'idIdx', { lower: 6 });
+        const iter3 = idb.reverseKeyIteratorByIndex('MyStore1', 'idIdx', { lower: 6 });
         const result3: IDBValidKey[] = [];
         for await (const key of iter3) {
             result3.push(key);
@@ -1399,15 +1399,15 @@ describe('トランザクションのテスト', () => {
     });
     test('トランザクション内で複数の操作を行う', async () => {
         const tx = pidb.transaction('MyStore1', async (inner) => {
-            const result = await inner.addItem('MyStore1', 'Apple', 'A');
-            await inner.addItem('MyStore1', 'Banana', 'B');
+            const result = await inner.add('MyStore1', 'Apple', 'A');
+            await inner.add('MyStore1', 'Banana', 'B');
             return result;
         }, 'readwrite');
         await expect(tx).resolves.toBe('A');
 
         // トランザクション内で追加したデータが取得できることをテスト
-        await expect(pidb.getItem('MyStore1', 'A')).resolves.toBe('Apple');
-        await expect(pidb.getItem('MyStore1', 'B')).resolves.toBe('Banana');
+        await expect(pidb.get('MyStore1', 'A')).resolves.toBe('Apple');
+        await expect(pidb.get('MyStore1', 'B')).resolves.toBe('Banana');
     });
 
     test('コールバック関数内で例外を投げる', async () => {
@@ -1437,20 +1437,20 @@ describe('トランザクションのテスト', () => {
     });
     test('トランザクションのモードを間違えると失敗する', async () => {
         const tx = pidb.transaction('MyStore1', (inner) => {
-            return inner.addItem('MyStore1', 'Cherry', 'C');
+            return inner.add('MyStore1', 'Cherry', 'C');
         }, 'readonly');
         await expect(tx).rejects.toThrow(DOMException);
         await expect(tx).rejects.toThrow('The mutating operation was attempted in a "readonly" transaction.');
     });
     test('トランザクション内の操作でエラーが発生するとロールバックする', async () => {
         const tx = pidb.transaction('MyStore1', async (inner) => {
-            await inner.addItem('MyStore1', 'Cherry', 'C');
-            await inner.addItem('MyStore1', 'Blueberry', 'B');
+            await inner.add('MyStore1', 'Cherry', 'C');
+            await inner.add('MyStore1', 'Blueberry', 'B');
         }, 'readwrite');
         await expect(tx).rejects.toThrow(DOMException);
 
         // トランザクション実行前の状態に戻っていることをテスト
-        await expect(pidb.getItem('MyStore1', 'C')).resolves.toBeUndefined();
-        await expect(pidb.getItem('MyStore1', 'B')).resolves.toBe('Banana');
+        await expect(pidb.get('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(pidb.get('MyStore1', 'B')).resolves.toBe('Banana');
     });
 });
