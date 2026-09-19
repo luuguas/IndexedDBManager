@@ -232,9 +232,9 @@ export class IDBManager {
         });
     }
 
-    addItem<TItem>(
+    add<TValue>(
         storeName: string,
-        item: TItem,
+        value: TValue,
         key?: IDBValidKey,
     ): Promise<IDBValidKey> {
         return new Promise((resolve, reject) => {
@@ -244,16 +244,16 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.addItem(storeName, item, key);
+                return inner.add(storeName, value, key);
             }, 'readwrite')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    addItems<TItem>(
+    addMany<TValue>(
         storeName: string,
-        items: TItem[],
+        values: TValue[],
         keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
@@ -263,16 +263,16 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.addItems(storeName, items, keys);
+                return inner.addMany(storeName, values, keys);
             }, 'readwrite')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    setItem<TItem>(
+    put<TValue>(
         storeName: string,
-        item: TItem,
+        value: TValue,
         key?: IDBValidKey,
     ): Promise<IDBValidKey> {
         return new Promise((resolve, reject) => {
@@ -282,16 +282,16 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.setItem(storeName, item, key);
+                return inner.put(storeName, value, key);
             }, 'readwrite')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    setItems<TItem>(
+    putMany<TValue>(
         storeName: string,
-        items: TItem[],
+        values: TValue[],
         keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
@@ -301,14 +301,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.setItems(storeName, items, keys);
+                return inner.putMany(storeName, values, keys);
             }, 'readwrite')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    removeItem(storeName: string, key: IDBValidKey): Promise<void> {
+    delete(storeName: string, key: IDBValidKey): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -316,14 +316,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.removeItem(storeName, key);
+                return inner.delete(storeName, key);
             }, 'readwrite')
                 .then(() => { resolve(); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    removeItems(storeName: string, keys: IDBValidKey[]): Promise<void> {
+    deleteMany(storeName: string, keys: IDBValidKey[]): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -331,14 +331,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.removeItems(storeName, keys);
+                return inner.deleteMany(storeName, keys);
             }, 'readwrite')
                 .then(() => { resolve(); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    clearItems(storeName: string): Promise<void> {
+    clear(storeName: string): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -346,14 +346,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.clearItems(storeName);
+                return inner.clear(storeName);
             }, 'readwrite')
                 .then(() => { resolve(); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getItem<TItem>(storeName: string, key: IDBValidKey): Promise<TItem | undefined> {
+    get<TValue>(storeName: string, key: IDBValidKey): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -361,14 +361,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getItem<TItem>(storeName, key);
+                return inner.get<TValue>(storeName, key);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getFirstItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
+    getFirst<TValue>(storeName: string, keyRange?: IDBMKeyRange): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -376,14 +376,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getFirstItem<TItem>(storeName, keyRange);
+                return inner.getFirst<TValue>(storeName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getLastItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
+    getLast<TValue>(storeName: string, keyRange?: IDBMKeyRange): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -391,7 +391,7 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getLastItem<TItem>(storeName, keyRange);
+                return inner.getLast<TValue>(storeName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
@@ -428,7 +428,7 @@ export class IDBManager {
         });
     }
 
-    hasItem(storeName: string, key: IDBValidKey): Promise<boolean> {
+    has(storeName: string, key: IDBValidKey): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -436,19 +436,19 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.hasItem(storeName, key);
+                return inner.has(storeName, key);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getItems<TItem>(storeName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
-    getItems<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
-    getItems<TItem>(
+    getMany<TValue>(storeName: string, keys: IDBValidKey[]): Promise<(TValue | undefined)[]>;
+    getMany<TValue>(storeName: string, keyRange?: IDBMKeyRange): Promise<TValue[]>;
+    getMany<TValue>(
         storeName: string,
         keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
-    ): Promise<(TItem | undefined)[]> {
+    ): Promise<(TValue | undefined)[]> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -458,17 +458,17 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 if (Array.isArray(keysOrKeyRange)) {
                     // keys: IDBValidKey[]
-                    return inner.getItems<TItem>(storeName, keysOrKeyRange);
+                    return inner.getMany<TValue>(storeName, keysOrKeyRange);
                 }
                 // keyRange?: IDBMKeyRange
-                return inner.getItems<TItem>(storeName, keysOrKeyRange);
+                return inner.getMany<TValue>(storeName, keysOrKeyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getKeys(
+    getManyKeys(
         storeName: string,
         keyRange?: IDBMKeyRange,
     ): Promise<IDBValidKey[]> {
@@ -479,14 +479,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getKeys(storeName, keyRange);
+                return inner.getManyKeys(storeName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    countItems(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
+    count(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -494,14 +494,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.countItems(storeName, keyRange);
+                return inner.count(storeName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    hasAnyItems(storeName: string, keyRange?: IDBMKeyRange): Promise<boolean> {
+    hasAny(storeName: string, keyRange?: IDBMKeyRange): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -509,40 +509,40 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.hasAnyItems(storeName, keyRange);
+                return inner.hasAny(storeName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getIterator<TItem>(
+    iterator<TValue>(
         storeName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (this.isClose()) {
             throw IDBManager.dbNotOpenError();
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getIterator<TItem>(storeName, keyRange);
+        return tx.iterator<TValue>(storeName, keyRange);
     }
 
-    getReversedIterator<TItem>(
+    reverseIterator<TValue>(
         storeName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (this.isClose()) {
             throw IDBManager.dbNotOpenError();
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getReversedIterator<TItem>(storeName, keyRange);
+        return tx.reverseIterator<TValue>(storeName, keyRange);
     }
 
-    getKeyIterator(
+    keyIterator(
         storeName: string,
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<IDBValidKey> {
@@ -552,10 +552,10 @@ export class IDBManager {
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getKeyIterator(storeName, keyRange);
+        return tx.keyIterator(storeName, keyRange);
     }
 
-    getReversedKeyIterator(
+    reverseKeyIterator(
         storeName: string,
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<IDBValidKey> {
@@ -565,14 +565,14 @@ export class IDBManager {
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getReversedKeyIterator(storeName, keyRange);
+        return tx.reverseKeyIterator(storeName, keyRange);
     }
 
-    getItemByIndex<TItem>(
+    getByIndex<TValue>(
         storeName: string,
         indexName: string,
         key: IDBValidKey,
-    ): Promise<TItem | undefined> {
+    ): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -580,18 +580,18 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getItemByIndex<TItem>(storeName, indexName, key);
+                return inner.getByIndex<TValue>(storeName, indexName, key);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getFirstItemByIndex<TItem>(
+    getFirstByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): Promise<TItem | undefined> {
+    ): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -599,18 +599,18 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getFirstItemByIndex<TItem>(storeName, indexName, keyRange);
+                return inner.getFirstByIndex<TValue>(storeName, indexName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getLastItemByIndex<TItem>(
+    getLastByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): Promise<TItem | undefined> {
+    ): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -618,7 +618,7 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getLastItemByIndex<TItem>(storeName, indexName, keyRange);
+                return inner.getLastByIndex<TValue>(storeName, indexName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
@@ -663,7 +663,7 @@ export class IDBManager {
         });
     }
 
-    hasItemByIndex(
+    hasByIndex(
         storeName: string,
         indexName: string,
         key: IDBValidKey,
@@ -675,22 +675,22 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.hasItemByIndex(storeName, indexName, key);
+                return inner.hasByIndex(storeName, indexName, key);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getItemsByIndex<TItem>(
-        storeName: string, indexName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
-    getItemsByIndex<TItem>(
-        storeName: string, indexName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
-    getItemsByIndex<TItem>(
+    getManyByIndex<TValue>(
+        storeName: string, indexName: string, keys: IDBValidKey[]): Promise<(TValue | undefined)[]>;
+    getManyByIndex<TValue>(
+        storeName: string, indexName: string, keyRange?: IDBMKeyRange): Promise<TValue[]>;
+    getManyByIndex<TValue>(
         storeName: string,
         indexName: string,
         keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
-    ): Promise<(TItem | undefined)[]> {
+    ): Promise<(TValue | undefined)[]> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -700,17 +700,17 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 if (Array.isArray(keysOrKeyRange)) {
                     // keys: IDBValidKey[]
-                    return inner.getItemsByIndex<TItem>(storeName, indexName, keysOrKeyRange);
+                    return inner.getManyByIndex<TValue>(storeName, indexName, keysOrKeyRange);
                 }
                 // keyRange?: IDBMKeyRange
-                return inner.getItemsByIndex<TItem>(storeName, indexName, keysOrKeyRange);
+                return inner.getManyByIndex<TValue>(storeName, indexName, keysOrKeyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getKeysByIndex(
+    getManyKeysByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -722,14 +722,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.getKeysByIndex(storeName, indexName, keyRange);
+                return inner.getManyKeysByIndex(storeName, indexName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    countItemsByIndex(
+    countByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -741,14 +741,14 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.countItemsByIndex(storeName, indexName, keyRange);
+                return inner.countByIndex(storeName, indexName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    hasAnyItemsByIndex(
+    hasAnyByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -760,42 +760,42 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.hasAnyItemsByIndex(storeName, indexName, keyRange);
+                return inner.hasAnyByIndex(storeName, indexName, keyRange);
             }, 'readonly')
                 .then((response) => { resolve(response); })
                 .catch((error) => { reject(error); });
         });
     }
 
-    getIteratorByIndex<TItem>(
+    iteratorByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (this.isClose()) {
             throw IDBManager.dbNotOpenError();
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getIteratorByIndex<TItem>(storeName, indexName, keyRange);
+        return tx.iteratorByIndex<TValue>(storeName, indexName, keyRange);
     }
 
-    getReversedIteratorByIndex<TItem>(
+    reverseIteratorByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (this.isClose()) {
             throw IDBManager.dbNotOpenError();
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getReversedIteratorByIndex<TItem>(storeName, indexName, keyRange);
+        return tx.reverseIteratorByIndex<TValue>(storeName, indexName, keyRange);
     }
 
-    getKeyIteratorByIndex(
+    keyIteratorByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -806,10 +806,10 @@ export class IDBManager {
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getKeyIteratorByIndex(storeName, indexName, keyRange);
+        return tx.keyIteratorByIndex(storeName, indexName, keyRange);
     }
 
-    getReversedKeyIteratorByIndex(
+    reverseKeyIteratorByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -820,6 +820,6 @@ export class IDBManager {
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
         tx.getSettlement().catch(() => { /* do nothing */ });
-        return tx.getReversedKeyIteratorByIndex(storeName, indexName, keyRange);
+        return tx.reverseKeyIteratorByIndex(storeName, indexName, keyRange);
     }
 }
