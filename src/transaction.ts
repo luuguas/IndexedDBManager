@@ -76,9 +76,9 @@ export class IDBMTransaction {
         this.tx.commit();
     }
 
-    addItem<TItem>(
+    add<TValue>(
         storeName: string,
-        item: TItem,
+        value: TValue,
         key?: IDBValidKey,
     ): Promise<IDBValidKey> {
         return new Promise((resolve, reject) => {
@@ -89,7 +89,7 @@ export class IDBMTransaction {
 
             try {
                 const store = this.tx.objectStore(storeName);
-                const addReq = store.add(item, key);
+                const addReq = store.add(value, key);
                 addReq.onerror = () => {
                     if (this.isActive()) { this.abort(addReq.error); }
                     reject(addReq.error);
@@ -103,9 +103,9 @@ export class IDBMTransaction {
         });
     }
 
-    addItems<TItem>(
+    addMany<TValue>(
         storeName: string,
-        items: TItem[],
+        values: TValue[],
         keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
@@ -113,8 +113,8 @@ export class IDBMTransaction {
                 reject(IDBMTransaction.txNotActiveError());
                 return;
             }
-            if (Array.isArray(keys) && items.length !== keys.length) {
-                const error = new TypeError('The length of items and keys must be the same.');
+            if (Array.isArray(keys) && values.length !== keys.length) {
+                const error = new TypeError('The length of values and keys must be the same.');
                 if (this.isActive()) { this.abort(error); }
                 reject(error);
                 return;
@@ -122,9 +122,9 @@ export class IDBMTransaction {
 
             try {
                 const store = this.tx.objectStore(storeName);
-                const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
+                const promises: Promise<IDBValidKey>[] = values.map((value, idx) => {
                     return new Promise((res, rej) => {
-                        const addReq = store.add(item, keys?.[idx]);
+                        const addReq = store.add(value, keys?.[idx]);
                         addReq.onerror = () => { rej(addReq.error); };
                         addReq.onsuccess = () => { res(addReq.result); };
                     });
@@ -144,9 +144,9 @@ export class IDBMTransaction {
         });
     }
 
-    setItem<TItem>(
+    put<TValue>(
         storeName: string,
-        item: TItem,
+        value: TValue,
         key?: IDBValidKey,
     ): Promise<IDBValidKey> {
         return new Promise((resolve, reject) => {
@@ -157,7 +157,7 @@ export class IDBMTransaction {
 
             try {
                 const store = this.tx.objectStore(storeName);
-                const putReq = store.put(item, key);
+                const putReq = store.put(value, key);
                 putReq.onerror = () => {
                     if (this.isActive()) { this.abort(putReq.error); }
                     reject(putReq.error);
@@ -171,9 +171,9 @@ export class IDBMTransaction {
         });
     }
 
-    setItems<TItem>(
+    putMany<TValue>(
         storeName: string,
-        items: TItem[],
+        values: TValue[],
         keys?: (IDBValidKey | undefined)[],
     ): Promise<IDBValidKey[]> {
         return new Promise((resolve, reject) => {
@@ -181,8 +181,8 @@ export class IDBMTransaction {
                 reject(IDBMTransaction.txNotActiveError());
                 return;
             }
-            if (Array.isArray(keys) && items.length !== keys.length) {
-                const error = new TypeError('The length of items and keys must be the same.');
+            if (Array.isArray(keys) && values.length !== keys.length) {
+                const error = new TypeError('The length of values and keys must be the same.');
                 if (this.isActive()) { this.abort(error); }
                 reject(error);
                 return;
@@ -190,9 +190,9 @@ export class IDBMTransaction {
 
             try {
                 const store = this.tx.objectStore(storeName);
-                const promises: Promise<IDBValidKey>[] = items.map((item, idx) => {
+                const promises: Promise<IDBValidKey>[] = values.map((value, idx) => {
                     return new Promise((res, rej) => {
-                        const putReq = store.put(item, keys?.[idx]);
+                        const putReq = store.put(value, keys?.[idx]);
                         putReq.onerror = () => { rej(putReq.error); };
                         putReq.onsuccess = () => { res(putReq.result); };
                     });
@@ -212,7 +212,7 @@ export class IDBMTransaction {
         });
     }
 
-    removeItem(storeName: string, key: IDBValidKey): Promise<void> {
+    delete(storeName: string, key: IDBValidKey): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -235,7 +235,7 @@ export class IDBMTransaction {
         });
     }
 
-    removeItems(storeName: string, keys: IDBValidKey[]): Promise<void> {
+    deleteMany(storeName: string, keys: IDBValidKey[]): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -266,7 +266,7 @@ export class IDBMTransaction {
         });
     }
 
-    clearItems(storeName: string): Promise<void> {
+    clear(storeName: string): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -289,7 +289,7 @@ export class IDBMTransaction {
         });
     }
 
-    getItem<TItem>(storeName: string, key: IDBValidKey): Promise<TItem | undefined> {
+    get<TValue>(storeName: string, key: IDBValidKey): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -303,7 +303,7 @@ export class IDBMTransaction {
                     if (this.isActive()) { this.abort(getReq.error); }
                     reject(getReq.error);
                 };
-                getReq.onsuccess = () => { resolve(getReq.result as TItem | undefined); };
+                getReq.onsuccess = () => { resolve(getReq.result as TValue | undefined); };
             }
             catch (error) {
                 if (this.isActive()) { this.abort(error as Error); }
@@ -312,7 +312,7 @@ export class IDBMTransaction {
         });
     }
 
-    getFirstItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
+    getFirst<TValue>(storeName: string, keyRange?: IDBMKeyRange): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -330,7 +330,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.value as TItem); }
+                    if (cursor) { resolve(cursor.value as TValue); }
                     else { resolve(undefined); }
                 };
             }
@@ -341,7 +341,7 @@ export class IDBMTransaction {
         });
     }
 
-    getLastItem<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem | undefined> {
+    getLast<TValue>(storeName: string, keyRange?: IDBMKeyRange): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -359,7 +359,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.value as TItem); }
+                    if (cursor) { resolve(cursor.value as TValue); }
                     else { resolve(undefined); }
                 };
             }
@@ -428,7 +428,7 @@ export class IDBMTransaction {
         });
     }
 
-    hasItem(storeName: string, key: IDBValidKey): Promise<boolean> {
+    has(storeName: string, key: IDBValidKey): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -451,12 +451,12 @@ export class IDBMTransaction {
         });
     }
 
-    getItems<TItem>(storeName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
-    getItems<TItem>(storeName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
-    getItems<TItem>(
+    getMany<TValue>(storeName: string, keys: IDBValidKey[]): Promise<(TValue | undefined)[]>;
+    getMany<TValue>(storeName: string, keyRange?: IDBMKeyRange): Promise<TValue[]>;
+    getMany<TValue>(
         storeName: string,
         keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
-    ): Promise<(TItem | undefined)[]> {
+    ): Promise<(TValue | undefined)[]> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -468,16 +468,16 @@ export class IDBMTransaction {
 
                 if (Array.isArray(keysOrKeyRange)) {
                     // keys: IDBValidKey[]
-                    const promises: Promise<TItem | undefined>[] = keysOrKeyRange.map((key) => {
+                    const promises: Promise<TValue | undefined>[] = keysOrKeyRange.map((key) => {
                         return new Promise((res, rej) => {
                             const getReq = store.get(key);
                             getReq.onerror = () => { rej(getReq.error); };
-                            getReq.onsuccess = () => { res(getReq.result as TItem | undefined); };
+                            getReq.onsuccess = () => { res(getReq.result as TValue | undefined); };
                         });
                     });
 
                     Promise.all(promises)
-                        .then((response: (TItem | undefined)[]) => { resolve(response); })
+                        .then((response: (TValue | undefined)[]) => { resolve(response); })
                         .catch((error: DOMException) => {
                             if (this.isActive()) { this.abort(error); }
                             reject(error);
@@ -491,7 +491,7 @@ export class IDBMTransaction {
                         if (this.isActive()) { this.abort(getAllReq.error); }
                         reject(getAllReq.error);
                     };
-                    getAllReq.onsuccess = () => { resolve(getAllReq.result as TItem[]); };
+                    getAllReq.onsuccess = () => { resolve(getAllReq.result as TValue[]); };
                 }
             }
             catch (error) {
@@ -501,7 +501,7 @@ export class IDBMTransaction {
         });
     }
 
-    getKeys(
+    getManyKeys(
         storeName: string,
         keyRange?: IDBMKeyRange,
     ): Promise<IDBValidKey[]> {
@@ -528,7 +528,7 @@ export class IDBMTransaction {
         });
     }
 
-    countItems(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
+    count(storeName: string, keyRange?: IDBMKeyRange): Promise<number> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -552,7 +552,7 @@ export class IDBMTransaction {
         });
     }
 
-    hasAnyItems(storeName: string, keyRange?: IDBMKeyRange): Promise<boolean> {
+    hasAny(storeName: string, keyRange?: IDBMKeyRange): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -576,10 +576,10 @@ export class IDBMTransaction {
         });
     }
 
-    getIterator<TItem>(
+    iterator<TValue>(
         storeName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (!this.isActive()) {
             throw IDBMTransaction.txNotActiveError();
         }
@@ -592,14 +592,14 @@ export class IDBMTransaction {
             const isActive = () => { return this.isActive(); };
             const abort = (error?: Error | null) => { this.abort(error); };
 
-            let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
+            let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
             );
             return {
-                next(): Promise<IteratorResult<TItem>> {
+                next(): Promise<IteratorResult<TValue>> {
                     const p = prev.then(
                         (prevResponse) => {
-                            return new Promise<IteratorResult<TItem>>((resolve, reject) => {
+                            return new Promise<IteratorResult<TValue>>((resolve, reject) => {
                                 if (!isActive()) {
                                     reject(IDBMTransaction.txNotActiveError());
                                     return;
@@ -617,7 +617,7 @@ export class IDBMTransaction {
                                     const cursor = cursorReq.result;
 
                                     if (cursor) {
-                                        resolve({ value: cursor.value as TItem, done: false });
+                                        resolve({ value: cursor.value as TValue, done: false });
                                         if (isActive()) { cursor.continue(); }
                                     }
                                     else {
@@ -631,7 +631,7 @@ export class IDBMTransaction {
                     prev = p;
                     return p;
                 },
-                [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
+                [Symbol.asyncIterator](): AsyncIterableIterator<TValue> { return this; },
             };
         }
         catch (error) {
@@ -640,10 +640,10 @@ export class IDBMTransaction {
         }
     }
 
-    getReversedIterator<TItem>(
+    reverseIterator<TValue>(
         storeName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (!this.isActive()) {
             throw IDBMTransaction.txNotActiveError();
         }
@@ -656,14 +656,14 @@ export class IDBMTransaction {
             const isActive = () => { return this.isActive(); };
             const abort = (error?: Error | null) => { this.abort(error); };
 
-            let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
+            let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
             );
             return {
-                next(): Promise<IteratorResult<TItem>> {
+                next(): Promise<IteratorResult<TValue>> {
                     const p = prev.then(
                         (prevResponse) => {
-                            return new Promise<IteratorResult<TItem>>((resolve, reject) => {
+                            return new Promise<IteratorResult<TValue>>((resolve, reject) => {
                                 if (!isActive()) {
                                     reject(IDBMTransaction.txNotActiveError());
                                     return;
@@ -681,7 +681,7 @@ export class IDBMTransaction {
                                     const cursor = cursorReq.result;
 
                                     if (cursor) {
-                                        resolve({ value: cursor.value as TItem, done: false });
+                                        resolve({ value: cursor.value as TValue, done: false });
                                         if (isActive()) { cursor.continue(); }
                                     }
                                     else {
@@ -695,7 +695,7 @@ export class IDBMTransaction {
                     prev = p;
                     return p;
                 },
-                [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
+                [Symbol.asyncIterator](): AsyncIterableIterator<TValue> { return this; },
             };
         }
         catch (error) {
@@ -704,7 +704,7 @@ export class IDBMTransaction {
         }
     }
 
-    getKeyIterator(
+    keyIterator(
         storeName: string,
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<IDBValidKey> {
@@ -768,7 +768,7 @@ export class IDBMTransaction {
         }
     }
 
-    getReversedKeyIterator(
+    reverseKeyIterator(
         storeName: string,
         keyRange?: IDBMKeyRange,
     ): AsyncIterableIterator<IDBValidKey> {
@@ -832,11 +832,11 @@ export class IDBMTransaction {
         }
     }
 
-    getItemByIndex<TItem>(
+    getByIndex<TValue>(
         storeName: string,
         indexName: string,
         key: IDBValidKey,
-    ): Promise<TItem | undefined> {
+    ): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -851,7 +851,7 @@ export class IDBMTransaction {
                     if (this.isActive()) { this.abort(getReq.error); }
                     reject(getReq.error);
                 };
-                getReq.onsuccess = () => { resolve(getReq.result as TItem | undefined); };
+                getReq.onsuccess = () => { resolve(getReq.result as TValue | undefined); };
             }
             catch (error) {
                 if (this.isActive()) { this.abort(error as Error); }
@@ -860,11 +860,11 @@ export class IDBMTransaction {
         });
     }
 
-    getFirstItemByIndex<TItem>(
+    getFirstByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): Promise<TItem | undefined> {
+    ): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -883,7 +883,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.value as TItem); }
+                    if (cursor) { resolve(cursor.value as TValue); }
                     else { resolve(undefined); }
                 };
             }
@@ -894,11 +894,11 @@ export class IDBMTransaction {
         });
     }
 
-    getLastItemByIndex<TItem>(
+    getLastByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): Promise<TItem | undefined> {
+    ): Promise<TValue | undefined> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -917,7 +917,7 @@ export class IDBMTransaction {
                 cursorReq.onsuccess = () => {
                     const cursor = cursorReq.result;
 
-                    if (cursor) { resolve(cursor.value as TItem); }
+                    if (cursor) { resolve(cursor.value as TValue); }
                     else { resolve(undefined); }
                 };
             }
@@ -996,7 +996,7 @@ export class IDBMTransaction {
         });
     }
 
-    hasItemByIndex(
+    hasByIndex(
         storeName: string,
         indexName: string,
         key: IDBValidKey,
@@ -1024,15 +1024,15 @@ export class IDBMTransaction {
         });
     }
 
-    getItemsByIndex<TItem>(
-        storeName: string, indexName: string, keys: IDBValidKey[]): Promise<(TItem | undefined)[]>;
-    getItemsByIndex<TItem>(
-        storeName: string, indexName: string, keyRange?: IDBMKeyRange): Promise<TItem[]>;
-    getItemsByIndex<TItem>(
+    getManyByIndex<TValue>(
+        storeName: string, indexName: string, keys: IDBValidKey[]): Promise<(TValue | undefined)[]>;
+    getManyByIndex<TValue>(
+        storeName: string, indexName: string, keyRange?: IDBMKeyRange): Promise<TValue[]>;
+    getManyByIndex<TValue>(
         storeName: string,
         indexName: string,
         keysOrKeyRange: IDBValidKey[] | IDBMKeyRange | undefined,
-    ): Promise<(TItem | undefined)[]> {
+    ): Promise<(TValue | undefined)[]> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -1045,16 +1045,16 @@ export class IDBMTransaction {
 
                 if (Array.isArray(keysOrKeyRange)) {
                     // keys: IDBValidKey[]
-                    const promises: Promise<TItem | undefined>[] = keysOrKeyRange.map((key) => {
+                    const promises: Promise<TValue | undefined>[] = keysOrKeyRange.map((key) => {
                         return new Promise((res, rej) => {
                             const getReq = idx.get(key);
                             getReq.onerror = () => { rej(getReq.error); };
-                            getReq.onsuccess = () => { res(getReq.result as TItem | undefined); };
+                            getReq.onsuccess = () => { res(getReq.result as TValue | undefined); };
                         });
                     });
 
                     Promise.all(promises)
-                        .then((response: (TItem | undefined)[]) => { resolve(response); })
+                        .then((response: (TValue | undefined)[]) => { resolve(response); })
                         .catch((error: DOMException) => {
                             if (this.isActive()) { this.abort(error); }
                             reject(error);
@@ -1068,7 +1068,7 @@ export class IDBMTransaction {
                         if (this.isActive()) { this.abort(getAllReq.error); }
                         reject(getAllReq.error);
                     };
-                    getAllReq.onsuccess = () => { resolve(getAllReq.result as TItem[]); };
+                    getAllReq.onsuccess = () => { resolve(getAllReq.result as TValue[]); };
                 }
             }
             catch (error) {
@@ -1078,7 +1078,7 @@ export class IDBMTransaction {
         });
     }
 
-    getKeysByIndex(
+    getManyKeysByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -1107,7 +1107,7 @@ export class IDBMTransaction {
         });
     }
 
-    countItemsByIndex(
+    countByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -1136,7 +1136,7 @@ export class IDBMTransaction {
         });
     }
 
-    hasAnyItemsByIndex(
+    hasAnyByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -1165,11 +1165,11 @@ export class IDBMTransaction {
         });
     }
 
-    getIteratorByIndex<TItem>(
+    iteratorByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (!this.isActive()) {
             throw IDBMTransaction.txNotActiveError();
         }
@@ -1183,14 +1183,14 @@ export class IDBMTransaction {
             const isActive = () => { return this.isActive(); };
             const abort = (error?: Error | null) => { this.abort(error); };
 
-            let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
+            let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
             );
             return {
-                next(): Promise<IteratorResult<TItem>> {
+                next(): Promise<IteratorResult<TValue>> {
                     const p = prev.then(
                         (prevResponse) => {
-                            return new Promise<IteratorResult<TItem>>((resolve, reject) => {
+                            return new Promise<IteratorResult<TValue>>((resolve, reject) => {
                                 if (!isActive()) {
                                     reject(IDBMTransaction.txNotActiveError());
                                     return;
@@ -1208,7 +1208,7 @@ export class IDBMTransaction {
                                     const cursor = cursorReq.result;
 
                                     if (cursor) {
-                                        resolve({ value: cursor.value as TItem, done: false });
+                                        resolve({ value: cursor.value as TValue, done: false });
                                         if (isActive()) { cursor.continue(); }
                                     }
                                     else {
@@ -1222,7 +1222,7 @@ export class IDBMTransaction {
                     prev = p;
                     return p;
                 },
-                [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
+                [Symbol.asyncIterator](): AsyncIterableIterator<TValue> { return this; },
             };
         }
         catch (error) {
@@ -1231,11 +1231,11 @@ export class IDBMTransaction {
         }
     }
 
-    getReversedIteratorByIndex<TItem>(
+    reverseIteratorByIndex<TValue>(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
-    ): AsyncIterableIterator<TItem> {
+    ): AsyncIterableIterator<TValue> {
         if (!this.isActive()) {
             throw IDBMTransaction.txNotActiveError();
         }
@@ -1249,14 +1249,14 @@ export class IDBMTransaction {
             const isActive = () => { return this.isActive(); };
             const abort = (error?: Error | null) => { this.abort(error); };
 
-            let prev: Promise<IteratorResult<TItem | void>> = Promise.resolve(
+            let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
             );
             return {
-                next(): Promise<IteratorResult<TItem>> {
+                next(): Promise<IteratorResult<TValue>> {
                     const p = prev.then(
                         (prevResponse) => {
-                            return new Promise<IteratorResult<TItem>>((resolve, reject) => {
+                            return new Promise<IteratorResult<TValue>>((resolve, reject) => {
                                 if (!isActive()) {
                                     reject(IDBMTransaction.txNotActiveError());
                                     return;
@@ -1274,7 +1274,7 @@ export class IDBMTransaction {
                                     const cursor = cursorReq.result;
 
                                     if (cursor) {
-                                        resolve({ value: cursor.value as TItem, done: false });
+                                        resolve({ value: cursor.value as TValue, done: false });
                                         if (isActive()) { cursor.continue(); }
                                     }
                                     else {
@@ -1288,7 +1288,7 @@ export class IDBMTransaction {
                     prev = p;
                     return p;
                 },
-                [Symbol.asyncIterator](): AsyncIterableIterator<TItem> { return this; },
+                [Symbol.asyncIterator](): AsyncIterableIterator<TValue> { return this; },
             };
         }
         catch (error) {
@@ -1297,7 +1297,7 @@ export class IDBMTransaction {
         }
     }
 
-    getKeyIteratorByIndex(
+    keyIteratorByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
@@ -1363,7 +1363,7 @@ export class IDBMTransaction {
         }
     }
 
-    getReversedKeyIteratorByIndex(
+    reverseKeyIteratorByIndex(
         storeName: string,
         indexName: string,
         keyRange?: IDBMKeyRange,
