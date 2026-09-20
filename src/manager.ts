@@ -217,7 +217,7 @@ export class IDBManager {
                 .then(
                     (response: TResult) => {
                         if (inner.isActive()) { inner.commit(); }
-                        inner.getSettlement()
+                        inner
                             .then(() => { resolve(response); })
                             .catch((err) => { reject(err); });
                     },
@@ -226,7 +226,7 @@ export class IDBManager {
                             if (error instanceof Error) { inner.abort(error); }
                             else { inner.abort(); }
                         }
-                        inner.getSettlement().catch((err) => { reject(err); });
+                        inner.catch((err) => { reject(err); });
                     },
                 );
         });
@@ -550,7 +550,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.iterator<TValue>(storeName, keyRange);
     }
 
@@ -563,7 +563,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.reverseIterator<TValue>(storeName, keyRange);
     }
 
@@ -576,7 +576,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.keyIterator(storeName, keyRange);
     }
 
@@ -589,7 +589,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.reverseKeyIterator(storeName, keyRange);
     }
 
@@ -847,7 +847,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.iteratorByIndex<TValue>(storeName, indexName, keyRange);
     }
 
@@ -861,7 +861,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.reverseIteratorByIndex<TValue>(storeName, indexName, keyRange);
     }
 
@@ -875,7 +875,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.keyIteratorByIndex(storeName, indexName, keyRange);
     }
 
@@ -889,7 +889,7 @@ export class IDBManager {
         }
 
         const tx = new IDBMTransaction(this.db, storeName, 'readonly');
-        tx.getSettlement().catch(() => { /* do nothing */ });
+        tx.catch(() => { /* do nothing */ });
         return tx.reverseKeyIteratorByIndex(storeName, indexName, keyRange);
     }
 }
