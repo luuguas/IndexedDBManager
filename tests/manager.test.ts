@@ -188,6 +188,8 @@ describe('CRUDs共通の例外処理', () => {
         expect(() => { idb.keyIterator(''); }).toThrow(ReferenceError);
         expect(() => { idb.reverseKeyIterator(''); }).toThrow(ReferenceError);
 
+        await expect(idb.deleteManyByIndex('', '', [])).rejects.toThrow(ReferenceError);
+
         await expect(idb.getByIndex('', '', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getFirstByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.getLastByIndex('', '')).rejects.toThrow(ReferenceError);
@@ -232,6 +234,8 @@ describe('CRUDs共通の例外処理', () => {
         expect(() => { idb.reverseIterator('MyStoreX'); }).toThrow(DOMException);
         expect(() => { idb.keyIterator('MyStoreX'); }).toThrow(DOMException);
         expect(() => { idb.reverseKeyIterator('MyStoreX'); }).toThrow(DOMException);
+
+        await expect(idb.deleteManyByIndex('MyStoreX', '', [])).rejects.toThrow(DOMException);
 
         await expect(idb.getByIndex('MyStoreX', '', '')).rejects.toThrow(DOMException);
         await expect(idb.getFirstByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
