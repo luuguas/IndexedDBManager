@@ -1422,6 +1422,119 @@ describe('複数データのインデックスによる取得テスト(multiEntr
     });
 });
 
+describe('複数データのインデックスによる削除テスト(deleteManyByIndex)', () => {
+    beforeAll(() => {
+        window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
+    });
+
+    type Item = {
+        item: string,
+        id: number,
+        value: number,
+        tags: string[],
+    };
+
+    const dbName = createDBName();
+    const storeInfos: IDBMStoreInfo[] = [
+        {
+            name: 'MyStore1',
+            keyPath: 'item',
+            indexInfos: [
+                { indexName: 'idIdx', keyPath: 'id', unique: true },
+                { indexName: 'valueIdx', keyPath: 'value' },
+                { indexName: 'tagsIdx', keyPath: 'tags', multiEntry: true },
+            ],
+        },
+    ];
+    const items: Item[] = [
+        {
+            item: 'Apple', id: 1, value: 100, tags: ['fruit'],
+        },
+        {
+            item: 'Banana', id: 2, value: 80, tags: ['fruit', 'on sale', 'new'],
+        },
+        {
+            item: 'Chocolate', id: 3, value: 120, tags: ['snack'],
+        },
+        {
+            item: 'Donut', id: 4, value: 90, tags: ['snack', 'on sale'],
+        },
+        {
+            item: 'Egg', id: 5, value: 70, tags: ['food', 'new'],
+        },
+    ];
+
+    const idb = new IDBManager(dbName, 1, storeInfos);
+
+    beforeEach(async () => {
+        await idb.openDatabase();
+        await idb.addMany<Item>('MyStore1', items);
+    });
+    afterEach(async () => {
+        await idb.clear('MyStore1');
+        idb.closeDatabase();
+    });
+
+    test('idのキー範囲で削除する', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'idIdx', { lower: 2, upper: 4 }),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Apple', 'Egg']);
+    });
+    test('valueのキー範囲で削除する', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'valueIdx', { lower: 100 }),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Banana', 'Donut', 'Egg']);
+    });
+    test('tagsのキー範囲で削除する', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'tagsIdx', { lower: 'food', upper: 'on sale' }),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Chocolate']);
+    });
+
+    test('0個のキーを指定して削除する(何も削除されない)', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'idIdx', []),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Apple', 'Banana', 'Chocolate', 'Donut', 'Egg']);
+    });
+
+    test('idを1個指定して削除する', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'idIdx', [2]),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Apple', 'Chocolate', 'Donut', 'Egg']);
+    });
+    test('tagsを1個指定して削除する(multiEntryオプションあり)', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'tagsIdx', ['on sale']),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Apple', 'Chocolate', 'Egg']);
+    });
+
+    test('idの配列で削除する', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'idIdx', [1, 3, 5]),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Banana', 'Donut']);
+    });
+    test('tagsの配列で削除する(multiEntryオプションあり)', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'tagsIdx', ['fruit', 'snack', 'wow']),
+        ).resolves.toBeUndefined();
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Egg']);
+    });
+
+    test('不正なキーを渡すと削除できない', async () => {
+        await expect(
+            idb.deleteManyByIndex('MyStore1', 'idIdx', [2, { wow: null }] as IDBValidKey[]),
+        ).rejects.toThrow(DOMException);
+        await expect(idb.getManyKeys('MyStore1')).resolves.toEqual(['Apple', 'Banana', 'Chocolate', 'Donut', 'Egg']); // ロールバック
+    });
+});
+
 describe('トランザクションのテスト', () => {
     beforeAll(() => {
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB

@@ -116,6 +116,8 @@ describe('CRUD共通の例外処理', () => {
         expect(() => { tx.keyIterator(''); }).toThrow(DOMException);
         expect(() => { tx.reverseKeyIterator(''); }).toThrow(DOMException);
 
+        await expect(tx.deleteManyByIndex('', '', [])).rejects.toThrow(DOMException);
+
         await expect(tx.getByIndex('', '', '')).rejects.toThrow(DOMException);
         await expect(tx.getFirstByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.getLastByIndex('', '')).rejects.toThrow(DOMException);
@@ -230,6 +232,12 @@ describe('CRUD共通の例外処理', () => {
         expect(() => { tx.reverseKeyIterator('MyStoreX'); }).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
+        // インデックスによる削除関数
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readwrite');
+        await expect(tx.deleteManyByIndex('MyStoreX', '', [])).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
         // インデックスによる取得関数
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
@@ -323,6 +331,10 @@ describe('CRUD共通の例外処理', () => {
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
         await expect(tx.clear('MyStore1')).rejects.toThrow(DOMException);
+        await expect(tx.getSettlement()).rejects.toThrow(DOMException);
+
+        tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
+        await expect(tx.deleteManyByIndex('MyStore1', 'valueIdx', ['A'])).rejects.toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
     });
 });
