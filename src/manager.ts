@@ -41,7 +41,6 @@ export class IDBManager {
     isClose(): boolean { return this.db === NULL_IDB_DATABASE; }
     isOpen(): boolean { return !this.isClose(); }
 
-    // DB上のオブジェクトストア名とstoreInfosのオブジェクトストア名が全て一致しているかを返す
     protected verifyObjectStoreNames(): boolean {
         if (this.isClose()) { throw IDBManager.dbNotOpenError(); }
 
