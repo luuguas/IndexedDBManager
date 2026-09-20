@@ -420,19 +420,45 @@ describe('複数データの追加・更新・削除テスト', () => {
         await expect(idb.get('MyStore1', 'C')).resolves.toEqual(['Chris', 'Charlie']);
     });
     test('複数のデータを削除する', async () => {
-        const keys = ['B', 'C'];
+        // keys: IDBValidKey[]
 
         // 削除前
         await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined();
         await expect(idb.get('MyStore1', 'B')).resolves.toBeDefined();
         await expect(idb.get('MyStore1', 'C')).resolves.toBeDefined();
 
-        await expect(idb.deleteMany('MyStore1', keys)).resolves.toBeUndefined();
+        await expect(idb.deleteMany('MyStore1', ['B', 'C'])).resolves.toBeUndefined();
 
         // 削除後
         await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined();
         await expect(idb.get('MyStore1', 'B')).resolves.toBeUndefined();
         await expect(idb.get('MyStore1', 'C')).resolves.toBeUndefined();
+
+        // keyRange: IDBKeyRange
+
+        await expect(idb.addMany('MyStore1', ['Book', 'Car', 'Desk'], ['B', 'C', 'D'])).resolves.toEqual(['B', 'C', 'D']);
+
+        // 削除前
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'B')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'C')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'D')).resolves.toBeDefined();
+
+        await expect(idb.deleteMany('MyStore1', { lower: 'B', upper: 'C' })).resolves.toBeUndefined();
+
+        // 削除後
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeDefined();
+        await expect(idb.get('MyStore1', 'B')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'D')).resolves.toBeDefined();
+
+        // 全範囲削除
+        await expect(idb.deleteMany('MyStore1', {})).resolves.toBeUndefined();
+
+        await expect(idb.get('MyStore1', 'A')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'B')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'C')).resolves.toBeUndefined();
+        await expect(idb.get('MyStore1', 'D')).resolves.toBeUndefined();
     });
     test('全てのデータを削除する', async () => {
         // 削除前
