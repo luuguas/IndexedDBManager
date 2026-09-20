@@ -874,6 +874,79 @@ export class IDBMTransaction {
         }
     }
 
+    deleteManyByIndex(storeName: string, indexName: string, keys: IDBValidKey[]): Promise<void>;
+    deleteManyByIndex(storeName: string, indexName: string, keyRange: IDBMKeyRange): Promise<void>;
+    deleteManyByIndex(
+        storeName: string,
+        indexName: string,
+        keysOrkeyRange: IDBValidKey[] | IDBMKeyRange,
+    ): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (!this.isActive()) {
+                reject(IDBMTransaction.txNotActiveError());
+                return;
+            }
+
+            try {
+                const store = this.tx.objectStore(storeName);
+                const idx = store.index(indexName);
+
+                if (Array.isArray(keysOrkeyRange)) {
+                    // keys: IDBValidKey[]
+                    const promises: Promise<void>[] = keysOrkeyRange.map((key) => {
+                        return new Promise((res, rej) => {
+                            const cursorReq = idx.openCursor(key);
+                            cursorReq.onerror = () => { rej(cursorReq.error); };
+                            cursorReq.onsuccess = () => {
+                                const cursor = cursorReq.result;
+
+                                if (cursor) {
+                                    cursor.delete();
+                                    cursor.continue();
+                                }
+                                else {
+                                    res();
+                                }
+                            };
+                        });
+                    });
+
+                    Promise.all(promises)
+                        .then(() => { resolve(); })
+                        .catch((error: DOMException) => {
+                            if (this.isActive()) { this.abort(error); }
+                            reject(error);
+                        });
+                }
+                else {
+                    // keyRange: IDBMKeyRange
+                    const rawKeyRange = IDBMTransaction.generateRawKeyRange(keysOrkeyRange);
+                    const cursorReq = idx.openCursor(rawKeyRange);
+
+                    cursorReq.onerror = () => {
+                        if (this.isActive()) { this.abort(cursorReq.error); }
+                        reject(cursorReq.error);
+                    };
+                    cursorReq.onsuccess = () => {
+                        const cursor = cursorReq.result;
+
+                        if (cursor) {
+                            cursor.delete();
+                            cursor.continue();
+                        }
+                        else {
+                            resolve();
+                        }
+                    };
+                }
+            }
+            catch (error) {
+                if (this.isActive()) { this.abort(error as Error); }
+                reject(error);
+            }
+        });
+    }
+
     getByIndex<TValue>(
         storeName: string,
         indexName: string,

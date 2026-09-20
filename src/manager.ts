@@ -726,6 +726,32 @@ export class IDBManager {
         });
     }
 
+    deleteManyByIndex(storeName: string, indexName: string, keys: IDBValidKey[]): Promise<void>;
+    deleteManyByIndex(storeName: string, indexName: string, keyRange: IDBMKeyRange): Promise<void>;
+    deleteManyByIndex(
+        storeName: string,
+        indexName: string,
+        keysOrKeyRange: IDBValidKey[] | IDBMKeyRange,
+    ): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.isClose()) {
+                reject(IDBManager.dbNotOpenError());
+                return;
+            }
+
+            this.transaction(storeName, (inner) => {
+                if (Array.isArray(keysOrKeyRange)) {
+                    // keys: IDBValidKey[]
+                    return inner.deleteManyByIndex(storeName, indexName, keysOrKeyRange);
+                }
+                // keyRange: IDBMKeyRange
+                return inner.deleteManyByIndex(storeName, indexName, keysOrKeyRange);
+            }, 'readwrite')
+                .then(() => { resolve(); })
+                .catch((error) => { reject(error); });
+        });
+    }
+
     getManyByIndex<TValue>(
         storeName: string, indexName: string, keys: IDBValidKey[]): Promise<(TValue | undefined)[]>;
     getManyByIndex<TValue>(
