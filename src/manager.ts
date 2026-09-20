@@ -323,7 +323,12 @@ export class IDBManager {
         });
     }
 
-    deleteMany(storeName: string, keys: IDBValidKey[]): Promise<void> {
+    deleteMany(storeName: string, keys: IDBValidKey[]): Promise<void>;
+    deleteMany(storeName: string, keyRange: IDBMKeyRange): Promise<void>;
+    deleteMany(
+        storeName: string,
+        keysOrKeyRange: IDBValidKey[] | IDBMKeyRange,
+    ): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isClose()) {
                 reject(IDBManager.dbNotOpenError());
@@ -331,7 +336,12 @@ export class IDBManager {
             }
 
             this.transaction(storeName, (inner) => {
-                return inner.deleteMany(storeName, keys);
+                if (Array.isArray(keysOrKeyRange)) {
+                    // keys: IDBValidKey[]
+                    return inner.deleteMany(storeName, keysOrKeyRange);
+                }
+                // keyRange: IDBMKeyRange
+                return inner.deleteMany(storeName, keysOrKeyRange);
             }, 'readwrite')
                 .then(() => { resolve(); })
                 .catch((error) => { reject(error); });

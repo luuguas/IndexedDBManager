@@ -235,7 +235,12 @@ export class IDBMTransaction {
         });
     }
 
-    deleteMany(storeName: string, keys: IDBValidKey[]): Promise<void> {
+    deleteMany(storeName: string, keys: IDBValidKey[]): Promise<void>;
+    deleteMany(storeName: string, keyRange: IDBMKeyRange): Promise<void>;
+    deleteMany(
+        storeName: string,
+        keysOrKeyRange: IDBValidKey[] | IDBMKeyRange,
+    ): Promise<void> {
         return new Promise((resolve, reject) => {
             if (!this.isActive()) {
                 reject(IDBMTransaction.txNotActiveError());
@@ -244,20 +249,34 @@ export class IDBMTransaction {
 
             try {
                 const store = this.tx.objectStore(storeName);
-                const promises: Promise<void>[] = keys.map((key) => {
-                    return new Promise((res, rej) => {
-                        const deleteReq = store.delete(key);
-                        deleteReq.onerror = () => { rej(deleteReq.error); };
-                        deleteReq.onsuccess = () => { res(); };
-                    });
-                });
 
-                Promise.all(promises)
-                    .then(() => { resolve(); })
-                    .catch((error: DOMException) => {
-                        if (this.isActive()) { this.abort(error); }
-                        reject(error);
+                if (Array.isArray(keysOrKeyRange)) {
+                    // keys: IDBValidKey[]
+                    const promises: Promise<void>[] = keysOrKeyRange.map((key) => {
+                        return new Promise((res, rej) => {
+                            const deleteReq = store.delete(key);
+                            deleteReq.onerror = () => { rej(deleteReq.error); };
+                            deleteReq.onsuccess = () => { res(); };
+                        });
                     });
+
+                    Promise.all(promises)
+                        .then(() => { resolve(); })
+                        .catch((error: DOMException) => {
+                            if (this.isActive()) { this.abort(error); }
+                            reject(error);
+                        });
+                }
+                else {
+                    // keyRange: IDBMKeyRange
+                    const rawKeyRange = IDBMTransaction.generateRawKeyRange(keysOrKeyRange);
+                    const deleteReq = rawKeyRange ? store.delete(rawKeyRange) : store.clear();
+                    deleteReq.onerror = () => {
+                        if (this.isActive()) { this.abort(deleteReq.error); }
+                        reject(deleteReq.error);
+                    };
+                    deleteReq.onsuccess = () => { resolve(); };
+                }
             }
             catch (error) {
                 if (this.isActive()) { this.abort(error as Error); }
