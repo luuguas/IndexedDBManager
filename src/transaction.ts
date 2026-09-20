@@ -5,7 +5,7 @@ export interface IDBMKeyRange {
     upperOpen?: boolean;
 }
 
-export class IDBMTransaction {
+export class IDBMTransaction implements PromiseLike<void> {
     protected db: IDBDatabase;
     protected tx: IDBTransaction;
 
@@ -63,6 +63,21 @@ export class IDBMTransaction {
 
     isActive(): boolean { return this.active; }
     getSettlement(): Promise<void> { return this.settlement; }
+
+    then<TResult1 = void, TResult2 = never>(
+        onFulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | undefined | null,
+        onRejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | undefined | null,
+    ): Promise<TResult1 | TResult2> {
+        return this.settlement.then(onFulfilled, onRejected);
+    }
+    catch<TResult = never>(
+        onRejected?: ((reason: unknown) => TResult | PromiseLike<TResult>) | undefined | null,
+    ): Promise<void | TResult> {
+        return this.settlement.catch(onRejected);
+    }
+    finally(onFinally?: (() => void) | undefined | null): Promise<void> {
+        return this.settlement.finally(onFinally);
+    }
 
     abort(error?: Error | null): void {
         if (!this.isActive()) { throw IDBMTransaction.txNotActiveError(); }
