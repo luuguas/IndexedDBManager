@@ -1,9 +1,18 @@
 {
   "name": "@luuguas/idbmanager",
-  "version": "2.0.0-beta1",
+  "version": "2.0.0-beta.1",
   "description": "A Promise wrapper for simple IndexedDB handling",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "yarn tsc",
+    "build": "yarn tsdown",
     "lint": "yarn eslint .",
     "lint-fix": "yarn eslint . --fix",
     "format": "yarn prettier --write src",
