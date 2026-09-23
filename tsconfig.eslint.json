@@ -3,5 +3,5 @@
   "compilerOptions": {
     "allowJs": true
   },
-  "include": ["src", "tests", ".*.js", "*.js"]
+  "include": ["src", "tests", ".*.js", "*.js", "*.ts"]
 }

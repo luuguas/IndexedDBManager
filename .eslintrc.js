@@ -33,7 +33,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['.*.js', '*.js'],
+      files: ['.*.js', '*.js', '*.ts'],
       rules: {
         '@typescript-eslint/indent': ['error', 2],
       },
