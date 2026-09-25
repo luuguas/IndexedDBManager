@@ -16,6 +16,7 @@
     "docs"
   ],
   "scripts": {
+    "prepack": "yarn build",
     "build": "yarn tsdown",
     "lint": "yarn eslint .",
     "lint-fix": "yarn eslint . --fix",
