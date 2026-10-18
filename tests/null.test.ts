@@ -1,3 +1,4 @@
+import { describe, test, expect } from 'vitest';
 import { NULL_IDB_DATABASE } from '../src/null';
 
 describe('NullIDBDatabaseのテスト', () => {

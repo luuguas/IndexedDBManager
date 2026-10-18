@@ -1,6 +1,6 @@
-import 'fake-indexeddb/auto';
-import { IDBMStoreInfo } from '../src/manager';
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { IDBMTransaction } from '../src/transaction';
+import type { IDBMStoreInfo } from '../src/manager';
 import { PublicIDBManager } from './env/public';
 
 /* eslint-disable no-restricted-syntax */

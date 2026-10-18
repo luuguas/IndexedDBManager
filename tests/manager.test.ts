@@ -1,6 +1,7 @@
-import 'fake-indexeddb/auto';
-import { IDBManager, IDBMStoreInfo } from '../src/manager';
-import { IDBMKeyRange } from '../src/transaction';
+import { describe, test, expect, beforeAll, beforeEach, afterEach } from 'vitest';
+import { IDBManager } from '../src/manager';
+import type { IDBMStoreInfo } from '../src/manager';
+import type { IDBMKeyRange } from '../src/transaction';
 import { PublicIDBManager } from './env/public';
 
 /* eslint-disable no-restricted-syntax */

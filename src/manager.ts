@@ -1,5 +1,6 @@
 import { NULL_IDB_DATABASE } from './null';
-import { IDBMTransaction, IDBMKeyRange } from './transaction';
+import { IDBMTransaction } from './transaction';
+import type { IDBMKeyRange } from './transaction';
 
 export interface IDBMIndexInfo {
     indexName: string;
