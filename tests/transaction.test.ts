@@ -3,8 +3,6 @@ import { IDBMTransaction } from '../src/transaction';
 import type { IDBMStoreInfo } from '../src/manager';
 import { PublicIDBManager } from './env/public';
 
-/* eslint-disable no-restricted-syntax */
-
 const dbName = 'MyDB001';
 const storeInfos: IDBMStoreInfo[] = [
     { name: 'MyStore1' },
@@ -59,10 +57,10 @@ describe('トランザクションの生成テスト', () => {
         tx.commit();
         await expect(tx.getSettlement()).resolves.toBeUndefined();
 
-        expect(() => { tx.abort(); }).toThrow(DOMException);
-        expect(() => { tx.abort(); }).toThrow('The transaction is not active.');
-        expect(() => { tx.commit(); }).toThrow(DOMException);
-        expect(() => { tx.commit(); }).toThrow('The transaction is not active.');
+        expect(() => void tx.abort()).toThrow(DOMException);
+        expect(() => void tx.abort()).toThrow('The transaction is not active.');
+        expect(() => void tx.commit()).toThrow(DOMException);
+        expect(() => void tx.commit()).toThrow('The transaction is not active.');
     });
     test('存在しないオブジェクトストアを指定するとエラー', () => {
         expect(() => {
@@ -111,10 +109,10 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getManyKeys('')).rejects.toThrow(DOMException);
         await expect(tx.count('')).rejects.toThrow(DOMException);
         await expect(tx.hasAny('')).rejects.toThrow(DOMException);
-        expect(() => { tx.iterator(''); }).toThrow(DOMException);
-        expect(() => { tx.reverseIterator(''); }).toThrow(DOMException);
-        expect(() => { tx.keyIterator(''); }).toThrow(DOMException);
-        expect(() => { tx.reverseKeyIterator(''); }).toThrow(DOMException);
+        expect(() => void tx.iterator('')).toThrow(DOMException);
+        expect(() => void tx.reverseIterator('')).toThrow(DOMException);
+        expect(() => void tx.keyIterator('')).toThrow(DOMException);
+        expect(() => void tx.reverseKeyIterator('')).toThrow(DOMException);
 
         await expect(tx.deleteManyByIndex('', '', [])).rejects.toThrow(DOMException);
 
@@ -129,10 +127,10 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getManyKeysByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.countByIndex('', '')).rejects.toThrow(DOMException);
         await expect(tx.hasAnyByIndex('', '')).rejects.toThrow(DOMException);
-        expect(() => { tx.iteratorByIndex('', ''); }).toThrow(DOMException);
-        expect(() => { tx.reverseIteratorByIndex('', ''); }).toThrow(DOMException);
-        expect(() => { tx.keyIteratorByIndex('', ''); }).toThrow(DOMException);
-        expect(() => { tx.reverseKeyIteratorByIndex('', ''); }).toThrow(DOMException);
+        expect(() => void tx.iteratorByIndex('', '')).toThrow(DOMException);
+        expect(() => void tx.reverseIteratorByIndex('', '')).toThrow(DOMException);
+        expect(() => void tx.keyIteratorByIndex('', '')).toThrow(DOMException);
+        expect(() => void tx.reverseKeyIteratorByIndex('', '')).toThrow(DOMException);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         let tx: IDBMTransaction;
@@ -217,19 +215,19 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.iterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => void tx.iterator('MyStoreX')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.reverseIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => void tx.reverseIterator('MyStoreX')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.keyIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => void tx.keyIterator('MyStoreX')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.reverseKeyIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => void tx.reverseKeyIterator('MyStoreX')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         // インデックスによる削除関数
@@ -285,19 +283,19 @@ describe('CRUD共通の例外処理', () => {
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.iteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => void tx.iteratorByIndex('MyStoreX', '')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.reverseIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => void tx.reverseIteratorByIndex('MyStoreX', '')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.keyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => void tx.keyIteratorByIndex('MyStoreX', '')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
 
         tx = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
-        expect(() => { tx.reverseKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => void tx.reverseKeyIteratorByIndex('MyStoreX', '')).toThrow(DOMException);
         await expect(tx.getSettlement()).rejects.toThrow(DOMException);
     });
     test('トランザクションのモードがreadonlyのときに更新系の関数を呼び出すとエラー', async () => {
@@ -634,11 +632,11 @@ describe('インデックスによるイテレータのテスト', () => {
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
     });
 
-    type Item = {
-        item: string,
-        id: number,
-        value: number,
-        tags: string[],
+    interface Item {
+        item: string;
+        id: number;
+        value: number;
+        tags: string[];
     };
 
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);

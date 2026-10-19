@@ -4,8 +4,6 @@ import type { IDBMStoreInfo } from '../src/manager';
 import type { IDBMKeyRange } from '../src/transaction';
 import { PublicIDBManager } from './env/public';
 
-/* eslint-disable no-restricted-syntax */
-
 // データベース名を連番で生成するクロージャ
 function dbNameGenerator(prefix: string, digits: number): () => string {
     let count = 1;
@@ -55,7 +53,8 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
 
         await expect(idb1.openDatabase()).resolves.toBeUndefined();
         await expect(idb2.openDatabase()).resolves.toBeUndefined();
-        idb1.closeDatabase(); idb2.closeDatabase();
+        idb1.closeDatabase();
+        idb2.closeDatabase();
     });
 
     test('不正なバージョンを指定するとDBを開けない', async () => {
@@ -153,7 +152,7 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         const dbName = createDBName();
         const pidb = new PublicIDBManager(dbName, 1, []);
 
-        expect(() => { pidb.p_verifyObjectStoreNames(); }).toThrow(ReferenceError);
+        expect(() => void pidb.p_verifyObjectStoreNames()).toThrow(ReferenceError);
     });
 });
 
@@ -184,10 +183,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getManyKeys('')).rejects.toThrow(ReferenceError);
         await expect(idb.count('')).rejects.toThrow(ReferenceError);
         await expect(idb.hasAny('')).rejects.toThrow(ReferenceError);
-        expect(() => { idb.iterator(''); }).toThrow(ReferenceError);
-        expect(() => { idb.reverseIterator(''); }).toThrow(ReferenceError);
-        expect(() => { idb.keyIterator(''); }).toThrow(ReferenceError);
-        expect(() => { idb.reverseKeyIterator(''); }).toThrow(ReferenceError);
+        expect(() => void idb.iterator('')).toThrow(ReferenceError);
+        expect(() => void idb.reverseIterator('')).toThrow(ReferenceError);
+        expect(() => void idb.keyIterator('')).toThrow(ReferenceError);
+        expect(() => void idb.reverseKeyIterator('')).toThrow(ReferenceError);
 
         await expect(idb.deleteManyByIndex('', '', [])).rejects.toThrow(ReferenceError);
 
@@ -202,10 +201,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getManyKeysByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.countByIndex('', '')).rejects.toThrow(ReferenceError);
         await expect(idb.hasAnyByIndex('', '')).rejects.toThrow(ReferenceError);
-        expect(() => { idb.iteratorByIndex('', ''); }).toThrow(ReferenceError);
-        expect(() => { idb.reverseIteratorByIndex('', ''); }).toThrow(ReferenceError);
-        expect(() => { idb.keyIteratorByIndex('', ''); }).toThrow(ReferenceError);
-        expect(() => { idb.reverseKeyIteratorByIndex('', ''); }).toThrow(ReferenceError);
+        expect(() => void idb.iteratorByIndex('', '')).toThrow(ReferenceError);
+        expect(() => void idb.reverseIteratorByIndex('', '')).toThrow(ReferenceError);
+        expect(() => void idb.keyIteratorByIndex('', '')).toThrow(ReferenceError);
+        expect(() => void idb.reverseKeyIteratorByIndex('', '')).toThrow(ReferenceError);
     });
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         const dbName = createDBName();
@@ -231,10 +230,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getManyKeys('MyStoreX')).rejects.toThrow(DOMException);
         await expect(idb.count('MyStoreX')).rejects.toThrow(DOMException);
         await expect(idb.hasAny('MyStoreX')).rejects.toThrow(DOMException);
-        expect(() => { idb.iterator('MyStoreX'); }).toThrow(DOMException);
-        expect(() => { idb.reverseIterator('MyStoreX'); }).toThrow(DOMException);
-        expect(() => { idb.keyIterator('MyStoreX'); }).toThrow(DOMException);
-        expect(() => { idb.reverseKeyIterator('MyStoreX'); }).toThrow(DOMException);
+        expect(() => void idb.iterator('MyStoreX')).toThrow(DOMException);
+        expect(() => void idb.reverseIterator('MyStoreX')).toThrow(DOMException);
+        expect(() => void idb.keyIterator('MyStoreX')).toThrow(DOMException);
+        expect(() => void idb.reverseKeyIterator('MyStoreX')).toThrow(DOMException);
 
         await expect(idb.deleteManyByIndex('MyStoreX', '', [])).rejects.toThrow(DOMException);
 
@@ -249,10 +248,10 @@ describe('CRUDs共通の例外処理', () => {
         await expect(idb.getManyKeysByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.countByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
         await expect(idb.hasAnyByIndex('MyStoreX', '')).rejects.toThrow(DOMException);
-        expect(() => { idb.iteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
-        expect(() => { idb.reverseIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
-        expect(() => { idb.keyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
-        expect(() => { idb.reverseKeyIteratorByIndex('MyStoreX', ''); }).toThrow(DOMException);
+        expect(() => void idb.iteratorByIndex('MyStoreX', '')).toThrow(DOMException);
+        expect(() => void idb.reverseIteratorByIndex('MyStoreX', '')).toThrow(DOMException);
+        expect(() => void idb.keyIteratorByIndex('MyStoreX', '')).toThrow(DOMException);
+        expect(() => void idb.reverseKeyIteratorByIndex('MyStoreX', '')).toThrow(DOMException);
     });
 });
 
@@ -521,10 +520,10 @@ describe('複数データの追加・更新・削除テスト', () => {
 
 describe('generateKeyRangeの動作テスト', () => {
     type IDBKeyRangeInfo = {
-        lower: unknown,
-        upper: unknown,
-        lowerOpen: boolean,
-        upperOpen: boolean,
+        lower: unknown;
+        upper: unknown;
+        lowerOpen: boolean;
+        upperOpen: boolean;
     } | null;
     function getKeyRangeInfo(rawKeyRange: IDBKeyRange | null): IDBKeyRangeInfo {
         if (rawKeyRange) {
@@ -538,7 +537,7 @@ describe('generateKeyRangeの動作テスト', () => {
         return null;
     }
 
-    const testCases: { exp: IDBMKeyRange, toEq: IDBKeyRangeInfo }[] = [
+    const testCases: { exp: IDBMKeyRange; toEq: IDBKeyRangeInfo }[] = [
         // 下限なし・上限なし (全範囲)
         { exp: {}, toEq: null },
         { exp: { lowerOpen: true, upperOpen: false }, toEq: null }, // lowerOpen, upperOpen は無視
@@ -801,10 +800,9 @@ describe('複数データの取得テスト', () => {
         // イテレータの next() を await なしで呼び出して取得
         const iter2 = idb.iterator<string>('MyStore');
         const promises = [];
-        for (let i = 0; i < values.length; i += 1) {
-            // eslint-disable-next-line @typescript-eslint/no-loop-func
+        for (const value of values) {
             promises.push(iter2.next().then((response) => {
-                expect(response).toEqual({ value: values[i], done: false });
+                expect(response).toEqual({ value, done: false });
             }));
         }
         promises.push(iter2.next().then((response) => {
@@ -909,17 +907,17 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
     });
 
-    type Person = {
-        name: string,
-        age: number,
-        address: string,
+    interface Person {
+        name: string;
+        age: number;
+        address: string;
     };
-    type Item = {
-        item: string,
-        id: number,
-        weight: number,
-        value: number,
-        color: string,
+    interface Item {
+        item: string;
+        id: number;
+        weight: number;
+        value: number;
+        color: string;
     };
 
     const oldStoreInfos: IDBMStoreInfo[] = [
@@ -1026,11 +1024,11 @@ describe('単体データのインデックスによる取得テスト', () => {
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
     });
 
-    type Item = {
-        item: string,
-        id: number,
-        value: number,
-        color: string,
+    interface Item {
+        item: string;
+        id: number;
+        value: number;
+        color: string;
     };
 
     const dbName = createDBName();
@@ -1186,11 +1184,11 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
     });
 
-    type Item = {
-        item: string,
-        id: number,
-        value: number,
-        tags: string[],
+    interface Item {
+        item: string;
+        id: number;
+        value: number;
+        tags: string[];
     };
 
     const dbName = createDBName();
@@ -1324,10 +1322,9 @@ describe('複数データのインデックスによる取得テスト(multiEntr
         // イテレータの next() を await なしで呼び出して取得
         const iter2 = idb.iteratorByIndex<string>('MyStore1', 'valueIdx');
         const promises = [];
-        for (let i = 0; i < itemsSortedByValue.length; i += 1) {
-            // eslint-disable-next-line @typescript-eslint/no-loop-func
+        for (const value of itemsSortedByValue) {
             promises.push(iter2.next().then((response) => {
-                expect(response).toEqual({ value: itemsSortedByValue[i], done: false });
+                expect(response).toEqual({ value, done: false });
             }));
         }
         promises.push(iter2.next().then((response) => {
@@ -1432,11 +1429,11 @@ describe('複数データのインデックスによる削除テスト(deleteMan
         window.indexedDB = new IDBFactory(); // refresh the mocked IndexedDB
     });
 
-    type Item = {
-        item: string,
-        id: number,
-        value: number,
-        tags: string[],
+    interface Item {
+        item: string;
+        id: number;
+        value: number;
+        tags: string[];
     };
 
     const dbName = createDBName();
@@ -1561,7 +1558,7 @@ describe('トランザクションのテスト', () => {
     });
 
     test('トランザクションを作成する', async () => {
-        const tx = pidb.transaction('MyStore1', async () => {});
+        const tx = pidb.transaction('MyStore1', () => Promise.resolve());
         await expect(tx).resolves.toBeUndefined();
     });
     test('トランザクション内で複数の操作を行う', async () => {
@@ -1578,28 +1575,26 @@ describe('トランザクションのテスト', () => {
     });
 
     test('コールバック関数内で例外を投げる', async () => {
-        // eslint-disable-next-line @typescript-eslint/require-await
         const tx1 = pidb.transaction('MyStore1', async (inner) => {
-            // eslint-disable-next-line @typescript-eslint/no-throw-literal
+            // eslint-disable-next-line @typescript-eslint/only-throw-error
             throw 'Oops';
         });
         // Errorオブジェクト以外を投げるとDOMExceptionになる
         await expect(tx1).rejects.toThrow(DOMException);
         await expect(tx1).rejects.toThrow('The transaction failed for some reason.');
 
-        // eslint-disable-next-line @typescript-eslint/require-await
-        const tx2 = pidb.transaction('MyStore1', async () => {
+        const tx2 = pidb.transaction('MyStore1', async (inner) => {
             throw new Error('Oops');
         });
         await expect(tx2).rejects.toThrow('Oops');
     });
     test('データベースが閉じているときにトランザクションを作成すると失敗する', async () => {
         pidb.closeDatabase();
-        const tx = pidb.transaction('MyStore1', async () => {});
+        const tx = pidb.transaction('MyStore1', () => Promise.resolve());
         await expect(tx).rejects.toThrow(ReferenceError);
     });
     test('存在しないオブジェクトストアを指定すると失敗する', async () => {
-        const tx = pidb.transaction('MyStoreX', async () => {});
+        const tx = pidb.transaction('MyStoreX', () => Promise.resolve());
         await expect(tx).rejects.toThrow(DOMException);
     });
     test('トランザクションのモードを間違えると失敗する', async () => {

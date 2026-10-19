@@ -1,7 +1,6 @@
 type Listener = ((this: IDBDatabase, ev: Event) => unknown) | null;
 
 class NullIDBDatabase implements IDBDatabase {
-    // eslint-disable-next-line class-methods-use-this
     protected nullDBError(): ReferenceError {
         return new ReferenceError('Referenced a null database.');
     }

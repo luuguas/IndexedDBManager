@@ -1,6 +1,8 @@
 import { IDBManager } from '../../src/manager';
 import type { IDBMStoreInfo } from '../../src/manager';
 
+/* eslint-disable @typescript-eslint/naming-convention */
+
 export class PublicIDBManager extends IDBManager {
     // accessor methods for testing protected members
     get p_dbName(): string { return this.dbName; }

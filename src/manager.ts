@@ -4,7 +4,7 @@ import type { IDBMKeyRange } from './transaction';
 
 export interface IDBMIndexInfo {
     indexName: string;
-    keyPath: string | string[],
+    keyPath: string | string[];
     unique?: boolean;
     multiEntry?: boolean;
 }
@@ -43,7 +43,7 @@ export class IDBManager {
     isOpen(): boolean { return !this.isClose(); }
 
     protected verifyObjectStoreNames(): boolean {
-        if (this.isClose()) { throw IDBManager.dbNotOpenError(); }
+        if (this.isClose()) throw IDBManager.dbNotOpenError();
 
         const existingStoreNames = Array.from(this.db.objectStoreNames);
         const st = new Set<string>();
@@ -58,7 +58,7 @@ export class IDBManager {
     }
 
     static generateRawKeyRange(keyRange?: IDBMKeyRange): IDBKeyRange | null {
-        if (typeof keyRange === 'undefined') { return null; }
+        if (typeof keyRange === 'undefined') return null;
 
         const lowerUnbounded = (typeof keyRange.lower === 'undefined');
         const upperUnbounded = (typeof keyRange.upper === 'undefined');
@@ -216,17 +216,17 @@ export class IDBManager {
             callback(inner)
                 .then(
                     (response: TResult) => {
-                        if (inner.isActive()) { inner.commit(); }
+                        if (inner.isActive()) inner.commit();
                         inner
                             .then(() => { resolve(response); })
                             .catch((err) => { reject(err); });
                     },
                     (error) => {
                         if (inner.isActive()) {
-                            if (error instanceof Error) { inner.abort(error); }
-                            else { inner.abort(); }
+                            if (error instanceof Error) inner.abort(error);
+                            else inner.abort();
                         }
-                        inner.catch((err) => { reject(err); });
+                        inner.catch((err) => reject(err));
                     },
                 );
         });
