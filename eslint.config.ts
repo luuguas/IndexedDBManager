@@ -6,7 +6,7 @@ import stylistic from '@stylistic/eslint-plugin';
 
 export default defineConfig([
   {
-    files: ['**/*.{js,mjs,cjs,ts,mts,cts}'],
+    files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     plugins: { js, '@stylistic': stylistic },
     extends: ['js/recommended'],
     languageOptions: {
@@ -43,7 +43,6 @@ export default defineConfig([
       'prefer-template': 'error',
       '@stylistic/lines-between-class-members': 'off',
       // Naming
-      'consistent-this': ['error', 'that'],
       '@typescript-eslint/naming-convention': [
         'error',
         {
@@ -93,7 +92,7 @@ export default defineConfig([
   },
   // Overrides for config files
   {
-    files: ['*.ts'],
+    files: ['*.{js,mjs,cjs,ts}'],
     extends: [tseslint.configs.disableTypeChecked],
     rules: { '@stylistic/indent': ['error', 2] },
   },

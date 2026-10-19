@@ -6,7 +6,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['fake-indexeddb/auto'],
     coverage: {
-      include: ['src/**'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.d.ts',
+        'src/**/index.{ts,tsx}',
+      ],
       provider: 'v8',
     },
   },
