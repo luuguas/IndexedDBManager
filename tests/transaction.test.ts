@@ -50,6 +50,19 @@ describe('トランザクションの生成テスト', () => {
         await expect(p).rejects.toThrow(TypeError);
         await expect(p).rejects.toThrow('Oops');
     });
+    test('PromiseLikeのテスト', async () => {
+        const tx1 = new IDBMTransaction(pidb.p_db, 'MyStore1');
+        // txはPromiseLikeなのでtx自体をawaitしてもsettlementの結果が返る
+        // tx.then
+        await expect(tx1).resolves.toBeUndefined();
+        // tx.finally
+        tx1.finally(() => { ; });
+
+        const tx2 = new IDBMTransaction(pidb.p_db, 'MyStore1');
+        tx2.abort(new Error('Oops'));
+        // tx.catch
+        await expect(tx2).rejects.toThrow('Oops');
+    });
 
     test('非アクティブ時にabortまたはcommitするとエラー', async () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
