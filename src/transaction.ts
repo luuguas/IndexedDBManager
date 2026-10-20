@@ -63,9 +63,7 @@ export class IDBMTransaction implements PromiseLike<void> {
         });
     }
 
-    isActive(): boolean { return this.active; }
-    getSettlement(): Promise<void> { return this.settlement; }
-
+    // Implementation of PromiseLike
     then<TResult1 = void, TResult2 = never>(
         onFulfilled?: ((value: void) => TResult1 | PromiseLike<TResult1>) | null,
         onRejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -80,6 +78,9 @@ export class IDBMTransaction implements PromiseLike<void> {
     finally(onFinally?: (() => void) | null): Promise<void> {
         return this.settlement.finally(onFinally);
     }
+
+    isActive(): boolean { return this.active; }
+    getSettlement(): Promise<void> { return this.settlement; }
 
     abort(error?: Error | null): void {
         if (!this.isActive()) throw IDBMTransaction.txNotActiveError();

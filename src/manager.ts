@@ -32,6 +32,25 @@ export class IDBManager {
         return new ReferenceError('The database is not open.');
     }
 
+    static generateRawKeyRange(keyRange?: IDBMKeyRange): IDBKeyRange | null {
+        if (typeof keyRange === 'undefined') return null;
+
+        const lowerUnbounded = (typeof keyRange.lower === 'undefined');
+        const upperUnbounded = (typeof keyRange.upper === 'undefined');
+
+        if (lowerUnbounded && upperUnbounded) {
+            return null;
+        }
+        if (lowerUnbounded) {
+            return window.IDBKeyRange.upperBound(keyRange.upper, keyRange.upperOpen);
+        }
+        if (upperUnbounded) {
+            return window.IDBKeyRange.lowerBound(keyRange.lower, keyRange.lowerOpen);
+        }
+        return window.IDBKeyRange
+            .bound(keyRange.lower, keyRange.upper, keyRange.lowerOpen, keyRange.upperOpen);
+    }
+
     constructor(dbName: string, dbVersion: number, storeInfos: IDBMStoreInfo[]) {
         this.db = NULL_IDB_DATABASE;
         this.dbName = dbName;
@@ -55,25 +74,6 @@ export class IDBManager {
             && existingStoreNames.every((storeName) => {
                 return st.has(storeName);
             });
-    }
-
-    static generateRawKeyRange(keyRange?: IDBMKeyRange): IDBKeyRange | null {
-        if (typeof keyRange === 'undefined') return null;
-
-        const lowerUnbounded = (typeof keyRange.lower === 'undefined');
-        const upperUnbounded = (typeof keyRange.upper === 'undefined');
-
-        if (lowerUnbounded && upperUnbounded) {
-            return null;
-        }
-        if (lowerUnbounded) {
-            return window.IDBKeyRange.upperBound(keyRange.upper, keyRange.upperOpen);
-        }
-        if (upperUnbounded) {
-            return window.IDBKeyRange.lowerBound(keyRange.lower, keyRange.lowerOpen);
-        }
-        return window.IDBKeyRange
-            .bound(keyRange.lower, keyRange.upper, keyRange.lowerOpen, keyRange.upperOpen);
     }
 
     openDatabase(): Promise<void> {
