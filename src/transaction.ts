@@ -47,9 +47,6 @@ export class IDBMTransaction implements PromiseLike<void> {
         this.active = true;
         this.error = null;
         this.settlement = new Promise((resolve, reject) => {
-            this.tx.onerror = () => {
-                this.active = false;
-            };
             this.tx.onabort = () => {
                 this.active = false;
                 if (this.tx.error) reject(this.tx.error);
@@ -79,18 +76,19 @@ export class IDBMTransaction implements PromiseLike<void> {
         return this.settlement.finally(onFinally);
     }
 
+    protected deactivate(): void { this.active = false; }
     isActive(): boolean { return this.active; }
     getSettlement(): Promise<void> { return this.settlement; }
 
     abort(error?: Error | null): void {
         if (!this.isActive()) throw IDBMTransaction.txNotActiveError();
-        this.active = false;
+        this.deactivate();
         this.error = error ?? null;
         this.tx.abort();
     }
     commit(): void {
         if (!this.isActive()) throw IDBMTransaction.txNotActiveError();
-        this.active = false;
+        this.deactivate();
         this.tx.commit();
     }
 
@@ -109,7 +107,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const store = this.tx.objectStore(storeName);
                 const addReq = store.add(value, key);
                 addReq.onerror = () => {
-                    if (this.isActive()) this.abort(addReq.error);
+                    this.deactivate();
                     reject(addReq.error);
                 };
                 addReq.onsuccess = () => resolve(addReq.result);
@@ -143,7 +141,10 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const promises: Promise<IDBValidKey>[] = values.map((value, idx) => {
                     return new Promise((res, rej) => {
                         const addReq = store.add(value, keys?.[idx]);
-                        addReq.onerror = () => rej(addReq.error);
+                        addReq.onerror = () => {
+                            this.deactivate();
+                            rej(addReq.error);
+                        };
                         addReq.onsuccess = () => res(addReq.result);
                     });
                 });
@@ -177,7 +178,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const store = this.tx.objectStore(storeName);
                 const putReq = store.put(value, key);
                 putReq.onerror = () => {
-                    if (this.isActive()) this.abort(putReq.error);
+                    this.deactivate();
                     reject(putReq.error);
                 };
                 putReq.onsuccess = () => resolve(putReq.result);
@@ -211,7 +212,10 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const promises: Promise<IDBValidKey>[] = values.map((value, idx) => {
                     return new Promise((res, rej) => {
                         const putReq = store.put(value, keys?.[idx]);
-                        putReq.onerror = () => rej(putReq.error);
+                        putReq.onerror = () => {
+                            this.deactivate();
+                            rej(putReq.error);
+                        };
                         putReq.onsuccess = () => res(putReq.result);
                     });
                 });
@@ -241,7 +245,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const store = this.tx.objectStore(storeName);
                 const deleteReq = store.delete(key);
                 deleteReq.onerror = () => {
-                    if (this.isActive()) this.abort(deleteReq.error);
+                    this.deactivate();
                     reject(deleteReq.error);
                 };
                 deleteReq.onsuccess = () => resolve();
@@ -273,7 +277,10 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const promises: Promise<void>[] = keysOrKeyRange.map((key) => {
                         return new Promise((res, rej) => {
                             const deleteReq = store.delete(key);
-                            deleteReq.onerror = () => rej(deleteReq.error);
+                            deleteReq.onerror = () => {
+                                this.deactivate();
+                                rej(deleteReq.error);
+                            };
                             deleteReq.onsuccess = () => res();
                         });
                     });
@@ -290,7 +297,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const rawKeyRange = IDBMTransaction.generateRawKeyRange(keysOrKeyRange);
                     const deleteReq = rawKeyRange ? store.delete(rawKeyRange) : store.clear();
                     deleteReq.onerror = () => {
-                        if (this.isActive()) this.abort(deleteReq.error);
+                        this.deactivate();
                         reject(deleteReq.error);
                     };
                     deleteReq.onsuccess = () => resolve();
@@ -314,7 +321,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const store = this.tx.objectStore(storeName);
                 const clearReq = store.clear();
                 clearReq.onerror = () => {
-                    if (this.isActive()) this.abort(clearReq.error);
+                    this.deactivate();
                     reject(clearReq.error);
                 };
                 clearReq.onsuccess = () => resolve();
@@ -337,7 +344,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const store = this.tx.objectStore(storeName);
                 const getReq = store.get(key);
                 getReq.onerror = () => {
-                    if (this.isActive()) this.abort(getReq.error);
+                    this.deactivate();
                     reject(getReq.error);
                 };
                 getReq.onsuccess = () => resolve(getReq.result as TValue | undefined);
@@ -361,7 +368,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = store.openCursor(rawKeyRange, 'next');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -390,7 +397,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = store.openCursor(rawKeyRange, 'prev');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -418,7 +425,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const store = this.tx.objectStore(storeName);
                 const getReq = store.getKey(key);
                 getReq.onerror = () => {
-                    if (this.isActive()) this.abort(getReq.error);
+                    this.deactivate();
                     reject(getReq.error);
                 };
                 getReq.onsuccess = () => resolve(getReq.result);
@@ -442,7 +449,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = store.openKeyCursor(rawKeyRange, 'next');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -471,7 +478,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = store.openKeyCursor(rawKeyRange, 'prev');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -499,7 +506,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const store = this.tx.objectStore(storeName);
                 const getReq = store.getKey(key);
                 getReq.onerror = () => {
-                    if (this.isActive()) this.abort(getReq.error);
+                    this.deactivate();
                     reject(getReq.error);
                 };
                 getReq.onsuccess = () => resolve(typeof getReq.result !== 'undefined');
@@ -531,7 +538,10 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const promises: Promise<TValue | undefined>[] = keysOrKeyRange.map((key) => {
                         return new Promise((res, rej) => {
                             const getReq = store.get(key);
-                            getReq.onerror = () => rej(getReq.error);
+                            getReq.onerror = () => {
+                                this.deactivate();
+                                rej(getReq.error);
+                            };
                             getReq.onsuccess = () => res(getReq.result as TValue | undefined);
                         });
                     });
@@ -548,7 +558,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const rawKeyRange = IDBMTransaction.generateRawKeyRange(keysOrKeyRange);
                     const getAllReq = store.getAll(rawKeyRange);
                     getAllReq.onerror = () => {
-                        if (this.isActive()) this.abort(getAllReq.error);
+                        this.deactivate();
                         reject(getAllReq.error);
                     };
                     getAllReq.onsuccess = () => resolve(getAllReq.result as TValue[]);
@@ -576,7 +586,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const getAllReq = store.getAllKeys(rawKeyRange);
                 getAllReq.onerror = () => {
-                    if (this.isActive()) this.abort(getAllReq.error);
+                    this.deactivate();
                     reject(getAllReq.error);
                 };
                 getAllReq.onsuccess = () => resolve(getAllReq.result);
@@ -600,7 +610,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const countReq = store.count(rawKeyRange ?? undefined);
                 countReq.onerror = () => {
-                    if (this.isActive()) this.abort(countReq.error);
+                    this.deactivate();
                     reject(countReq.error);
                 };
                 countReq.onsuccess = () => resolve(countReq.result);
@@ -624,7 +634,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = store.openKeyCursor(rawKeyRange);
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => resolve(cursorReq.result !== null);
@@ -649,8 +659,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = store.openCursor(rawKeyRange, 'next');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -670,7 +680,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {
@@ -713,8 +723,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = store.openCursor(rawKeyRange, 'prev');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -734,7 +744,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {
@@ -777,8 +787,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = store.openKeyCursor(rawKeyRange, 'next');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -798,7 +808,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {
@@ -841,8 +851,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = store.openKeyCursor(rawKeyRange, 'prev');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -862,7 +872,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {
@@ -914,7 +924,10 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const promises: Promise<void>[] = keysOrkeyRange.map((key) => {
                         return new Promise((res, rej) => {
                             const cursorReq = idx.openCursor(key);
-                            cursorReq.onerror = () => rej(cursorReq.error);
+                            cursorReq.onerror = () => {
+                                this.deactivate();
+                                rej(cursorReq.error);
+                            };
                             cursorReq.onsuccess = () => {
                                 const cursor = cursorReq.result;
 
@@ -942,7 +955,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const cursorReq = idx.openCursor(rawKeyRange);
 
                     cursorReq.onerror = () => {
-                        if (this.isActive()) this.abort(cursorReq.error);
+                        this.deactivate();
                         reject(cursorReq.error);
                     };
                     cursorReq.onsuccess = () => {
@@ -981,7 +994,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const idx = store.index(indexName);
                 const getReq = idx.get(key);
                 getReq.onerror = () => {
-                    if (this.isActive()) this.abort(getReq.error);
+                    this.deactivate();
                     reject(getReq.error);
                 };
                 getReq.onsuccess = () => resolve(getReq.result as TValue | undefined);
@@ -1010,7 +1023,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = idx.openCursor(rawKeyRange, 'next');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -1044,7 +1057,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = idx.openCursor(rawKeyRange, 'prev');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -1077,7 +1090,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const idx = store.index(indexName);
                 const getReq = idx.getKey(key);
                 getReq.onerror = () => {
-                    if (this.isActive()) this.abort(getReq.error);
+                    this.deactivate();
                     reject(getReq.error);
                 };
                 getReq.onsuccess = () => resolve(getReq.result);
@@ -1106,7 +1119,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = idx.openKeyCursor(rawKeyRange, 'next');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -1140,7 +1153,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = idx.openKeyCursor(rawKeyRange, 'prev');
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => {
@@ -1173,7 +1186,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const idx = store.index(indexName);
                 const getReq = idx.getKey(key);
                 getReq.onerror = () => {
-                    if (this.isActive()) this.abort(getReq.error);
+                    this.deactivate();
                     reject(getReq.error);
                 };
                 getReq.onsuccess = () => resolve(typeof getReq.result !== 'undefined');
@@ -1209,7 +1222,10 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const promises: Promise<TValue | undefined>[] = keysOrKeyRange.map((key) => {
                         return new Promise((res, rej) => {
                             const getReq = idx.get(key);
-                            getReq.onerror = () => rej(getReq.error);
+                            getReq.onerror = () => {
+                                this.deactivate();
+                                rej(getReq.error);
+                            };
                             getReq.onsuccess = () => res(getReq.result as TValue | undefined);
                         });
                     });
@@ -1226,7 +1242,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                     const rawKeyRange = IDBMTransaction.generateRawKeyRange(keysOrKeyRange);
                     const getAllReq = idx.getAll(rawKeyRange);
                     getAllReq.onerror = () => {
-                        if (this.isActive()) this.abort(getAllReq.error);
+                        this.deactivate();
                         reject(getAllReq.error);
                     };
                     getAllReq.onsuccess = () => resolve(getAllReq.result as TValue[]);
@@ -1256,7 +1272,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const getAllReq = idx.getAllKeys(rawKeyRange);
                 getAllReq.onerror = () => {
-                    if (this.isActive()) this.abort(getAllReq.error);
+                    this.deactivate();
                     reject(getAllReq.error);
                 };
                 getAllReq.onsuccess = () => resolve(getAllReq.result);
@@ -1285,7 +1301,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const countReq = idx.count(rawKeyRange ?? undefined);
                 countReq.onerror = () => {
-                    if (this.isActive()) this.abort(countReq.error);
+                    this.deactivate();
                     reject(countReq.error);
                 };
                 countReq.onsuccess = () => resolve(countReq.result);
@@ -1314,7 +1330,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                 const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
                 const cursorReq = idx.openKeyCursor(rawKeyRange);
                 cursorReq.onerror = () => {
-                    if (this.isActive()) this.abort(cursorReq.error);
+                    this.deactivate();
                     reject(cursorReq.error);
                 };
                 cursorReq.onsuccess = () => resolve(cursorReq.result !== null);
@@ -1341,8 +1357,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = idx.openCursor(rawKeyRange, 'next');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -1362,7 +1378,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {
@@ -1407,8 +1423,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = idx.openCursor(rawKeyRange, 'prev');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<TValue | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -1428,7 +1444,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {
@@ -1473,8 +1489,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = idx.openKeyCursor(rawKeyRange, 'next');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -1494,7 +1510,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {
@@ -1539,8 +1555,8 @@ export class IDBMTransaction implements PromiseLike<void> {
             const rawKeyRange = IDBMTransaction.generateRawKeyRange(keyRange);
             const cursorReq = idx.openKeyCursor(rawKeyRange, 'prev');
 
+            const deactivate = () => void this.deactivate();
             const isActive = () => this.isActive();
-            const abort = (error?: Error | null) => void this.abort(error);
 
             let prev: Promise<IteratorResult<IDBValidKey | void>> = Promise.resolve(
                 { value: undefined, done: false },
@@ -1560,7 +1576,7 @@ export class IDBMTransaction implements PromiseLike<void> {
                                 }
 
                                 cursorReq.onerror = () => {
-                                    if (isActive()) abort(cursorReq.error);
+                                    deactivate();
                                     reject(cursorReq.error);
                                 };
                                 cursorReq.onsuccess = () => {

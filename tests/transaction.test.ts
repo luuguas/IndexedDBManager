@@ -794,9 +794,17 @@ tx.onabort と tx.onerror の発火関係メモ
 Case1: tx.abort() した場合
     tx.onabort のみ発火(undefined)
 Case2: const addReq = tx.store.add() で既に存在するキーを指定した場合
-    addReq.onerror が発火(ConstraintError) -> tx.onerror が発火(undefined)
-    -> tx.onabort(ConstraintError) が発火
+    addReq.onerror が発火(ConstraintError) -> tx.onerror が発火(undefined) -> tx.onabort(ConstraintError) が発火
 Case3: const addReq = tx.store.add() でキー指定を間違えたとき
     tx.store.add() が直接例外を投げるので、addReq.onerror は発火せず、tx.onerror および tx.onabort も発火しない
-    ゆえにtx.abort()してあげる必要がある
+    ゆえにtx.abort()してあげる必要がある (-> Case1 と同じ)
+*/
+
+/*
+エラーへの対応メモ
+Case1: request.onerror が発火した場合
+    トランザクションは自動的に abort されるので this.abort() を呼び出す必要はない、this.deactivate() のみ呼び出す
+    this.abort() を余計に呼び出すと 'Error: should have been able to remove transaction' (Uncaught Exception) が発生する
+Case2: requestが直接例外を投げた場合、つまり try/catch の catch 節や Promise.all().catch() で例外を受け取る場合
+    this.isActive() が true のとき this.abort() を呼び出す
 */
