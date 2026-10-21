@@ -1,8 +1,8 @@
 # IndexedDBManager
 
-A Promise wrapper for simple IndexedDB handling
+A Promise wrapper for simple IndexedDB operations
 
-IndexedDB をシンプルに扱える Promise ラッパー
+シンプルに IndexedDB を扱える Promise ラッパー
 
 - [各種リンク](#各種リンク)
 - [インストール](#インストール)
