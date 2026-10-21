@@ -2,7 +2,7 @@
 
 A Promise wrapper for simple IndexedDB operations
 
-シンプルに IndexedDB を扱える Promise ラッパー
+シンプルにIndexedDBを扱えるPromiseラッパー
 
 - [各種リンク](#各種リンク)
 - [インストール](#インストール)
@@ -13,8 +13,8 @@ A Promise wrapper for simple IndexedDB operations
 
 ## 各種リンク
 
-- IndexedDB について: [IndexedDB API - Web APIs | MDN](https://developer.mozilla.org/ja/docs/Web/API/IndexedDB_API)
-- API リファレンス: 
+- IndexedDBについて: [IndexedDB API - Web APIs | MDN](https://developer.mozilla.org/ja/docs/Web/API/IndexedDB_API)
+- APIリファレンス: 
 - README (English ver.): [README.md](../README.md)
 - API Reference (English ver.): 
 
@@ -44,20 +44,22 @@ const db = new IDBManager(...);
 
 ### CDN
 
-#### 外部ファイル参照
+#### 外部スクリプト参照
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@luuguas/idbmanager@[version]/[file].min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@luuguas/idbmanager@2.0.0/dist/umd.min.js"></script>
 <script>
-    const db = new IDBManager(...);
+    const db = new idbmanager.IDBManager(...);
 </script>
 ```
 
-#### jsDelivr 経由で直接インポート
+グローバル変数`idbmanager`を経由して各モジュールを利用できます。
+
+#### jsDelivr経由で直接インポート
 
 ```html
 <script type="module">
-    import { IDBManager } from 'https://cdn.jsdelivr.net/npm/@luuguas/idbmanager@[version]/+esm'
+    import { IDBManager } from 'https://cdn.jsdelivr.net/npm/@luuguas/idbmanager@2.0.0/+esm'
 
     const db = new IDBManager(...);
 </script>
