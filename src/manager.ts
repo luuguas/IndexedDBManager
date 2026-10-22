@@ -92,14 +92,19 @@ export class IDBManager {
                 if (!this.verifyObjectStoreNames()) {
                     this.db.close();
                     this.db = NULL_IDB_DATABASE;
-                    reject(new TypeError('The storeInfos does not match the object stores in the database. The database version needs upgrading.'));
+                    reject(new TypeError('The storeInfos do not match the object stores in the database. The database version needs to be upgraded.'));
                     return;
                 }
+                this.db.onclose = () => {
+                    // eslint-disable-next-line no-console
+                    console.warn(`Warning from IDBManager: The database "${this.dbName}" was closed unexpectedly.`);
+                    this.db = NULL_IDB_DATABASE;
+                };
                 resolve();
             };
 
             openReq.onblocked = () => {
-                reject(new ReferenceError('The database cannot be upgraded because it is currently open on another instance.'));
+                reject(new ReferenceError('The database cannot be upgraded because it is currently open in another instance.'));
             };
             openReq.onupgradeneeded = () => {
                 const db = openReq.result;
