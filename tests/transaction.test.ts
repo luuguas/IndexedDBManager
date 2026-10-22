@@ -18,10 +18,10 @@ describe('トランザクションの生成テスト', () => {
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
     });
     afterEach(() => {
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     test('トランザクションの開始とcommit', async () => {
@@ -91,10 +91,10 @@ describe('CRUD共通の例外処理', () => {
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
     });
     afterEach(() => {
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     test('トランザクションが非アクティブなときに呼び出すとエラー', async () => {
@@ -358,10 +358,10 @@ describe('addのテスト', () => {
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
     });
     afterEach(() => {
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     test('アイテムを追加する', async () => {
@@ -401,10 +401,10 @@ describe('addManyのテスト', () => {
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
     });
     afterEach(() => {
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     test('複数のアイテムを追加する', async () => {
@@ -460,16 +460,16 @@ describe('イテレータのテスト', () => {
     const keys = ['B', 'D', 'E', 'G', 'J', 'L', 'N', 'O', 'S', 'V'];
 
     beforeAll(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
         await pidb.putMany('MyStore1', values, keys);
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     beforeEach(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
     });
     afterEach(() => {
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     test('イテレータで全件取得', async () => {
@@ -673,16 +673,16 @@ describe('インデックスによるイテレータのテスト', () => {
     ];
 
     beforeAll(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
         await pidb.putMany('MyStore2', items);
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     beforeEach(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
     });
     afterEach(() => {
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     test('走査中にトランザクションをcommitするとエラー', async () => {

@@ -29,11 +29,11 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         expect(idb.isOpen()).toBe(false);
         expect(idb.isClose()).toBe(true);
         // 開いた後
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
+        await expect(idb.openDB()).resolves.toBeUndefined();
         expect(idb.isOpen()).toBe(true);
         expect(idb.isClose()).toBe(false);
         // 閉じた後
-        expect(idb.closeDatabase()).toBeUndefined();
+        expect(idb.closeDB()).toBeUndefined();
         expect(idb.isOpen()).toBe(false);
         expect(idb.isClose()).toBe(true);
     });
@@ -41,27 +41,27 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 1, []);
 
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
-        expect(idb.closeDatabase()).toBeUndefined();
-        expect(idb.closeDatabase()).toBeUndefined();
+        await expect(idb.openDB()).resolves.toBeUndefined();
+        await expect(idb.openDB()).resolves.toBeUndefined();
+        expect(idb.closeDB()).toBeUndefined();
+        expect(idb.closeDB()).toBeUndefined();
     });
     test('複数のインスタンスでDBを開く', async () => {
         const dbName = createDBName();
         const idb1 = new IDBManager(dbName, 1, []);
         const idb2 = new IDBManager(dbName, 1, []);
 
-        await expect(idb1.openDatabase()).resolves.toBeUndefined();
-        await expect(idb2.openDatabase()).resolves.toBeUndefined();
-        idb1.closeDatabase();
-        idb2.closeDatabase();
+        await expect(idb1.openDB()).resolves.toBeUndefined();
+        await expect(idb2.openDB()).resolves.toBeUndefined();
+        idb1.closeDB();
+        idb2.closeDB();
     });
 
     test('不正なバージョンを指定するとDBを開けない', async () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 0, []);
 
-        await expect(idb.openDatabase()).rejects.toThrow(TypeError); // IDBRequest.onerror は呼び出されない
+        await expect(idb.openDB()).rejects.toThrow(TypeError); // IDBRequest.onerror は呼び出されない
         expect(idb.isClose()).toBe(true);
     });
     test('バージョンのダウングレードはできない', async () => {
@@ -69,9 +69,9 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const idb1 = new IDBManager(dbName, 2, []);
         const idb2 = new IDBManager(dbName, 1, []);
 
-        await expect(idb1.openDatabase()).resolves.toBeUndefined();
-        idb1.closeDatabase();
-        await expect(idb2.openDatabase())
+        await expect(idb1.openDB()).resolves.toBeUndefined();
+        idb1.closeDB();
+        await expect(idb2.openDB())
             .rejects.toThrow(DOMException); // IDBRequest.onerror が呼び出される
     });
     test('他のインスタンスでDBを開いている状態ではアップグレードできない', async () => {
@@ -79,15 +79,15 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const idb1 = new IDBManager(dbName, 1, []);
         const idb2 = new IDBManager(dbName, 2, []);
 
-        await expect(idb1.openDatabase()).resolves.toBeUndefined();
-        const p = idb2.openDatabase();
+        await expect(idb1.openDB()).resolves.toBeUndefined();
+        const p = idb2.openDB();
         await expect(p).rejects.toThrow(ReferenceError);
         await expect(p).rejects.toThrow('The database cannot be upgraded because it is currently open on another instance.');
 
         // DBを閉じるとアップグレードできる
-        idb1.closeDatabase();
-        await expect(idb2.openDatabase()).resolves.toBeUndefined();
-        idb2.closeDatabase();
+        idb1.closeDB();
+        await expect(idb2.openDB()).resolves.toBeUndefined();
+        idb2.closeDB();
     });
 });
 
@@ -116,37 +116,37 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 1, oldStoreInfos);
 
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
-        idb.closeDatabase();
+        await expect(idb.openDB()).resolves.toBeUndefined();
+        idb.closeDB();
     });
     test('オブジェクトストアの構成を更新する(アップグレード)', async () => {
         const dbName = createDBName();
         const oldIDB = new IDBManager(dbName, 1, oldStoreInfos);
 
-        await expect(oldIDB.openDatabase()).resolves.toBeUndefined();
-        oldIDB.closeDatabase();
+        await expect(oldIDB.openDB()).resolves.toBeUndefined();
+        oldIDB.closeDB();
 
         const newIDB = new IDBManager(dbName, 2, newStoreInfos);
-        await expect(newIDB.openDatabase()).resolves.toBeUndefined();
-        newIDB.closeDatabase();
+        await expect(newIDB.openDB()).resolves.toBeUndefined();
+        newIDB.closeDB();
     });
 
     test('アップグレードせずにstoreInfosを変更するとDBを開けない', async () => {
         const dbName = createDBName();
         const oldIDB = new IDBManager(dbName, 1, oldStoreInfos);
 
-        await expect(oldIDB.openDatabase()).resolves.toBeUndefined();
-        oldIDB.closeDatabase();
+        await expect(oldIDB.openDB()).resolves.toBeUndefined();
+        oldIDB.closeDB();
 
         const wrongIDB = new IDBManager(dbName, 1, newStoreInfos);
-        const p = wrongIDB.openDatabase();
+        const p = wrongIDB.openDB();
         await expect(p).rejects.toThrow(TypeError);
         await expect(p).rejects.toThrow('The storeInfos does not match the object stores in the database. The database version needs upgrading.');
 
         // アップグレード(バージョンアップ)するとDBを開ける
         const newIDB = new IDBManager(dbName, 2, newStoreInfos);
-        await expect(newIDB.openDatabase()).resolves.toBeUndefined();
-        newIDB.closeDatabase();
+        await expect(newIDB.openDB()).resolves.toBeUndefined();
+        newIDB.closeDB();
     });
     test('DBを開いていないときverifyObjectStores(protectedなメンバ関数)を呼び出すとエラー', () => {
         const dbName = createDBName();
@@ -209,7 +209,7 @@ describe('CRUDs共通の例外処理', () => {
     test('存在しないオブジェクトストアを指定するとエラー', async () => {
         const dbName = createDBName();
         const idb = new IDBManager(dbName, 1, [{ name: 'MyStore1' }]);
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
+        await expect(idb.openDB()).resolves.toBeUndefined();
 
         await expect(idb.add('MyStoreX', {})).rejects.toThrow(DOMException);
         await expect(idb.addMany('MyStoreX', [])).rejects.toThrow(DOMException);
@@ -270,10 +270,10 @@ describe('単体データの追加・更新・削除テスト', () => {
     const idb = new IDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
     });
     afterEach(() => {
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     test('1個のデータを追加する(add, put)', async () => {
@@ -369,10 +369,10 @@ describe('複数データの追加・更新・削除テスト', () => {
     const idb = new IDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
     });
     afterEach(() => {
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     test('複数のデータを追加する(addMany, putMany)', async () => {
@@ -628,16 +628,16 @@ describe('単体データの取得テスト', () => {
     const keys = ['B', 'D', 'E', 'G', 'J', 'L', 'N', 'O', 'S', 'V'];
 
     beforeAll(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
         await idb.putMany('MyStore', values, keys);
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     beforeEach(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
     });
     afterEach(() => {
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     test('get', async () => {
@@ -734,16 +734,16 @@ describe('複数データの取得テスト', () => {
     const keys = ['B', 'D', 'E', 'G', 'J', 'L', 'N', 'O', 'S', 'V'];
 
     beforeAll(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
         await idb.putMany('MyStore', values, keys);
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     beforeEach(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
     });
     afterEach(() => {
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     test('getMany', async () => {
@@ -964,7 +964,7 @@ describe('DBの開閉テスト(インデックスあり)', () => {
 
     test('インデックス付きオブジェクトストアを作成してDBを開く', async () => {
         const pidb = new PublicIDBManager(dbName, 1, oldStoreInfos);
-        await expect(pidb.openDatabase()).resolves.toBeUndefined();
+        await expect(pidb.openDB()).resolves.toBeUndefined();
 
         await expect(pidb.put<Person>('MyStore1', {
             name: 'Alice', age: 20, address: 'US',
@@ -977,11 +977,11 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         const indexNames2 = Array.from(tx.objectStore('MyStore2').indexNames).sort();
         expect(indexNames2).toEqual(['idIdx', 'valueIdx', 'weightIdx']);
 
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
     test('uniqueオプションのテスト', async () => {
         const idb = new IDBManager(dbName, 1, oldStoreInfos);
-        await expect(idb.openDatabase()).resolves.toBeUndefined();
+        await expect(idb.openDB()).resolves.toBeUndefined();
 
         await expect(idb.putMany<Item>('MyStore2', [
             {
@@ -997,11 +997,11 @@ describe('DBの開閉テスト(インデックスあり)', () => {
             item: 'Cherry', id: 2, weight: 5, value: 50, color: 'red',
         })).rejects.toThrow(DOMException);
 
-        idb.closeDatabase();
+        idb.closeDB();
     });
     test('オブジェクトストア内のインデックスの構成を更新する(アップグレード)', async () => {
         const pidb = new PublicIDBManager(dbName, 2, newStoreInfos);
-        await expect(pidb.openDatabase()).resolves.toBeUndefined();
+        await expect(pidb.openDB()).resolves.toBeUndefined();
 
         // インデックスが変更されていることをテスト
         const tx = pidb.p_db.transaction(['MyStore1', 'MyStore2'], 'readonly');
@@ -1015,7 +1015,7 @@ describe('DBの開閉テスト(インデックスあり)', () => {
         // resetOnUpgrade: 'index' のとき、データは残る
         await expect(pidb.has('MyStore2', 'Apple')).resolves.toBe(true);
 
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 });
 
@@ -1064,16 +1064,16 @@ describe('単体データのインデックスによる取得テスト', () => {
     const idb = new IDBManager(dbName, 1, storeInfos);
 
     beforeAll(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
         await idb.addMany<Item>('MyStore1', items);
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     beforeEach(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
     });
     afterEach(() => {
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     test('getByIndex', async () => {
@@ -1227,16 +1227,16 @@ describe('複数データのインデックスによる取得テスト(multiEntr
     const idb = new IDBManager(dbName, 1, storeInfos);
 
     beforeAll(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
         await idb.addMany<Item>('MyStore1', items);
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     beforeEach(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
     });
     afterEach(() => {
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     test('getManyByIndex', async () => {
@@ -1469,12 +1469,12 @@ describe('複数データのインデックスによる削除テスト(deleteMan
     const idb = new IDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await idb.openDatabase();
+        await idb.openDB();
         await idb.addMany<Item>('MyStore1', items);
     });
     afterEach(async () => {
         await idb.clear('MyStore1');
-        idb.closeDatabase();
+        idb.closeDB();
     });
 
     test('idのキー範囲で削除する', async () => {
@@ -1551,10 +1551,10 @@ describe('トランザクションのテスト', () => {
     const pidb = new PublicIDBManager(dbName, 1, storeInfos);
 
     beforeEach(async () => {
-        await pidb.openDatabase();
+        await pidb.openDB();
     });
     afterEach(() => {
-        pidb.closeDatabase();
+        pidb.closeDB();
     });
 
     test('トランザクションを作成する', async () => {
@@ -1589,7 +1589,7 @@ describe('トランザクションのテスト', () => {
         await expect(tx2).rejects.toThrow('Oops');
     });
     test('データベースが閉じているときにトランザクションを作成すると失敗する', async () => {
-        pidb.closeDatabase();
+        pidb.closeDB();
         const tx = pidb.transaction('MyStore1', () => Promise.resolve());
         await expect(tx).rejects.toThrow(ReferenceError);
     });

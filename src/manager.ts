@@ -76,7 +76,7 @@ export class IDBManager {
             });
     }
 
-    openDatabase(): Promise<void> {
+    openDB(): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this.isOpen()) {
                 resolve();
@@ -194,7 +194,7 @@ export class IDBManager {
         });
     }
 
-    closeDatabase(): void {
+    closeDB(): void {
         if (this.isOpen()) {
             this.db.close();
             this.db = NULL_IDB_DATABASE;
