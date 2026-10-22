@@ -80,9 +80,7 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         const idb2 = new IDBManager(dbName, 2, []);
 
         await expect(idb1.openDB()).resolves.toBeUndefined();
-        const p = idb2.openDB();
-        await expect(p).rejects.toThrow(ReferenceError);
-        await expect(p).rejects.toThrow('The database cannot be upgraded because it is currently open on another instance.');
+        await expect(idb2.openDB()).rejects.toThrow(new ReferenceError('The database cannot be upgraded because it is currently open in another instance.'));
 
         // DBを閉じるとアップグレードできる
         idb1.closeDB();
@@ -139,9 +137,7 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         oldIDB.closeDB();
 
         const wrongIDB = new IDBManager(dbName, 1, newStoreInfos);
-        const p = wrongIDB.openDB();
-        await expect(p).rejects.toThrow(TypeError);
-        await expect(p).rejects.toThrow('The storeInfos does not match the object stores in the database. The database version needs upgrading.');
+        await expect(wrongIDB.openDB()).rejects.toThrow(new TypeError('The storeInfos do not match the object stores in the database. The database version needs to be upgraded.'));
 
         // アップグレード(バージョンアップ)するとDBを開ける
         const newIDB = new IDBManager(dbName, 2, newStoreInfos);
@@ -152,7 +148,7 @@ describe('DBの開閉テスト(オブジェクトストアあり)', () => {
         const dbName = createDBName();
         const pidb = new PublicIDBManager(dbName, 1, []);
 
-        expect(() => void pidb.p_verifyObjectStoreNames()).toThrow(ReferenceError);
+        expect(() => void pidb.p_verifyObjectStoreNames()).toThrow(new ReferenceError('The database is not open.'));
     });
 });
 
@@ -164,7 +160,7 @@ describe('CRUDs共通の例外処理', () => {
     test('DBを開いていない状態で呼び出すとエラー', async () => {
         const idb = new IDBManager('', 1, []);
 
-        await expect(idb.add('', {})).rejects.toThrow(ReferenceError);
+        await expect(idb.add('', {})).rejects.toThrow(new ReferenceError('The database is not open.'));
         await expect(idb.addMany('', [])).rejects.toThrow(ReferenceError);
         await expect(idb.put('', {})).rejects.toThrow(ReferenceError);
         await expect(idb.putMany('', [])).rejects.toThrow(ReferenceError);
@@ -211,7 +207,9 @@ describe('CRUDs共通の例外処理', () => {
         const idb = new IDBManager(dbName, 1, [{ name: 'MyStore1' }]);
         await expect(idb.openDB()).resolves.toBeUndefined();
 
-        await expect(idb.add('MyStoreX', {})).rejects.toThrow(DOMException);
+        const p = idb.add('MyStoreX', {});
+        await expect(p).rejects.toThrow(DOMException);
+        await expect(p).rejects.toThrow('No objectStore named MyStoreX in this database');
         await expect(idb.addMany('MyStoreX', [])).rejects.toThrow(DOMException);
         await expect(idb.put('MyStoreX', {})).rejects.toThrow(DOMException);
         await expect(idb.putMany('MyStoreX', [])).rejects.toThrow(DOMException);
@@ -331,7 +329,9 @@ describe('単体データの追加・更新・削除テスト', () => {
     });
     test('キー指定を間違えると追加できない', async () => {
         // keyPath: なし, autoIncrement: false
-        await expect(idb.put('MyStore1', 'Hamburger')).rejects.toThrow(DOMException); // 外部キー指定なし
+        const p = idb.put('MyStore1', 'Hamburger');
+        await expect(p).rejects.toThrow(DOMException); // 外部キー指定なし
+        await expect(p).rejects.toThrow('Data provided to an operation does not meet requirements.');
 
         // keyPath: あり, autoIncrement: false
         await expect(idb.put('MyStore2', { key: 'I', value: 'Icecream' }, 'I')).rejects.toThrow(DOMException); // 外部キー指定あり

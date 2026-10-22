@@ -46,9 +46,7 @@ describe('トランザクションの生成テスト', () => {
         const tx = new IDBMTransaction(pidb.p_db, 'MyStore1');
 
         tx.abort(new TypeError('Oops'));
-        const p = tx.getSettlement();
-        await expect(p).rejects.toThrow(TypeError);
-        await expect(p).rejects.toThrow('Oops');
+        await expect(tx.getSettlement()).rejects.toThrow(new TypeError('Oops'));
     });
     test('PromiseLikeのテスト', async () => {
         const tx1 = new IDBMTransaction(pidb.p_db, 'MyStore1');
@@ -484,7 +482,9 @@ describe('イテレータのテスト', () => {
 
         // トランザクション完了後に next() を呼び出すとエラー
         await expect(tx1.getSettlement()).resolves.toBeUndefined();
-        await expect(iter1.next()).rejects.toThrow(DOMException);
+        const p1 = iter1.next();
+        await expect(p1).rejects.toThrow(DOMException);
+        await expect(p1).rejects.toThrow('The transaction is not active.');
 
         // reverseIterator
         const tx2 = new IDBMTransaction(pidb.p_db, 'MyStore1', 'readonly');
