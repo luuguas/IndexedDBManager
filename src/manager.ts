@@ -218,8 +218,8 @@ export class IDBManager {
                     (response: TResult) => {
                         if (inner.isActive()) inner.commit();
                         inner
-                            .then(() => { resolve(response); })
-                            .catch((err) => { reject(err); });
+                            .then(() => resolve(response))
+                            .catch((err) => reject(err));
                     },
                     (error) => {
                         if (inner.isActive()) {
@@ -246,8 +246,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.add(storeName, value, key);
             }, 'readwrite')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -265,8 +265,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.addMany(storeName, values, keys);
             }, 'readwrite')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -284,8 +284,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.put(storeName, value, key);
             }, 'readwrite')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -303,8 +303,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.putMany(storeName, values, keys);
             }, 'readwrite')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -318,8 +318,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.delete(storeName, key);
             }, 'readwrite')
-                .then(() => { resolve(); })
-                .catch((error) => { reject(error); });
+                .then(() => resolve())
+                .catch((error) => reject(error));
         });
     }
 
@@ -343,8 +343,8 @@ export class IDBManager {
                 // keyRange: IDBMKeyRange
                 return inner.deleteMany(storeName, keysOrKeyRange);
             }, 'readwrite')
-                .then(() => { resolve(); })
-                .catch((error) => { reject(error); });
+                .then(() => resolve())
+                .catch((error) => reject(error));
         });
     }
 
@@ -358,8 +358,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.clear(storeName);
             }, 'readwrite')
-                .then(() => { resolve(); })
-                .catch((error) => { reject(error); });
+                .then(() => resolve())
+                .catch((error) => reject(error));
         });
     }
 
@@ -373,8 +373,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.get<TValue>(storeName, key);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -388,8 +388,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getFirst<TValue>(storeName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -403,8 +403,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getLast<TValue>(storeName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -418,8 +418,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getKey(storeName, key);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -433,8 +433,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getFirstKey(storeName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -448,8 +448,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getLastKey(storeName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -463,8 +463,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.has(storeName, key);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -488,8 +488,8 @@ export class IDBManager {
                 // keyRange?: IDBMKeyRange
                 return inner.getMany<TValue>(storeName, keysOrKeyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -506,8 +506,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getManyKeys(storeName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -521,8 +521,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.count(storeName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -536,8 +536,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.hasAny(storeName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -607,8 +607,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getByIndex<TValue>(storeName, indexName, key);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -626,8 +626,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getFirstByIndex<TValue>(storeName, indexName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -645,8 +645,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getLastByIndex<TValue>(storeName, indexName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -664,8 +664,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getKeyByIndex(storeName, indexName, key);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -683,8 +683,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getFirstKeyByIndex(storeName, indexName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -702,8 +702,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getLastKeyByIndex(storeName, indexname, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -721,8 +721,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.hasByIndex(storeName, indexName, key);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -747,8 +747,8 @@ export class IDBManager {
                 // keyRange: IDBMKeyRange
                 return inner.deleteManyByIndex(storeName, indexName, keysOrKeyRange);
             }, 'readwrite')
-                .then(() => { resolve(); })
-                .catch((error) => { reject(error); });
+                .then(() => resolve())
+                .catch((error) => reject(error));
         });
     }
 
@@ -775,8 +775,8 @@ export class IDBManager {
                 // keyRange?: IDBMKeyRange
                 return inner.getManyByIndex<TValue>(storeName, indexName, keysOrKeyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -794,8 +794,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.getManyKeysByIndex(storeName, indexName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -813,8 +813,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.countByIndex(storeName, indexName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
@@ -832,8 +832,8 @@ export class IDBManager {
             this.transaction(storeName, (inner) => {
                 return inner.hasAnyByIndex(storeName, indexName, keyRange);
             }, 'readonly')
-                .then((response) => { resolve(response); })
-                .catch((error) => { reject(error); });
+                .then((response) => resolve(response))
+                .catch((error) => reject(error));
         });
     }
 
