@@ -1,7 +1,10 @@
 export function deleteDB(dbName: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const deleteReq = window.indexedDB.deleteDatabase(dbName);
-        deleteReq.onblocked = () => reject(new ReferenceError('Failed to delete the database because it is currently open in another instance.'));
+        deleteReq.onblocked = () => {
+            // eslint-disable-next-line no-console
+            console.warn(`Warning from IDBManager: The request to delete the database "${dbName}" will be pending until all connections to the database are closed.`);
+        };
         deleteReq.onerror = () => reject(deleteReq.error);
         deleteReq.onsuccess = () => resolve();
     });

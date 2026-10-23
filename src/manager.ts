@@ -104,7 +104,8 @@ export class IDBManager {
             };
 
             openReq.onblocked = () => {
-                reject(new ReferenceError('The database cannot be upgraded because it is currently open in another instance.'));
+                // eslint-disable-next-line no-console
+                console.warn(`Warning from IDBManager: The request to upgrade the database "${this.dbName}" will be pending until all connections to the database are closed.`);
             };
             openReq.onupgradeneeded = () => {
                 const db = openReq.result;
