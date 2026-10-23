@@ -97,7 +97,7 @@ export class IDBManager {
                 }
                 this.db.onclose = () => {
                     // eslint-disable-next-line no-console
-                    console.warn(`Warning from IDBManager: The database "${this.dbName}" was closed unexpectedly.`);
+                    console.warn(`Warning from IndexedDBManager: The database "${this.dbName}" was closed unexpectedly.`);
                     this.db = NULL_IDB_DATABASE;
                 };
                 resolve();
@@ -105,7 +105,7 @@ export class IDBManager {
 
             openReq.onblocked = () => {
                 // eslint-disable-next-line no-console
-                console.warn(`Warning from IDBManager: The request to upgrade the database "${this.dbName}" will be pending until all connections to the database are closed.`);
+                console.warn(`Warning from IndexedDBManager: The request to upgrade the database "${this.dbName}" will be pending until all connections to the database are closed.`);
             };
             openReq.onupgradeneeded = () => {
                 const db = openReq.result;
