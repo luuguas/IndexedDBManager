@@ -56,6 +56,26 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         idb1.closeDB();
         idb2.closeDB();
     });
+    test('他のインスタンスでDBを開いている状態ではアップグレードが保留される', async () => {
+        const dbName = createDBName();
+        const idb1 = new IDBManager(dbName, 1, []);
+        const idb2 = new IDBManager(dbName, 2, []);
+
+        await expect(idb1.openDB()).resolves.toBeUndefined();
+        const p = idb2.openDB();
+
+        // 少し待ってからDBを閉じる
+        await new Promise((resolve) => {
+            setTimeout(resolve, 50);
+        });
+        expect(idb2.isClose()).toBe(true);
+        await expect(window.indexedDB.databases()).resolves.toContainEqual({ name: dbName, version: 1 });
+        idb1.closeDB();
+
+        await expect(p).resolves.toBeUndefined();
+        expect(idb2.isOpen()).toBe(true);
+        await expect(window.indexedDB.databases()).resolves.toContainEqual({ name: dbName, version: 2 });
+    });
 
     test('不正なバージョンを指定するとDBを開けない', async () => {
         const dbName = createDBName();
@@ -73,19 +93,6 @@ describe('DBの開閉テスト(オブジェクトストアなし)', () => {
         idb1.closeDB();
         await expect(idb2.openDB())
             .rejects.toThrow(DOMException); // IDBRequest.onerror が呼び出される
-    });
-    test('他のインスタンスでDBを開いている状態ではアップグレードできない', async () => {
-        const dbName = createDBName();
-        const idb1 = new IDBManager(dbName, 1, []);
-        const idb2 = new IDBManager(dbName, 2, []);
-
-        await expect(idb1.openDB()).resolves.toBeUndefined();
-        await expect(idb2.openDB()).rejects.toThrow(new ReferenceError('The database cannot be upgraded because it is currently open in another instance.'));
-
-        // DBを閉じるとアップグレードできる
-        idb1.closeDB();
-        await expect(idb2.openDB()).resolves.toBeUndefined();
-        idb2.closeDB();
     });
 });
 
