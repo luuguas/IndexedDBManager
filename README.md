@@ -9,6 +9,7 @@ A Promise wrapper for simple IndexedDB operations
   - [Package manager](#package-manager)
   - [CDN](#cdn)
 - [Usage](#usage)
+  - [Quick Start](#quick-start)
 - [API](#api)
 
 ## Links
@@ -66,5 +67,29 @@ You can access each module via the global variable `idbmanager`.
 ```
 
 ## Usage
+
+### Quick Start
+
+```js
+const db = new IDBManager('MyDB', 1, [{ name: 'MyStore' }]);
+
+async function doSomething() {
+    // First, open the database!
+    await db.openDB();
+
+    // Add data with key 'A' and value 'Apple'
+    await db.put('MyStore', 'Apple', 'A');
+    // Object can also be used as value
+    await db.put('MyStore', { name: 'Banana', time: new Date() }, 'B');
+
+    // Look up the value by key
+    let value = await db.get('MyStore', 'B');
+    console.log(`${value.name} arrived at ${value.time.toLocaleString()}`);
+}
+
+doSomething(); // Console: Banana arrived at 2026/10/21 23:00:04
+```
+
+Since most functions return a `Promise` object, you can interact with the database using the `async`/`await` syntax or the `.then()`/`.catch()` methods.
 
 ## API
