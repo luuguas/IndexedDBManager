@@ -13,6 +13,8 @@ A Promise wrapper for simple IndexedDB operations
   - [Quick Start](#quick-start)
   - [データベースを開く](#データベースを開く)
   - [データベースの構成](#データベースの構成)
+  - [データの追加・更新](#データの追加更新)
+  - [データの削除](#データの削除)
 - [API](#api)
 
 ## 各種リンク
@@ -142,19 +144,20 @@ const storeInfos = [
 ];
 
 const db = new IDBManager(dbName, dbVersion, storeInfos);
+await db.open();
 ```
 
 データベース名は文字列、バージョンは1以上の整数を指定します。
 
 オブジェクトストアの設定では、オブジェクトストア名、キーの供給方法、更新時のリセット、インデックスを指定します。
-(インデックスの詳細は[インデックスの使用](#インデックスの使用)で後述)
+(インデックスについては[インデックスの使用](#インデックスの使用)で詳述)
 
 #### キーの供給方法
 
 データを識別するためのキーの供給方法には2種類のオプションがあります。
 
 - 内部キー(`keyPath`): このオプションを有効にすると、保存できるデータの値はオブジェクトのみになり、`keyPath`に指定した文字列と同じ名称のプロパティをキーとして利用します。データを追加・更新する際に、値とは別にキーを供給しようとするとエラーが発生します。
-- キージェネレーター(`autoIncrement`): このオプションを`true`にすると、キーを省略したデータを追加する際に、自動でキーに連番で整数が割り当てられます。
+- キージェネレーター(`autoIncrement`): このオプションを`true`にすると、キーを省略したデータを追加する際に、自動的にキーとして連番の整数が割り当てられます。
 
 #### 更新時のリセット
 
@@ -163,5 +166,96 @@ const db = new IDBManager(dbName, dbVersion, storeInfos);
 - `'all'`: キーの供給方法およびインデックスを再設定します。オブジェクトストア内のデータはすべて削除されます。
 - `'index'`: インデックスのみを再設定します。オブジェクトストア内のデータは保持されます。
 - `'none'`: 再設定は行いません。(`resetOnUpgrade`オプションを指定しない場合と同じ)
+
+### データの追加・更新
+
+データベースを作成したら、早速オブジェクトストアにデータを追加しましょう。
+
+データを追加するには`add`メソッドを使います。
+
+```js
+await db.add(storeName, value, key);
+// 内部キーまたはキージェネレーターを使う場合
+await db.add(storeName, value);
+```
+
+引数には追加先のオブジェクトストア名、値、キーを順に渡します。
+内部キーまたはキージェネレーターを使う場合は、第3引数は不要です。
+
+オブジェクトストア内に同一のキーを持つデータが存在する場合は、データの追加に失敗して例外を投げます。
+
+---
+
+データを追加する他の方法として、`put`メソッドも存在します。
+
+```js
+await db.put(storeName, value, key);
+// 内部キーまたはキージェネレーターを使う場合
+await db.put(storeName, value);
+```
+
+機能は`add`メソッドとほぼ同じですが、オブジェクトストア内に同ーのキーを持つデータが存在する場合、`add`メソッドと異なり`put`メソッドはそのデータを新しい値で更新します。
+
+#### 複数のデータの追加・更新
+
+複数のデータをまとめて追加・更新するには、`addMany`, `putMany`メソッドを使います。
+
+```js
+await db.addMany(storeName, values, keys);
+await db.putMany(storeName, values, keys);
+// 内部キーまたはキージェネレーターを使う場合
+await db.addMany(storeName, values);
+await db.putMany(storeName, values);
+```
+
+`values`, `keys`には値の配列、キーの配列をそれぞれ指定します。
+`values[0]`と`keys[0]`のペア、`values[1]`と`keys[1]`のペア、… が各データとして扱われます。
+
+例:
+
+```js
+const values = ['Apple', 'Banana', 'Chocolate'];
+const keys = ['A', 'B', 'C'];
+await db.addMany('MyStore', values, keys);
+```
+
+### データの削除
+
+オブジェクトストア内に存在するデータを削除するには`delete`メソッドを使います。
+
+```js
+await db.delete(storeName, key);
+```
+
+指定されたキーに一致するデータがオブジェクトストア内に存在する場合は、そのデータを削除します。
+(一致するデータが存在しない場合は、何も行わず例外も投げません)
+
+#### 複数のデータの削除
+
+複数のデータを削除するには`deleteMany`メソッドを使います。
+また、オブジェクトストア内の全データを削除するには`clear`メソッドを使います。
+
+```js
+// キーの配列
+await db.deleteMany(storeName, keys);
+// キーの範囲
+await db.deleteMany(storeName, keyRange);
+// 全データの削除
+await db.clear(storeName);
+```
+
+`deleteMany`メソッドでは、削除したいデータのキーを2種類の方法で指定できます。
+
+- キーの配列: 削除したいデータを個別に指定します。
+- キーの範囲: その範囲に含まれる全てのデータを指定します。([キーの範囲の指定方法](#キーの範囲の指定方法)を参照)
+
+例:
+
+```js
+// キーの配列
+await db.deleteMany('MyStore', ['B', 'C']);
+// キーの範囲 ('B'以上'Q'以下)
+await db.deleteMany('MyStore', { lower: 'B', upper: 'Q' });
+```
 
 ## API
