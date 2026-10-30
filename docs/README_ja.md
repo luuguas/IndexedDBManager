@@ -15,6 +15,8 @@ A Promise wrapper for simple IndexedDB operations
   - [データベースの構成](#データベースの構成)
   - [データの追加・更新](#データの追加更新)
   - [データの削除](#データの削除)
+  - [キーの範囲の指定方法](#キーの範囲の指定方法)
+  - [データの検索](#データの検索)
 - [API](#api)
 
 ## 各種リンク
@@ -96,12 +98,12 @@ async function doSomething() {
     // オブジェクトも値として使えます
     await db.put('MyStore', { name: 'Banana', time: new Date() }, 'B');
 
-    // キーを指定して値を調べます
+    // キーを指定して値を検索します
     let value = await db.get('MyStore', 'B');
     console.log(`${value.name} arrived at ${value.time.toLocaleString()}`);
 }
 
-doSomething(); // 出力: Banana arrived at 2026/10/21 23:00:04
+doSomething(); // ログ: Banana arrived at 2026/10/21 23:00:04
 ```
 
 ほとんどの機能は`Promise`オブジェクトを返すため、`async`/`await`構文や`.then()`/`.catch()`メソッドを利用してデータベースを操作できます。
@@ -184,8 +186,6 @@ await db.add(storeName, value);
 
 オブジェクトストア内に同一のキーを持つデータが存在する場合は、データの追加に失敗して例外を投げます。
 
----
-
 データを追加する他の方法として、`put`メソッドも存在します。
 
 ```js
@@ -256,6 +256,76 @@ await db.clear(storeName);
 await db.deleteMany('MyStore', ['B', 'C']);
 // キーの範囲 ('B'以上'Q'以下)
 await db.deleteMany('MyStore', { lower: 'B', upper: 'Q' });
+```
+### キーの範囲の指定方法
+
+`deleteMany`メソッドおよびデータを検索する一部のメソッドでは、操作対象のデータをキーの範囲で指定できます。
+
+キーの範囲の指定には、以下のプロパティを持つオブジェクトを使います。
+
+- `lower`: キーの範囲の下限です。
+- `lowerOpen`: `true`の場合、`lower`の値はキーの範囲に含まれません。
+- `upper`: キーの範囲の上限です。
+- `upperOpen`: `true`の場合、`upper`の値はキーの範囲に含まれません。
+
+|範囲|プロパティ|
+|:--|:--|
+|x ≦ key|`{ lower: x }`|
+|x ＜ key|`{ lower: x, lowerOpen: true }`|
+|x ≧ key|`{ upper: x }`|
+|x ＞ key|`{ upper: x, upperOpen: true }`|
+|x ≦ key ≦ y|`{ lower: x, upper: y }`|
+|x ＜ key ≦ y|`{ lower: x, upper: y, lowerOpen: true }`|
+|x ≦ key ＜ y|`{ lower: x, upper: y, upperOpen: true }`|
+|x ＜ key ＜ y|`{ lower: x, upper: y, lowerOpen: true, upperOpen: true }`|
+|全範囲|`{}` または 引数の省略|
+
+### データの検索
+
+オブジェクトストアにデータを追加した後は、様々な方法でデータを検索できます。
+
+#### 1件のデータの取得
+
+`get`メソッドは引数として渡されたキーに一致するデータを検索し、データが存在すればその値を返します。
+一致するデータが存在しない場合は`undefined`を返します。
+
+```js
+const value = await db.get(storeName, key);
+```
+
+`getFirst`, `getLast`メソッドは、キーの範囲に含まれるデータのうち最小・最大のキーを持つデータの値をそれぞれ返します。
+
+```js
+const value1 = await db.getFirst(storeName, keyRange);
+const value2 = await db.getLast(storeName, keyRange);
+```
+
+#### 複数のデータの取得
+
+キーの配列またはキーの範囲で指定した全てのデータの値を配列で取得するには、`getMany`メソッドを使います。
+
+```js
+// キーの配列
+const values1 = await db.getMany(storeName, keys);
+// キーの範囲
+const values2 = await db.getMany(storeName, keyRange);
+```
+
+#### データの存在確認とカウント
+
+値を取得する必要はないがデータが存在するかを調べたい場合は、`has`, `hasAny`メソッドを使います。
+
+```js
+const bool1 = await db.has(storeName, key);
+const bool2 = await db.hasAny(storeName, keyRange);
+```
+`has`メソッドは、指定したキーに一致するデータが存在すれば`true`、存在しなければ`false`を返します。
+`hasAny`メソッドは、指定したキーの範囲に含まれるデータが1件以上存在すれば`true`、1件も存在しなければ`false`を返します。
+
+指定したキーの範囲に含まれるデータの個数を調べたい場合は、`count`メソッドを使います。
+
+```js
+const num = await db.count(storeName, keyRange);
 ```
 
 ## API
